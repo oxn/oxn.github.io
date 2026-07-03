@@ -1,0 +1,36 @@
+name: pages build and deployment
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+# deploy-pages@v5 强制必填权限
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master 分支源码
+        uses: actions/checkout@v4
+        with:
+          ref: master
+      - name: 上传全站静态文件
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # GitHub Pages 强制绑定环境，缺失直接部署失败
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
