@@ -7,7 +7,7 @@
 本源码只需要修改站点信息和下面说的 `顶部导航按钮` `数据源存放位置` 其余自动生成。<br>
 地域原因来此不易，如有问题联系怸歪小站：<a href="https://cycy.fun" target="_blank" rel="noopener noreferrer" style="font-weight:bold;color:#0066cc;word-break:break-all;">👆CYCY.FUN</a><br>[English Doc](./Readme-en.md)
 # 2026年7月3日更新内容：
-1、 更新了主题，借鉴（抄袭）了https://www.yysuni.com/的主题样式，当然和他的差远了，大家可以去关注他一波，可以说他的微博美的不可方物！
+1、 更新了主题，借鉴（抄袭）了 https://www.yysuni.com/ 的主题样式，当然和他的差远了，大家可以去关注他一波，可以说他的微博美的不可方物！
 2、 html全站代码未压缩版放在库里了，主页是压缩了css和js的，不然太臃肿，也很乱！
 3、 我先睡了，太困了！
 # cytools\-html 开源工具站｜完整源码架构说明文档
