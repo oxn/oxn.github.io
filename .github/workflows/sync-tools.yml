@@ -1,4 +1,7 @@
 name: Sync cytools-html → oxn.github.io/tools
+concurrency:
+  group: "sync-tools-job"
+  cancel-in-progress: true
 on:
   workflow_dispatch:
   push:
