@@ -4,7 +4,7 @@ on:
     branches: [master]
   workflow_dispatch:
 
-# 并发锁：同时间只允许1次部署，新部署自动取消旧任务，根除冲突
+# 并发锁，避免多任务抢占部署
 concurrency:
   group: "pages-deploy-master"
   cancel-in-progress: true
@@ -18,21 +18,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout master 分支源码
+      - name: Checkout master
         uses: actions/checkout@v4
         with:
           ref: master
-      - name: 上传全站静态文件
+      # 官方核心适配步骤，修复部署轮询失败
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    environment: github-pages
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v5
