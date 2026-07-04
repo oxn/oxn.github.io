@@ -4,7 +4,11 @@ on:
     branches: [master]
   workflow_dispatch:
 
-# deploy-pages@v5 强制必填权限
+# 并发锁：同时间只允许1次部署，新部署自动取消旧任务，根除冲突
+concurrency:
+  group: "pages-deploy-master"
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pages: write
@@ -22,11 +26,9 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    # GitHub Pages 强制绑定环境，缺失直接部署失败
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
