@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>🧹</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>文本去重工具</title>
+<style>
+:root {
+  --primary: #10b981;
+  --primary-light: #dcfce7;
+  --warn: #f97316;
+  --danger: #ef4444;
+  --nav-bg: #ffffff;
+  --nav-border: #e5e7eb;
+  --nav-text: #222222;
+  --text-main: #222222;
+  --text-sub: #555555;
+  --border-base: #e5e7eb;
+  --page-bg: #ffffff;
+  --card-bg: #ffffff;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+  --radius-md: 8px;
+  --space-md: 0.875rem;
+  --space-lg: 1.2rem;
+  --max-width: 1400px;
+  --transition: all 0.22s ease;
+}
+html[data-theme="dark"] {
+  --primary: #34d399;
+  --primary-light: rgba(52, 211, 153, 0.18);
+  --nav-bg: #1f2937;
+  --nav-border: #374151;
+  --nav-text: #f3f4f6;
+  --text-main: #f9fafb;
+  --text-sub: #d1d5db;
+  --border-base: #374151;
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, sans-serif;
+}
+body {
+  background: var(--page-bg);
+  color: var(--text-main);
+  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(1rem, 4vw, 1.75rem);
+  z-index: 999;
+}
+.back-btn {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius-md);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor: pointer;
+}
+.back-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.theme-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-border);
+  border-radius: 50%;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.theme-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--max-width);
+  margin:0 auto;
+  background:var(--card-bg);
+  padding: clamp(1.5rem, 5vw, 2rem);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+}
+h2{
+  text-align:center;
+  margin-bottom: 6px;
+  font-weight:600;
+}
+.sub-title{
+  text-align:center;
+  font-size:0.875rem;
+  color:var(--text-sub);
+  margin-bottom: 32px;
+}
+.opt-group{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1.5rem;
+  margin-bottom: 32px;
+}
+.opt-item{
+  display:flex;
+  gap:0.4rem;
+  align-items:center;
+}
+.input-wrap{
+  margin-bottom: 24px;
+}
+.label{
+  display:block;
+  margin-bottom: 8px;
+  font-weight:500;
+}
+textarea{
+  width:100%;
+  min-height: 30vh;
+  max-height: 70vh;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-family:monospace;
+  resize:vertical;
+  overflow-y:auto;
+  white-space:pre-wrap;
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: 24px;
+}
+.btn-row button{
+  flex:1;
+  min-width: 110px;
+  padding:0.85rem;
+  border-radius:var(--radius-md);
+  font-size:1rem;
+  cursor:pointer;
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+}
+.btn-row button:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.btn-main{
+  border:none;
+  background:var(--primary);
+  color:#fff;
+}
+.result-wrap{
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  padding:1rem;
+  margin-bottom:16px;
+}
+.result-stat{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1.5rem;
+  margin-bottom:12px;
+  font-size:0.9rem;
+  color:var(--text-sub);
+}
+#resultText{
+  min-height: 20vh;
+  max-height: 60vh;
+  overflow:auto;
+  font-family:monospace;
+  white-space:pre-wrap;
+}
+.copy-mini{
+  padding:0.4rem 0.6rem;
+  font-size:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  cursor:pointer;
+  margin-top:10px;
+}
+.copy-mini:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.tip-desc{
+  color:var(--text-sub);
+  font-size:0.875rem;
+  line-height:1.6;
+}
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  background:var(--card-bg);
+  box-shadow:var(--shadow-lg);
+  z-index:9999;
+  pointer-events:none;
+  transition:all 0.2s ease;
+}
+.toast-box.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="back-btn" id="backBtn">← 返回首页</button>
+  <button class="theme-btn" id="themeBtn">🌙</button>
+</div>
+
+<div class="box">
+  <h2>文本去重工具</h2>
+  <div class="sub-title">按行去重、保持顺序，适合清理名单和清单</div>
+
+  <div class="opt-group">
+    <div class="opt-item">
+      <input type="checkbox" id="trimSpace" checked>
+      <label for="trimSpace">去掉首尾空格</label>
+    </div>
+    <div class="opt-item">
+      <input type="checkbox" id="removeEmpty" checked>
+      <label for="removeEmpty">移除空行</label>
+    </div>
+    <div class="opt-item">
+      <input type="checkbox" id="ignoreCase">
+      <label for="ignoreCase">忽略大小写</label>
+    </div>
+  </div>
+
+  <div class="input-wrap">
+    <label class="label">原始文本</label>
+    <textarea id="sourceText" placeholder="每行一条数据，粘贴待处理内容"></textarea>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-outline" id="clearBtn">清空</button>
+    <button class="btn-outline" id="demoBtn">加载示例</button>
+    <button class="btn-main" id="processBtn">去重处理</button>
+  </div>
+
+  <div class="result-wrap">
+    <div class="result-stat">
+      <span>总行数:<span id="totalLine">0</span></span>
+      <span>唯一行数:<span id="uniqueLine">0</span></span>
+      <span>已移除:<span id="delLine">0</span></span>
+    </div>
+    <div id="resultText"></div>
+    <button class="copy-mini" id="copyResultBtn">复制结果</button>
+  </div>
+
+  <div class="tip-desc">
+    使用说明：按原始行顺序保留首个不重复内容；支持去首尾空格、清除空行、忽略大小写对比；处理后显示统计数据，可一键复制全部结果。
+  </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+const sourceText = document.getElementById('sourceText');
+const resultText = document.getElementById('resultText');
+const totalLine = document.getElementById('totalLine');
+const uniqueLine = document.getElementById('uniqueLine');
+const delLine = document.getElementById('delLine');
+const trimSpace = document.getElementById('trimSpace');
+const removeEmpty = document.getElementById('removeEmpty');
+const ignoreCase = document.getElementById('ignoreCase');
+const clearBtn = document.getElementById('clearBtn');
+const demoBtn = document.getElementById('demoBtn');
+const processBtn = document.getElementById('processBtn');
+const copyResultBtn = document.getElementById('copyResultBtn');
+const toastBox = document.getElementById('toastBox');
+const themeBtn = document.getElementById('themeBtn');
+const backBtn = document.getElementById('backBtn');
+const STORAGE_KEY = "site_theme_mode";
+
+function showToast(msg){
+  toastBox.innerText = msg;
+  toastBox.classList.add("show");
+  setTimeout(()=>toastBox.classList.remove("show"),2000);
+}
+
+// 核心去重处理
+function doProcess(){
+  const raw = sourceText.value;
+  let lines = raw.split('\n');
+  let originLines = [...lines];
+
+  // 去除首尾空格
+  if(trimSpace.checked){
+    lines = lines.map(s=>s.trim());
+  }
+  // 过滤空行
+  if(removeEmpty.checked){
+    lines = lines.filter(s=>s !== '');
+  }
+
+  const seen = new Set();
+  const out = [];
+  for(let s of lines){
+    let key = s;
+    if(ignoreCase.checked) key = s.toLowerCase();
+    if(!seen.has(key)){
+      seen.add(key);
+      out.push(s);
+    }
+  }
+
+  const allCount = originLines.length;
+  const uniqueCount = out.length;
+  const delCount = allCount - uniqueCount;
+
+  totalLine.innerText = allCount;
+  uniqueLine.innerText = uniqueCount;
+  delLine.innerText = delCount;
+  resultText.innerText = out.join('\n');
+  window.lastResult = out.join('\n');
+  showToast("处理完成");
+}
+
+function clearAll(){
+  sourceText.value = '';
+  resultText.innerText = '';
+  totalLine.innerText = '0';
+  uniqueLine.innerText = '0';
+  delLine.innerText = '0';
+  window.lastResult = '';
+}
+
+function loadDemo(){
+  sourceText.value = `apple
+Apple
+banana
+banana
+cherry
+
+cherry
+demo test demo test`;
+  doProcess();
+}
+
+async function copyResult(){
+  if(!window.lastResult) return showToast("暂无处理结果");
+  try{
+    await navigator.clipboard.writeText(window.lastResult);
+    showToast("复制成功");
+  }catch(e){
+    const temp = document.createElement('textarea');
+    temp.value = window.lastResult;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showToast("复制成功");
+  }
+}
+
+// 绑定事件
+processBtn.onclick = doProcess;
+clearBtn.onclick = clearAll;
+demoBtn.onclick = loadDemo;
+copyResultBtn.onclick = copyResult;
+
+// 主题
+function initTheme(){
+  const save = localStorage.getItem(STORAGE_KEY);
+  if(save === "dark"){
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }else{
+    document.documentElement.removeAttribute("data-theme");
+    themeBtn.innerText = "🌙";
+  }
+}
+themeBtn.onclick = ()=>{
+  const dark = document.documentElement.hasAttribute("data-theme");
+  if(dark){
+    localStorage.setItem(STORAGE_KEY,"light");
+    document.documentElement.removeAttribute("data-theme");
+    themeBtn.innerText = "🌙";
+  }else{
+    localStorage.setItem(STORAGE_KEY,"dark");
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }
+};
+backBtn.onclick = ()=>window.location.href="./index.html";
+
+initTheme();
+loadDemo();
+</script>
+</body>
+</html>

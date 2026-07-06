@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>🔠</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>大小写转换工具</title>
+<style>
+:root {
+  --primary: #10b981;
+  --primary-light: #dcfce7;
+  --warn: #f97316;
+  --danger: #ef4444;
+  --nav-bg: #ffffff;
+  --nav-border: #e5e7eb;
+  --nav-text: #222222;
+  --text-main: #222222;
+  --text-sub: #555555;
+  --border-base: #e5e7eb;
+  --page-bg: #ffffff;
+  --card-bg: #ffffff;
+  --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+  --radius-md: 8px;
+  --space-md: 0.875rem;
+  --space-lg: 1.2rem;
+  --max-width: 1400px;
+  --transition: all 0.22s ease;
+}
+html[data-theme="dark"] {
+  --primary: #34d399;
+  --primary-light: rgba(52, 211, 153, 0.18);
+  --nav-bg: #1f2937;
+  --nav-border: #374151;
+  --nav-text: #f3f4f6;
+  --text-main: #f9fafb;
+  --text-sub: #d1d5db;
+  --border-base: #374151;
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  background: var(--page-bg);
+  color: var(--text-main);
+  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(1rem,4vw,1.75rem);
+  z-index:999;
+}
+.header-btn{
+  padding: 0.4375rem 0.625rem;
+  border:1px solid var(--nav-border);
+  border-radius: var(--radius-md);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor:pointer;
+}
+.header-btn:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--max-width);
+  margin:0 auto;
+  background:var(--card-bg);
+  padding: clamp(1.5rem,5vw,2rem);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+}
+h2{
+  text-align:center;
+  margin-bottom: 6px;
+  font-weight:600;
+}
+.sub-title{
+  text-align:center;
+  color:var(--text-sub);
+  margin-bottom: 32px;
+}
+.input-wrap{
+  margin-bottom: 32px;
+}
+.input-label{
+  display:block;
+  margin-bottom: 8px;
+}
+#sourceText{
+  width:100%;
+  min-height: 160px;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-size:1rem;
+  resize:vertical;
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: 32px;
+}
+.btn-row button{
+  flex:1;
+  min-width: 120px;
+  padding:0.8rem;
+  border-radius:var(--radius-md);
+  cursor:pointer;
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+}
+.btn-row button:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.result-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap:1rem;
+}
+.result-item{
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  padding:0.8rem;
+  display:flex;
+  flex-direction:column;
+  gap:0.6rem;
+}
+.result-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.result-name{
+  font-size:0.85rem;
+  color:var(--text-sub);
+}
+.copy-mini{
+  padding:0.3rem 0.6rem;
+  font-size:0.75rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  cursor:pointer;
+}
+.copy-mini:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.result-text{
+  font-family:monospace;
+  word-break:break-all;
+  min-height:20px;
+}
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  background:var(--card-bg);
+  box-shadow:var(--shadow-lg);
+  z-index:9999;
+  pointer-events:none;
+  transition:all 0.2s ease;
+}
+.toast-box.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn" id="backBtn">← 返回首页</button>
+  <button class="header-btn" id="themeBtn">🌙</button>
+</div>
+
+<div class="box">
+  <h2>大小写转换工具</h2>
+  <div class="sub-title">在各种命名格式之间转换文本</div>
+
+  <div class="input-wrap">
+    <label class="input-label">输入文本</label>
+    <textarea id="sourceText" placeholder="输入内容，例如 hello world"></textarea>
+  </div>
+
+  <div class="btn-row">
+    <button id="clearBtn">清空</button>
+    <button id="demoBtn">加载示例</button>
+    <button id="copyAllBtn">复制全部结果</button>
+  </div>
+
+  <div class="result-grid" id="resultWrap">
+    <div class="result-item">
+      <div class="result-head">
+        <div class="result-name">小写 (lowercase)</div>
+        <button class="copy-mini" data-target="resLower">复制</button>
+      </div>
+      <div class="result-text" id="resLower"></div>
+    </div>
+    <div class="result-item">
+      <div class="result-head">
+        <div class="result-name">大写 (UPPERCASE)</div>
+        <button class="copy-mini" data-target="resUpper">复制</button>
+      </div>
+      <div class="result-text" id="resUpper"></div>
+    </div>
+    <div class="result-item">
+      <div class="result-head">
+        <div class="result-name">首字母大写 (Title Case)</div>
+        <button class="copy-mini" data-target="resTitle">复制</button>
+      </div>
+      <div class="result-text" id="resTitle"></div>
+    </div>
+    <div class="result-item">
+      <div class="result-head">
+        <div class="result-name">句首大写 (Sentence case)</div>
+        <button class="copy-mini" data-target="resSentence">复制</button>
+      </div>
+      <div class="result-text" id="resSentence"></div>
+    </div>
+    <div class="result-item">
+      <div class="result-head">
+        <div class="result-name">驼峰命名 (camelCase)</div>
+        <button class="copy-mini" data-target="resCamel">复制</button>
+      </div>
+      <div class="result-text" id="resCamel"></div>
+    </div>
+    <div class="result-item">
+      <div class="result-head">
+        <div class="result-name">帕斯卡命名 (PascalCase)</div>
+        <button class="copy-mini" data-target="resPascal">复制</button>
+      </div>
+      <div class="result-text" id="resPascal"></div>
+    </div>
+    <div class="result-item">
+      <div class="result-head">
+        <div class="result-name">蛇形命名 (snake_case)</div>
+        <button class="copy-mini" data-target="resSnake">复制</button>
+      </div>
+      <div class="result-text" id="resSnake"></div>
+    </div>
+    <div class="result-item">
+      <div class="result-head">
+        <div class="result-name">常量命名 (CONSTANT_CASE)</div>
+        <button class="copy-mini" data-target="resConstant">复制</button>
+      </div>
+      <div class="result-text" id="resConstant"></div>
+    </div>
+    <div class="result-item">
+      <div class="result-head">
+        <div class="result-name">烤串命名 (kebab-case)</div>
+        <button class="copy-mini" data-target="resKebab">复制</button>
+      </div>
+      <div class="result-text" id="resKebab"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+const sourceText = document.getElementById('sourceText');
+const resLower = document.getElementById('resLower');
+const resUpper = document.getElementById('resUpper');
+const resTitle = document.getElementById('resTitle');
+const resSentence = document.getElementById('resSentence');
+const resCamel = document.getElementById('resCamel');
+const resPascal = document.getElementById('resPascal');
+const resSnake = document.getElementById('resSnake');
+const resConstant = document.getElementById('resConstant');
+const resKebab = document.getElementById('resKebab');
+const clearBtn = document.getElementById('clearBtn');
+const demoBtn = document.getElementById('demoBtn');
+const copyAllBtn = document.getElementById('copyAllBtn');
+const toastBox = document.getElementById('toastBox');
+const themeBtn = document.getElementById('themeBtn');
+const backBtn = document.getElementById('backBtn');
+const STORAGE_KEY = "site_theme_mode";
+
+function showToast(msg){
+  toastBox.innerText = msg;
+  toastBox.classList.add("show");
+  setTimeout(()=>toastBox.classList.remove("show"),2000);
+}
+
+// 提取纯单词数组
+function getWords(str){
+  return str.trim().replace(/[_-]/g,' ').split(/\s+/).filter(w=>w);
+}
+
+// 小写
+function toLower(str){
+  return str.toLowerCase();
+}
+// 大写
+function toUpper(str){
+  return str.toUpperCase();
+}
+// Title Case
+function toTitle(str){
+  const words = getWords(str);
+  return words.map(w=>w[0].toUpperCase()+w.slice(1).toLowerCase()).join(' ');
+}
+// Sentence case
+function toSentence(str){
+  const s = str.trim().toLowerCase();
+  if(!s) return '';
+  return s[0].toUpperCase() + s.slice(1);
+}
+// camelCase
+function toCamel(str){
+  const words = getWords(str).map(w=>w.toLowerCase());
+  const first = words.shift();
+  return first + words.map(w=>w[0].toUpperCase()+w.slice(1)).join('');
+}
+// PascalCase
+function toPascal(str){
+  const words = getWords(str).map(w=>w.toLowerCase());
+  return words.map(w=>w[0].toUpperCase()+w.slice(1)).join('');
+}
+// snake_case
+function toSnake(str){
+  return getWords(str).map(w=>w.toLowerCase()).join('_');
+}
+// CONSTANT_CASE
+function toConstant(str){
+  return getWords(str).map(w=>w.toUpperCase()).join('_');
+}
+// kebab-case
+function toKebab(str){
+  return getWords(str).map(w=>w.toLowerCase()).join('-');
+}
+
+function calcAll(){
+  const txt = sourceText.value;
+  resLower.innerText = toLower(txt);
+  resUpper.innerText = toUpper(txt);
+  resTitle.innerText = toTitle(txt);
+  resSentence.innerText = toSentence(txt);
+  resCamel.innerText = toCamel(txt);
+  resPascal.innerText = toPascal(txt);
+  resSnake.innerText = toSnake(txt);
+  resConstant.innerText = toConstant(txt);
+  resKebab.innerText = toKebab(txt);
+}
+
+function clearAll(){
+  sourceText.value = '';
+  calcAll();
+  showToast("已清空");
+}
+function loadDemo(){
+  sourceText.value = "hello world test text";
+  calcAll();
+  showToast("已加载示例");
+}
+async function copyAllResult(){
+  const lines = [
+    `小写: ${resLower.innerText}`,
+    `大写: ${resUpper.innerText}`,
+    `Title: ${resTitle.innerText}`,
+    `Sentence: ${resSentence.innerText}`,
+    `camelCase: ${resCamel.innerText}`,
+    `PascalCase: ${resPascal.innerText}`,
+    `snake_case: ${resSnake.innerText}`,
+    `CONSTANT: ${resConstant.innerText}`,
+    `kebab-case: ${resKebab.innerText}`
+  ].join('\n');
+  try{
+    await navigator.clipboard.writeText(lines);
+    showToast("全部结果已复制");
+  }catch(e){
+    const t = document.createElement('textarea');
+    t.value = lines;
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand('copy');
+    document.body.removeChild(t);
+    showToast("复制成功");
+  }
+}
+
+// 单个复制按钮通用逻辑
+document.querySelectorAll('.copy-mini').forEach(btn=>{
+  btn.onclick = async ()=>{
+    const targetId = btn.dataset.target;
+    const targetEl = document.getElementById(targetId);
+    const text = targetEl.innerText;
+    if(!text) return showToast("暂无内容");
+    try{
+      await navigator.clipboard.writeText(text);
+      showToast("单项复制成功");
+    }catch(e){
+      const temp = document.createElement('textarea');
+      temp.value = text;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      showToast("单项复制成功");
+    }
+  }
+});
+
+// 绑定基础事件
+sourceText.oninput = calcAll;
+clearBtn.onclick = clearAll;
+demoBtn.onclick = loadDemo;
+copyAllBtn.onclick = copyAllResult;
+
+// 主题切换
+function initTheme(){
+  const save = localStorage.getItem(STORAGE_KEY);
+  if(save === "dark"){
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }else{
+    document.documentElement.removeAttribute("data-theme");
+    themeBtn.innerText = "🌙";
+  }
+}
+themeBtn.onclick = ()=>{
+  const dark = document.documentElement.hasAttribute("data-theme");
+  if(dark){
+    localStorage.setItem(STORAGE_KEY,"light");
+    document.documentElement.removeAttribute("data-theme");
+    themeBtn.innerText = "🌙";
+  }else{
+    localStorage.setItem(STORAGE_KEY,"dark");
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }
+};
+backBtn.onclick = ()=>window.location.href="./index.html";
+
+initTheme();
+loadDemo();
+</script>
+</body>
+</html>

@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>图片尺寸调整</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:8px;
+  font-weight:600;
+  font-size:24px;
+}
+.sub-title{
+  text-align:center;
+  font-size:14px;
+  color:var(--text-secondary);
+  margin-bottom:28px;
+}
+/* 上传区域 */
+.upload-area{
+  border:2px dashed var(--border-base);
+  border-radius:var(--radius-md);
+  padding:40px 16px;
+  text-align:center;
+  cursor:pointer;
+  margin-bottom:24px;
+}
+.upload-area.active{
+  border-color:var(--primary);
+  background:var(--primary-light);
+}
+.upload-icon{
+  font-size:42px;
+  margin-bottom:10px;
+  color:var(--text-secondary);
+}
+input[type="file"]{
+  display:none;
+}
+.row-two{
+  display:flex;
+  gap:12px;
+  width:100%;
+  margin-bottom:16px;
+}
+.col-half{
+  flex:1;
+}
+.input-item{
+  width:100%;
+}
+label{
+  display:block;
+  margin-bottom:8px;
+  font-size:15px;
+  opacity:0.85;
+}
+input[type="number"],select{
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  color:inherit;
+  background: transparent;
+}
+html[data-theme="dark"] {
+  input[type="number"],select{
+    background: #273449;
+    color: #f3f4f6;
+  }
+  select option {
+    background: #1e293b;
+    color: #f3f4f6;
+  }
+}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+.check-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:20px;
+}
+.info-box{
+  padding:14px;
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+  margin-bottom:20px;
+}
+.info-line{
+  font-size:15px;
+  margin:6px 0;
+}
+.preview-box{
+  text-align:center;
+  margin-bottom:20px;
+}
+.preview-box img{
+  max-width:100%;
+  max-height:260px;
+  border-radius:var(--radius-md);
+}
+.btn-main{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:var(--radius-md);
+  font-size:16px;
+  background:var(--primary);
+  color:#fff;
+  cursor:pointer;
+  margin-bottom:10px;
+}
+.btn-orange{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:var(--radius-md);
+  font-size:16px;
+  background:var(--warn);
+  color:#fff;
+  cursor:pointer;
+  margin-bottom:20px;
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+  margin-top:24px;
+}
+/* 手机竖屏适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+  }
+  .row-two{
+    flex-direction:column;
+    gap:10px;
+  }
+  .upload-area{
+    padding:30px 12px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>图片尺寸调整</h2>
+  <div class="sub-title">调整图片宽高，支持锁定比例</div>
+
+  <div class="upload-area" id="uploadBox">
+    <div class="upload-icon">🖼️</div>
+    <div>选择图片 / 拖拽图片到此处</div>
+    <input type="file" id="fileInput" accept="image/jpg,image/jpeg,image/png,image/webp">
+  </div>
+
+  <div class="row-two">
+    <div class="col-half input-item">
+      <label>宽度 (px)</label>
+      <input type="number" min="1" id="wInput" value="">
+    </div>
+    <div class="col-half input-item">
+      <label>高度 (px)</label>
+      <input type="number" min="1" id="hInput" value="">
+    </div>
+  </div>
+
+  <div class="check-row">
+    <input type="checkbox" id="lockRatio" checked>
+    <label for="lockRatio">锁定比例</label>
+  </div>
+
+  <div class="input-item">
+    <label>输出格式</label>
+    <select id="formatSel">
+      <option value="image/jpeg">JPEG</option>
+      <option value="image/webp">WebP</option>
+      <option value="image/png">PNG</option>
+    </select>
+  </div>
+
+  <button class="btn-main" id="resizeBtn" disabled>生成调整后图片</button>
+
+  <div class="info-box" id="infoWrap" style="display:none;">
+    <div class="info-line">原图尺寸：<span id="oriSize">--</span></div>
+    <div class="info-line">原图大小：<span id="oriByte">--</span></div>
+    <div class="info-line">调整后大小：<span id="newByte">--</span></div>
+  </div>
+
+  <div class="preview-box" id="previewWrap" style="display:none;">
+    <img id="previewImg" alt="预览">
+  </div>
+
+  <button class="btn-orange" id="downloadBtn" style="display:none;">下载图片</button>
+
+  <div class="tip">
+    使用说明：本地浏览器处理图片不上传服务器；勾选锁定比例修改宽度自动同步高度，取消可自由拉伸尺寸；PNG为无损格式，JPG/WebP可缩小文件体积。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// DOM
+const uploadBox = document.getElementById("uploadBox");
+const fileInput = document.getElementById("fileInput");
+const wInput = document.getElementById("wInput");
+const hInput = document.getElementById("hInput");
+const lockRatio = document.getElementById("lockRatio");
+const formatSel = document.getElementById("formatSel");
+const resizeBtn = document.getElementById("resizeBtn");
+const infoWrap = document.getElementById("infoWrap");
+const oriSize = document.getElementById("oriSize");
+const oriByte = document.getElementById("oriByte");
+const newByte = document.getElementById("newByte");
+const previewWrap = document.getElementById("previewWrap");
+const previewImg = document.getElementById("previewImg");
+const downloadBtn = document.getElementById("downloadBtn");
+
+let originImg = null;
+let originW = 0;
+let originH = 0;
+let originFile = null;
+let resBlob = null;
+let resUrl = "";
+
+// 字节格式化
+function formatByte(b) {
+  if (b < 1024) return b + " B";
+  if (b < 1024 * 1024) return (b / 1024).toFixed(2) + " KB";
+  return (b / 1024 / 1024).toFixed(2) + " MB";
+}
+
+// 拖拽
+uploadBox.addEventListener("dragover", e=>{e.preventDefault(); uploadBox.classList.add("active");});
+uploadBox.addEventListener("dragleave", ()=>uploadBox.classList.remove("active"));
+uploadBox.addEventListener("drop", e=>{
+  e.preventDefault();
+  uploadBox.classList.remove("active");
+  const f = e.dataTransfer.files[0];
+  if(f) handleFile(f);
+});
+uploadBox.onclick = ()=>fileInput.click();
+file.onchange = ()=>{
+  if(fileInput.files[0]) handleFile(fileInput.files[0]);
+};
+
+// 加载原图
+function handleFile(file){
+  originFile = file;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      originImg = img;
+      originW = img.width;
+      originH = img.height;
+      wInput.value = originW;
+      hInput.value = originH;
+      oriSize.innerText = originW + " × " + originH;
+      oriByte.innerText = formatByte(file.size);
+      resizeBtn.disabled = false;
+      infoWrap.style.display = "block";
+      previewImg.src = e.target.result;
+      previewWrap.style.display = "block";
+      downloadBtn.style.display = "none";
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// 锁定比例联动宽高
+wInput.oninput = ()=>{
+  if(!lockRatio.checked || !originImg) return;
+  const w = Number(w.value);
+  if(isNaN(w) || w <= 0) return;
+  const ratio = originH / originW;
+  hInput.value = Math.round(w * ratio);
+};
+hInput.oninput = ()=>{
+  if(!lockRatio.checked || !originImg) return;
+  const h = Number(h.value);
+  if(isNaN(h) || h <= 0) return;
+  const ratio = originW / originH;
+  wInput.value = Math.round(h * ratio);
+};
+
+// 调整尺寸核心
+async function resizeImage(){
+  const targetW = Number(wInput.value);
+  const targetH = Number(hInput.value);
+  const mime = formatSel.value;
+  if(isNaN(targetW) || isNaN(targetH) || targetW<=0 || targetH<=0) return alert("请输入合法宽高");
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = targetW;
+  canvas.height = targetH;
+  // JPG白底
+  if(mime === "image/jpeg"){
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0,0,targetW,targetH);
+  }
+  ctx.drawImage(originImg,0,0,targetW,targetH);
+  return new Promise(res=>{
+    canvas.toBlob(b=>res(b), mime, 0.92);
+  });
+}
+
+resizeBtn.onclick = async ()=>{
+  resBlob = await resizeImage();
+  resUrl = URL.createObject(resBlob);
+  newByte.innerText = formatByte(resBlob.size);
+  previewImg.src = resUrl;
+  previewWrap.style.display = "block";
+  downloadBtn.style.display = "block";
+};
+
+// 下载
+downloadBtn.onclick = ()=>{
+  if(!resBlob) return;
+  const a = document.createElement("a");
+  const ext = formatSel.value.split("/")[1];
+  a.download = "resize_" + originFile.name.replace(/\.\w+$/,".") + ext;
+  a.href = resUrl;
+  a.click();
+  URL.revokeObjectURL(resUrl);
+};
+
+initTheme();
+</script>
+</body>
+</html>

@@ -12,6 +12,7 @@
             --primary-light: #dcfce7;
             --header-bg: transparent;
             --warn: #f97316;
+            --danger: #ef4444;
             --nav-btn-bg: #ffffff;
             --nav-btn-border: #e5e7eb;
             --nav-btn-text: #222222;
@@ -97,7 +98,7 @@
             text-decoration: none;
             color: inherit;
         }
-        button {
+        button, select {
             font-family: inherit;
             font-size: inherit;
             border: none;
@@ -190,7 +191,7 @@
             margin: 20px 0 30px;
         }
         .page-head h1 {
-            font-size: calc(36px * var(--desktop-font-ratio));
+            font-size: calc(30px * var(--desktop-font-ratio));
             margin-bottom: 12px;
             color: var(--text-main);
         }
@@ -211,26 +212,51 @@
             box-shadow: var(--shadow-sm);
             margin-bottom: 24px;
         }
-        .card-title {
-            font-size: calc(22px * var(--desktop-font-ratio));
-            font-weight: bold;
-            color: var(--text-main);
+        /* 顶部操作栏 左右分布 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .left-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .right-setting {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        /* 双栏布局 */
+        .two-col-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
             margin-bottom: 16px;
         }
-        .input-row {
+        .col-block {
             display: flex;
+            flex-direction: column;
             gap: 10px;
-            margin-bottom: 16px;
+        }
+        .col-head {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
         }
-        .input-row label {
-            white-space: nowrap;
+        .col-title {
+            font-weight: 600;
             color: var(--text-main);
         }
-        .input-row input[type="text"] {
-            flex: 1;
+        .col-btn-group {
+            display: flex;
+            gap: 8px;
         }
-        textarea, input[type="text"] {
+        textarea, input[type="text"], select {
             width: 100%;
             padding: 12px 16px;
             border: 1px solid var(--border-base);
@@ -243,24 +269,26 @@
             transition: var(--transition);
             font-family: Consolas, monospace;
         }
-        textarea:focus, input[type="text"]:focus {
+        textarea {
+            min-height: 420px;
+        }
+        textarea:focus, input[type="text"]:focus, select:focus {
             border-color: var(--primary);
             box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
         }
-        .input-block {
-            margin-bottom: 16px;
+        .info-row {
+            display:flex;
+            gap:16px;
+            margin-top:12px;
+            flex-wrap:wrap;
+            font-size:14px;
+            color:var(--text-secondary);
         }
-        .input-label {
-            display: block;
-            color: var(--text-main);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        .btn-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 20px;
+        .info-item{
+            padding:4px 10px;
+            background:var(--key-bg);
+            border-radius:var(--key-radius);
+            color:var(--key-text);
         }
         .op-btn {
             height: 44px;
@@ -272,7 +300,12 @@
             font-size: 15px;
             white-space: nowrap;
         }
-        .op-btn.primary {
+        .op-btn.primary-purple {
+            border-color: #8b5cf6;
+            background: rgba(139, 92, 246, 0.12);
+            color: #8b5cf6;
+        }
+        .op-btn.primary-green {
             border-color: var(--primary);
             background: var(--primary-light);
             color: var(--primary);
@@ -291,30 +324,13 @@
             background: #fef2f2;
             color: #ef4444;
         }
-        .info-card-section {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 18px;
-            margin-top: 40px;
-        }
-        .info-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-base);
-            border-radius: var(--radius-lg);
-            padding: 18px 20px;
-            box-shadow: var(--shadow-sm);
-        }
-        .info-card h3 {
-            font-size: calc(32px * var(--desktop-font-ratio));
-            font-weight: bold;
-            color: var(--text-main);
-            margin-bottom: 16px;
-            line-height: 1.3;
-        }
-        .info-card p {
-            font-size: calc(17px * var(--desktop-font-ratio));
-            line-height: 1.8;
-            color: var(--text-secondary);
+        .err-tip {
+            color: #ef4444;
+            margin: 8px 0;
+            font-size: 14px;
+            padding: 6px 10px;
+            background: rgba(239,68,68,0.08);
+            border-radius: var(--radius-sm);
         }
         /* 复制弹窗 */
         .toast-copy {
@@ -366,10 +382,18 @@
         html[data-theme="dark"] .toast-text {
             color: #4ade80;
         }
-        .err-tip {
-            color: #ef4444;
-            margin: 8px 0;
-            font-size: 14px;
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .two-col-wrap {
+                grid-template-columns: 1fr;
+            }
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            textarea {
+                min-height: 280px;
+            }
         }
         @media (max-width: 640px) {
             body {
@@ -390,12 +414,6 @@
             .page-head .desc-text {
                 font-size: 15px;
             }
-            .info-card h3 {
-                font-size: 26px;
-            }
-            .info-card p {
-                font-size: 17px;
-            }
             .op-btn {
                 font-size: 15px;
             }
@@ -404,15 +422,6 @@
             }
             .toast-text {
                 font-size: 20px;
-            }
-            .btn-row {
-                flex-wrap: wrap;
-            }
-            .input-row {
-                flex-wrap: wrap;
-            }
-            .info-card-section {
-                grid-template-columns: 1fr;
             }
         }
         @media screen and (max-width:767px) and (orientation:portrait){
@@ -438,50 +447,69 @@
 <main class="container">
     <div class="page-head">
         <h1>JSON格式化工具</h1>
-        <div class="blue-tip">格式化/压缩/校验JSON，支持JSONPath查询，本地安全处理</div>
-        <div class="desc-text">接口调试、配置文件、日志JSON一键美化压缩</div>
+        <div class="blue-tip">格式化、压缩和验证JSON数据</div>
     </div>
 
     <div class="card-box">
-        <div class="btn-row">
-            <button class="op-btn primary" id="formatBtn">格式化(2空格缩进)</button>
-            <button class="op-btn primary" id="minifyBtn">压缩JSON</button>
-            <button class="op-btn primary" id="validateBtn">校验JSON</button>
-            <button class="op-btn warn" id="clearAll">清空全部</button>
+        <!-- 顶部操作栏 匹配截图布局 -->
+        <div class="top-bar">
+            <div class="left-buttons">
+                <button class="op-btn primary-purple" id="formatBtn">格式化</button>
+                <button class="op-btn primary-green" id="minifyBtn">压缩</button>
+                <button class="op-btn" id="demoBtn">示例</button>
+                <button class="op-btn warn" id="clearAll">清空</button>
+            </div>
+            <div class="right-setting">
+                <label>缩进：</label>
+                <select id="indentSelect">
+                    <option value="2">2 空格</option>
+                    <option value="4" selected>4 空格</option>
+                    <option value="\t">Tab</option>
+                </select>
+                <label style="display:flex;align-items:center;gap:6px;margin:0">
+                    <input type="checkbox" id="sortKey">排序键名
+                </label>
+            </div>
         </div>
-        <div class="input-row">
-            <label>JSONPath查询：</label>
-            <input type="text" id="jsonPathInput" placeholder="示例 $.list[0].name">
-            <button class="op-btn primary" id="jsonPathBtn">查询</button>
-        </div>
-        <div class="input-block">
-            <label class="input-label">原始JSON</label>
-            <textarea id="rawJson" rows="8" placeholder="粘贴压缩/杂乱JSON字符串"></textarea>
-        </div>
+
         <div class="err-tip" id="errorTip"></div>
-        <div class="input-block">
-            <label class="input-label">处理结果</label>
-            <textarea id="resultJson" rows="8" readonly></textarea>
-        </div>
-        <div class="btn-row">
-            <button class="op-btn primary" id="copyResult">复制结果</button>
+
+        <!-- 左右双栏输入输出 -->
+        <div class="two-col-wrap">
+            <!-- 左侧输入 -->
+            <div class="col-block">
+                <div class="col-head">
+                    <span class="col-title">输入JSON</span>
+                    <div class="col-btn-group">
+                        <button class="op-btn" id="pasteBtn">粘贴</button>
+                        <button class="op-btn warn" id="clearInputBtn">清空</button>
+                    </div>
+                </div>
+                <textarea id="rawJson" placeholder='在此输入 JSON，例如：
+{
+  "name": "John",
+  "age": 30
+}'></textarea>
+            </div>
+            <!-- 右侧输出 -->
+            <div class="col-block">
+                <div class="col-head">
+                    <span class="col-title">输出结果</span>
+                    <div class="col-btn-group">
+                        <button class="op-btn" id="copyResult">复制</button>
+                    </div>
+                </div>
+                <textarea id="resultJson" readonly placeholder="格式化后的 JSON 将显示在这里..."></textarea>
+                <!-- 统计信息 -->
+                <div class="info-row">
+                    <span class="info-item">字符：<span id="charCount">0</span></span>
+                    <span class="info-item">行数：<span id="lineCount">0</span></span>
+                    <span class="info-item">大小：<span id="byteCount">0 B</span></span>
+                </div>
+            </div>
         </div>
     </div>
-
-    <div class="info-card-section">
-        <div class="info-card">
-            <h3>什么是JSON</h3>
-            <p>JSON是轻量文本数据格式，独立于编程语言，用于前后端接口、配置、消息传输，由对象、数组、字符串、数字等组成。</p>
-        </div>
-        <div class="info-card">
-            <h3>工具功能</h3>
-            <p>JSON美化格式化、压缩去空格、语法校验、JSONPath字段提取，所有运算在浏览器本地，数据不上传服务器。</p>
-        </div>
-        <div class="info-card">
-            <h3>使用提示</h3>
-            <p>校验功能可定位JSON语法逗号、引号错误；JSONPath适合快速提取数组/对象指定字段。</p>
-        </div>
-    </main>
+</main>
 
 <div class="toast-copy" id="copyToast">
     <div class="toast-icon">✓</div>
@@ -489,7 +517,7 @@
 </div>
 
 <script>
-    // 明暗主题统一逻辑
+    // 明暗主题统一逻辑（保留原有不变）
     const htmlRoot = document.documentElement;
     const themeBtn = document.getElementById("themeToggle");
     const mediaDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -512,7 +540,7 @@
         const current = htmlRoot.hasAttribute("data-theme") ? "dark" : "light";
         const next = current === "dark" ? "light" : "dark";
         localStorage.setItem(STORAGE_KEY, next);
-        apply(next);
+        applyTheme(next);
     }
     mediaDark.addEventListener("change", e => {
         if (!localStorage.getItem(STORAGE_KEY)) applyTheme(e.matches ? "dark" : "light");
@@ -554,96 +582,133 @@
     const errorTip = document.getElementById('errorTip');
     const formatBtn = document.getElementById('formatBtn');
     const minifyBtn = document.getElementById('minifyBtn');
-    const validateBtn = document.getElementById('clearAll');
+    const demoBtn = document.getElementById('demoBtn');
     const clearAll = document.getElementById('clearAll');
     const copyResult = document.getElementById('copyResult');
-    const jsonPathInput = document.getElementById('jsonPathInput');
-    const jsonPathBtn = document.getElementById('jsonPathBtn');
+    const pasteBtn = document.getElementById('pasteBtn');
+    const clearInputBtn = document.getElementById('clearInputBtn');
+    const indentSelect = document.getElementById('indentSelect');
+    const sortKey = document.getElementById('sortKey');
+    const charCount = document.getElementById('charCount');
+    const lineCount = document.getElementById('lineCount');
+    const byteCount = document.getElementById('byteCount');
 
-    // 清空
+    // 示例JSON
+    const demoJson = `{
+  "username": "张三",
+  "age": 26,
+  "isVip": true,
+  "balance": 12580.66,
+  "hobby": ["看书", "爬山", "编程"],
+  "address": {
+    "province": "辽宁",
+    "city": "沈阳",
+    "detail": "浑南XX小区12号楼"
+  },
+  "orderList": [
+    {
+      "orderId": 10001,
+      "goodsName": "键盘",
+      "price": 129
+    },
+    {
+      "orderId": 10002,
+      "goodsName": "显示器",
+      "price": 899
+    }
+  ]
+}`;
+
+    // 获取当前缩进值
+    function getIndent() {
+        const val = indentSelect.value;
+        return val === "\t" ? "\t" : Number(val);
+    }
+
+    // 更新统计信息
+    function updateStats(text) {
+        const chars = text.length;
+        const lines = text.split('\n').length;
+        const bytes = new Blob([text]).size;
+        charCount.textContent = chars;
+        lineCount.textContent = lines;
+        byteCount.textContent = bytes + " B";
+    }
+
+    // 递归排序对象键
+    function sortObject(obj) {
+        if (Array.isArray(obj)) return obj.map(item => sortObject(item));
+        if (obj && typeof obj === "object") {
+            const sorted = {};
+            Object.keys(obj).sort().forEach(k => sorted[k] = sortObject(obj[k]));
+            return sorted;
+        }
+        return obj;
+    }
+
+    // 通用处理逻辑
+    function handleOperate(isMinify) {
+        errorTip.textContent = "";
+        const text = rawJson.value.trim();
+        if (!text) {
+            resultJson.value = "";
+            updateStats("");
+            return;
+        }
+        try {
+            let data = JSON.parse(text);
+            if (sortKey.checked) data = sortObject(data);
+            let out;
+            const indent = getIndent();
+            if (isMinify) out = JSON.stringify(data);
+            else out = JSON.stringify(data, null, indent);
+            resultJson.value = out;
+            updateStats(out);
+        } catch (e) {
+            errorTip.textContent = "JSON语法错误：" + e.message;
+            resultJson.value = "";
+            updateStats("");
+        }
+    }
+
+    // 格式化按钮
+    formatBtn.onclick = () => handleOperate(false);
+    // 压缩按钮
+    minifyBtn.onclick = () => handleOperate(true);
+    // 示例按钮
+    demoBtn.onclick = () => {
+        rawJson.value = demoJson;
+        resultJson.value = "";
+        errorTip.textContent = "";
+        updateStats("");
+    };
+    // 全局清空
     clearAll.onclick = () => {
         rawJson.value = "";
         resultJson.value = "";
         errorTip.textContent = "";
-    }
-    // 格式化2空格
-    formatBtn.onclick = () => {
-        errorTip.textContent = "";
-        const text = rawJson.value.trim();
-        if (!text) return;
+        updateStats("");
+    };
+    // 清空输入框
+    clearInputBtn.onclick = () => {
+        rawJson.value = "";
+    };
+    // 粘贴按钮
+    pasteBtn.onclick = async () => {
         try {
-            const obj = JSON.parse(text);
-            resultJson.value = JSON.stringify(obj, null, 2);
-        } catch (e) {
-            errorTip.textContent = "JSON语法错误：" + e.message;
-            resultJson.value = "";
+            const clipText = await navigator.clipboard.readText();
+            rawJson.value = clipText;
+        } catch (err) {
+            showToast("浏览器粘贴权限受限，请手动粘贴");
         }
-    }
-    // 压缩
-    minifyBtn.onclick = () => {
-        errorTip.textContent = "";
-        const text = rawJson.value.trim();
-        if (!text) return;
-        try {
-            const obj = JSON.parse(text);
-            resultJson.value = JSON.stringify(obj);
-        } catch (e) {
-            errorTip.textContent = "JSON语法错误：" + e.message;
-            resultJson.value = "";
-        }
-    }
-    // 校验
-    validateBtn.onclick = () => {
-        errorTip.textContent = "";
-        const text = rawJson.value.trim();
-        if (!text) return;
-        try {
-            JSON.parse(text);
-            errorTip.textContent = "✅ JSON格式合法";
-        } catch (e) {
-            errorTip.textContent = "❌ JSON语法错误：" + e.message;
-        }
-    }
-    // 复制结果
+    };
+    // 复制输出结果
     copyResult.onclick = () => {
         const val = resultJson.value.trim();
         if (!val) return;
         copyStr(val);
         showToast();
-    }
-    // 简易JSONPath实现（基础匹配 $.key / $.arr[0]）
-    function jsonPathQuery(obj, path) {
-        try {
-            let data = structuredClone(obj);
-            const paths = path.replace(/^\$/, '').split('.').filter(p=>p);
-            for(let p of paths) {
-                const arrMatch = p.match(/(\w+)\[(\d+)\]/);
-                if(arrMatch) {
-                    const key = arrMatch[1];
-                    const idx = Number(arrMatch[2]);
-                    data = data[key][idx];
-                } else {
-                    data = data[p];
-                }
-            }
-            return JSON.stringify(data,null,2);
-        } catch(err) {
-            return "JSONPath匹配失败："+err.message;
-        }
-    }
-    // JSONPath查询
-    jsonPathBtn.onclick = () => {
-        errorTip.textContent = "";
-        const jsonTxt = rawJson.value.trim();
-        const path = jsonPathInput.value.trim();
-        if(!jsonTxt || !path) return;
-        try {
-            const obj = JSON.parse(jsonTxt);
-            resultJson.value = jsonPathQuery(obj, path);
-        } catch(e) {
-            errorTip.textContent = "JSON解析失败："+e.message;
-        }
-    }
+    };
 </script>
 </body>
 </html>

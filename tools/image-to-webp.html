@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>图片转 WebP</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 0.375rem;
+      --space-sm: 0.625rem;
+      --space-md: 0.875rem;
+      --space-lg: 1rem;
+      --space-xl: 1.75rem;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 1rem;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 540px;
+      --card-gap: 1rem;
+      --card-min-width: 300px;
+      --header-safe-gap: 1rem;
+      --card-label-offset: 2.25rem;
+      --nav-line-height: 2.375rem;
+      --theme-btn-width: 2.25rem;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 clamp(1rem, 4vw, 1.75rem);
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: var(--theme-btn-width);
+  height: var(--theme-btn-width);
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--content-max-width);
+  background:var(--bg-card);
+  padding: clamp(1.5rem, 5vw, 2rem);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: var(--card-label-offset);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+  font-size: clamp(1.375rem, 4vw, 1.5rem);
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+/* 上传区域 */
+.upload-area{
+  border:2px dashed var(--border-base);
+  border-radius:var(--radius-md);
+  padding: clamp(1.875rem, 6vw, 2.5rem) clamp(0.75rem, 2vw, 1rem);
+  text-align:center;
+  cursor:pointer;
+  margin-bottom: var(--space-xl);
+}
+.upload-area.active{
+  border-color:var(--primary);
+  background:var(--primary-light);
+}
+.upload-icon{
+  font-size: clamp(2rem, 7vw, 2.625rem);
+  margin-bottom: var(--space-sm);
+  color:var(--text-secondary);
+}
+input[type="file"]{
+  display:none;
+}
+.input-item{
+  width:100%;
+  margin-bottom: var(--space-lg);
+}
+label{
+  display:block;
+  margin-bottom: var(--space-xs);
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+  opacity:0.85;
+}
+input[type="range"]{
+  width:100%;
+  padding: 0.8125rem 0;
+  background: transparent;
+}
+html[data-theme="dark"] input[type="range"]::-webkit-slider-thumb{
+  background:#34d399;
+}
+.info-box{
+  padding: clamp(0.875rem, 3vw, 1rem);
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+  margin-bottom: var(--space-lg);
+}
+.info-line{
+  font-size: clamp(0.8125rem, 2vw, 0.9375rem);
+  margin: var(--space-xs) 0;
+}
+.preview-box{
+  text-align:center;
+  margin-bottom: var(--space-lg);
+}
+.preview-box img{
+  max-width:100%;
+  max-height: clamp(16.25rem, 40vh, 260px);
+  border-radius:var(--radius-md);
+  object-fit: contain;
+}
+.btn-main{
+  width:100%;
+  padding: clamp(0.8125rem, 2vw, 0.875rem);
+  border:none;
+  border-radius:var(--radius-md);
+  font-size: clamp(0.9375rem, 2vw, 1rem);
+  background:var(--primary);
+  color:#fff;
+  cursor:pointer;
+  margin-bottom: var(--space-sm);
+}
+.btn-orange{
+  width:100%;
+  padding: clamp(0.8125rem, 2vw, 0.875rem);
+  border:none;
+  border-radius:var(--radius-md);
+  font-size: clamp(0.9375rem, 2vw, 1rem);
+  background:var(--warn);
+  color:#fff;
+  cursor:pointer;
+  margin-bottom: var(--space-xl);
+}
+.tip{
+  text-align:left;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+  margin-top: var(--space-xl);
+}
+.warn-text{
+  color:var(--danger);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  margin-bottom: var(--space-lg);
+  text-align:center;
+}
+
+/* 横屏平板/桌面适配 */
+@media screen and (min-width: 768px) {
+  :root {
+    --content-max-width: 620px;
+  }
+  .box {
+    padding: 2.25rem;
+  }
+  .upload-area {
+    padding: 2rem 1.25rem;
+  }
+  .preview-box img {
+    max-height: 30vh;
+  }
+}
+
+/* 手机竖屏专用 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:0.75rem;
+  }
+  .header-btn-back{
+    padding:0.375rem 0.5rem;
+    font-size:0.6875rem;
+    height: 2.125rem;
+  }
+  .header-btn-theme{
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+  .box{
+    padding: 1.5rem 1.25rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>图片转 WebP</h2>
+  <div class="sub-title">将图片转换为 WebP 格式</div>
+  <div class="warn-text" id="supportTip"></div>
+
+  <div class="upload-area" id="uploadBox">
+    <div class="upload-icon">🖼️</div>
+    <div>选择图片 / 拖拽图片到区域</div>
+    <input type="file" id="fileInput" accept="image/jpg,image/jpeg,image/png,image/gif">
+  </div>
+
+  <div class="input-item">
+    <label>输出质量: <span id="qualityVal">0.85</span></label>
+    <input type="range" id="qualitySlider" min="0.1" max="1" step="0.05" value="0.85">
+  </div>
+
+  <button class="btn-main" id="convertBtn" disabled>转换 WebP</button>
+
+  <div class="info-box" id="infoWrap" style="display:none;">
+    <div class="info-line">原图大小: <span id="origSize">--</span></div>
+    <div class="info-line">WebP大小: <span id="webpSize">--</span></div>
+    <div class="info-line">压缩节省: <span id="saveRate">--</span></div>
+  </div>
+
+  <div class="preview-box" id="previewWrap" style="display:none;">
+    <img id="previewImg" alt="预览图片">
+  </div>
+
+  <button class="btn-orange" id="downloadBtn" style="display:none;">下载 WebP</button>
+
+  <div class="tip">
+    使用说明：本地浏览器离线转换，不上传图片；WebP相比JPG/PNG体积更小，适合网页使用；质量越低文件越小，透明图可正常保留Alpha通道。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+const supportTip = document.getElementById("supportTip");
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// DOM
+const uploadBox = document.getElementById("uploadBox");
+const fileInput = document.getElementById("fileInput");
+const qualitySlider = document.getElementById("qualitySlider");
+const qualityVal = document.getElementById("qualityVal");
+const convertBtn = document.getElementById("convertBtn");
+const infoWrap = document.getElementById("infoWrap");
+const origSize = document.getElementById("origSize");
+const webpSize = document.getElementById("webpSize");
+const saveRate = document.getElementById("saveRate");
+const previewWrap = document.getElementById("previewWrap");
+const previewImg = document.getElementById("previewImg");
+const downloadBtn = document.getElementById("downloadBtn");
+
+let originFile = null;
+let webpBlob = null;
+let webpUrl = "";
+
+// 检测浏览器是否支持Canvas输出WebP
+async function checkWebPSupport() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  return new Promise(resolve => {
+    canvas.toBlob(b => {
+      if (!b) resolve(false);
+      resolve(b.type === "image/webp");
+    }, "image/webp", 0.5);
+  });
+}
+
+// 字节格式化
+function formatByte(b) {
+  if (b < 1024) return b + " B";
+  if (b < 1024 * 1024) return (b / 1024).toFixed(2) + " KB";
+  return (b / 1024 / 1024).toFixed(2) + " MB";
+}
+
+// 滑块实时显示质量
+qualitySlider.oninput = () => {
+  qualityVal.innerText = parseFloat(qualitySlider.value).toFixed(2);
+};
+
+// 拖拽上传
+uploadBox.addEventListener("dragover", e=>{
+  e.preventDefault();
+  uploadBox.classList.add("active");
+});
+uploadBox.addEventListener("dragleave", ()=>uploadBox.classList.remove("active"));
+uploadBox.addEventListener("drop", e=>{
+  e.preventDefault();
+  uploadBox.classList.remove("active");
+  const f = e.dataTransfer.files[0];
+  if(f) loadImageFile(f);
+});
+uploadBox.onclick = ()=>fileInput.click();
+fileInput.onchange = ()=>{
+  if(fileInput.files[0]) loadImageFile(fileInput.files[0]);
+};
+
+// 读取原图并预览
+function loadImageFile(file){
+  originFile = file;
+  convertBtn.disabled = false;
+  infoWrap.style.display = "none";
+  previewWrap.style.display = "none";
+  downloadBtn.style.display = "none";
+  origSize.innerText = formatByte(file.size);
+  const reader = new FileReader();
+  reader.onload = e=>{
+    previewImg.src = e.target.result;
+    previewWrap.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+}
+
+// 图片转WebP核心
+async function convertToWebP(file, quality){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img,0,0);
+      canvas.toBlob(b=>resolve(b), "image/webp", quality);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+convertBtn.onclick = async ()=>{
+  if(!originFile) return;
+  const q = parseFloat(qualitySlider.value);
+  webpBlob = await convertToWebP(originFile, q);
+  if(!webpBlob){
+    alert("当前浏览器不支持WebP转换");
+    return;
+  }
+  webpUrl = URL.createObjectURL(webpBlob);
+  // 修复NaN问题：originFile.size 正确取值，增加分母判断
+  const origByte = originFile.size;
+  const newByte = webpBlob.size;
+  let save = 0;
+  if (origByte > 0) {
+    save = ((origByte - newByte) / origByte * 100).toFixed(1);
+  }
+  webpSize.innerText = formatByte(newByte);
+  saveRate.innerText = save + "%";
+  infoWrap.style.display = "block";
+  previewImg.src = webpUrl;
+  downloadBtn.style.display = "block";
+};
+
+// 下载WebP文件
+downloadBtn.onclick = ()=>{
+  if(!webpBlob) return;
+  const a = document.createElement("a");
+  a.href = webpUrl;
+  const base = originFile.name.replace(/\.\w+$/, "");
+  a.download = base + ".webp";
+  a.click();
+  URL.revokeObjectURL(webpUrl);
+};
+
+// 初始化检测支持
+(async ()=>{
+  const support = await checkWebPSupport();
+  if(!support){
+    supportTip.innerText = "⚠️ 当前浏览器不支持输出WebP，转换会失败";
+  }else{
+    supportTip.innerText = "";
+  }
+})();
+
+initTheme();
+</script>
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>📋</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Markdown 表格生成器</title>
+<style>
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 0.375rem;
+      --space-sm: 0.625rem;
+      --space-md: 0.875rem;
+      --space-lg: 1rem;
+      --space-xl: 1.75rem;
+      --transition: all 0.22s ease;
+      --body-font-size: 1rem;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 620px;
+      --card-label-offset: 2.25rem;
+      --nav-line-height: 2.375rem;
+      --theme-btn-width: 2.25rem;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+  position: relative;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 clamp(1rem, 4vw, 1.75rem);
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: var(--theme-btn-width);
+  height: var(--theme-btn-width);
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--content-max-width);
+  background:var(--bg-card);
+  padding: clamp(1.5rem, 5vw, 2rem);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: var(--card-label-offset);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+  font-size: clamp(1.375rem, 4vw, 1.5rem);
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+.input-label{
+  display:block;
+  margin-bottom: var(--space-xs);
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+}
+textarea{
+  width:100%;
+  min-height: 140px;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-size:0.9rem;
+  resize: vertical;
+  margin-bottom: var(--space-lg);
+}
+html[data-theme="dark"] textarea{
+  background:#1f2937;
+}
+.radio-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem;
+  margin-bottom: var(--space-lg);
+  align-items:center;
+}
+.radio-item{
+  display:flex;
+  gap:0.3rem;
+  align-items:center;
+}
+.custom-input{
+  padding:0.5rem;
+  width:100px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-sm);
+  background:transparent;
+  color:var(--text-main);
+}
+.check-line{
+  display:flex;
+  gap:0.4rem;
+  align-items:center;
+  margin-bottom: var(--space-xl);
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: var(--space-lg);
+}
+.btn-row button{
+  flex:1;
+  min-width: 110px;
+  padding:0.85rem;
+  border-radius:var(--radius-md);
+  font-size:1rem;
+  cursor:pointer;
+}
+.btn-main{
+  border:none;
+  background:var(--primary);
+  color:#fff;
+}
+.btn-outline{
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+}
+.result-area{
+  width:100%;
+  min-height: 140px;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  white-space:pre-wrap;
+  resize: vertical;
+  margin-bottom: var(--space-xl);
+}
+html[data-theme="dark"] .result-area{
+  background:#1f2937;
+}
+.tip-desc{
+  margin-top: var(--space-xl);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  line-height:1.6;
+  opacity:0.7;
+}
+/* 无阻塞底部悬浮Toast，可穿透点击 */
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform: translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+  font-size:0.95rem;
+  z-index:9999;
+  pointer-events:none;
+  transition: all 0.2s ease;
+}
+.toast-box.show{
+  opacity:1;
+  transform: translateX(-50%) translateY(0);
+}
+html[data-theme="dark"] .toast-box{
+  background:#1e293b;
+}
+html:not([data-theme="dark"]) .toast-box{
+  background:#ffffff;
+}
+.toast-success{
+  color:var(--primary);
+}
+.toast-error{
+  color:var(--danger);
+}
+@media screen and (min-width: 768px) {
+  :root {
+    --content-max-width: 680px;
+  }
+  .box {
+    padding: 2.25rem;
+  }
+}
+@media screen and (max-width:767px) and (orientation:portrait){
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:0.75rem;
+  }
+  .header-btn-back{
+    padding:0.375rem 0.5rem;
+    font-size:0.6875rem;
+    height: 2.125rem;
+  }
+  .header-btn-theme{
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+  .box{
+    padding: 1.5rem 1.25rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>Markdown 表格生成器</h2>
+  <div class="sub-title">将文本快速转换为 Markdown 表格</div>
+
+  <label class="input-label">输入文本(每行一条记录)</label>
+  <textarea id="inputTxt" placeholder="姓名,年龄,城市
+张三,22,北京
+李四,25,上海"></textarea>
+
+  <label>分隔符</label>
+  <div class="radio-row">
+    <div class="radio-item">
+      <input type="radio" name="sep" value="," id="sepComma" checked>
+      <label for="sepComma">逗号</label>
+    </div>
+    <div class="radio-item">
+      <input type="radio" name="sep" value="\t" id="sepTab">
+      <label for="sepTab">制表符</label>
+    </div>
+    <div class="radio-item">
+      <input type="radio" name="sep" value="|" id="sepLine">
+      <label for="sepLine">竖线 |</label>
+    </div>
+    <div class="radio-item">
+      <input type="radio" name="sep" value="custom" id="sepCustom">
+      <label for="sepCustom">自定义</label>
+      <input class="custom-input" id="customSep" placeholder="符号">
+    </div>
+  </div>
+
+  <div class="check-line">
+    <input type="checkbox" id="useHeader" checked>
+    <label for="useHeader">首行作为表头</label>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-main" id="genBtn">生成表格</button>
+    <button class="btn-outline" id="demoBtn">加载演示</button>
+    <button class="btn-outline" id="clearBtn">清空内容</button>
+    <button class="btn-outline" id="copyBtn">复制结果</button>
+  </div>
+
+  <label class="input-label">Markdown 表格</label>
+  <textarea class="result-area" id="outputRes" readonly placeholder="生成后的表格代码"></textarea>
+
+  <div class="tip-desc">
+    使用说明：每行一条数据，选择对应分隔符，勾选首行表头即可一键生成标准Markdown表格，本地离线处理。
+  </div>
+</div>
+
+<div class="toast-box" id="toastText"></div>
+
+<script>
+// 原生ID获取，无封装选择器，杜绝DOM查找失败
+const inputTxt = document.getElementById('inputTxt');
+const outputRes = document.getElementById('outputRes');
+const genBtn = document.getElementById('genBtn');
+const demoBtn = document.getElementById('demoBtn');
+const clearBtn = document.getElementById('clearBtn');
+const copyBtn = document.getElementById('copyBtn');
+const toastText = document.getElementById('toastText');
+const useHeader = document.getElementById('useHeader');
+const sepComma = document.getElementById('sepComma');
+const sepTab = document.getElementById('sepTab');
+const sepLine = document.getElementById('sepLine');
+const sepCustom = document.getElementById('sepCustom');
+const customSep = document.getElementById('customSep');
+const themeToggle = document.getElementById('themeToggle');
+const backHome = document.getElementById('backHome');
+const htmlRoot = document.documentElement;
+const STORAGE_KEY = "site_theme_mode";
+
+// 悬浮轻提示
+function showToast(msg, success = true) {
+  toastText.className = "toast-box " + (success ? "toast-success" : "toast-error");
+  toastText.innerText = msg;
+  toastText.classList.add("show");
+  setTimeout(() => toastText.classList.remove("show"), 2000);
+}
+
+// 演示文本
+const demoText = "姓名,年龄,居住地\n小明,21,杭州\n小红,23,成都\n小刚,20,广州";
+
+// 获取当前分隔符
+function getSep() {
+  if (sepCustom.checked) return customSep.value || ",";
+  if (sepTab.checked) return "\t";
+  if (sepLine.checked) return "|";
+  return ",";
+}
+
+// 核心生成表格函数
+function generateTable() {
+  const raw = inputTxt.value.trim();
+  if (!raw) {
+    outputRes.value = "";
+    showToast("请输入文本数据", false);
+    return;
+  }
+  const sep = getSep();
+  const lines = raw.split("\n").filter(line => line.trim() !== "");
+  if (lines.length === 0) return;
+
+  const rows = lines.map(line => line.split(sep).map(cell => cell.trim()));
+  const mdArr = [];
+  if (useHeader.checked) {
+    const header = rows[0];
+    mdArr.push("| " + header.join(" | ") + " |");
+    const dashRow = header.map(() => "---");
+    mdArr.push("| " + dashRow.join(" | ") + " |");
+    for (let i = 1; i < rows.length; i++) {
+      mdArr.push("| " + rows[i].join(" | ") + " |");
+    }
+  } else {
+    for (const r of rows) {
+      mdArr.push("| " + r.join(" | ") + " |");
+    }
+  }
+  outputRes.value = mdArr.join("\n");
+}
+
+// 加载演示
+demoBtn.onclick = function() {
+  inputTxt.value = demoText;
+  sepComma.checked = true;
+  generateTable();
+  showToast("已加载演示数据");
+};
+
+// 清空按钮
+clearBtn.onclick = function() {
+  inputTxt.value = "";
+  outputRes.value = "";
+  showToast("已清空全部内容");
+};
+
+// 生成按钮
+genBtn.onclick = generateTable;
+
+// 复制结果
+copyBtn.onclick = async function() {
+  const val = outputRes.value;
+  if (!val) {
+    showToast("暂无表格可复制", false);
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(val);
+    showToast("✅ 复制成功");
+  } catch (err) {
+    const temp = document.createElement('textarea');
+    temp.value = val;
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    document.body.appendChild(temp);
+    temp.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(temp);
+    if (ok) {
+      showToast("✅ 复制成功");
+    } else {
+      showToast("❌ 复制失败，请手动选中", false);
+    }
+  }
+};
+
+// 实时监听输入、分隔符切换自动生成
+inputTxt.oninput = generateTable;
+sepComma.onchange = generateTable;
+sepTab.onchange = generateTable;
+sepLine.onchange = generateTable;
+sepCustom.onchange = generateTable;
+customSep.oninput = generateTable;
+useHeader.onchange = generateTable;
+
+// 返回首页
+backHome.onclick = function() {
+  window.location.href = "./index.html";
+};
+
+// 明暗主题切换
+function initTheme() {
+  const save = localStorage.getItem(STORAGE_KEY);
+  if (save === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerText = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerText = "🌙";
+  }
+}
+themeToggle.onclick = function() {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.innerText = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.innerText = "☀️";
+  }
+};
+
+// 页面初始化执行
+initTheme();
+generateTable();
+</script>
+</body>
+</html>

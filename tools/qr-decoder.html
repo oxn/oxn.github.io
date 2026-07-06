@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>二维码解码器</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:8px;
+  font-weight:600;
+  font-size:24px;
+}
+.sub-title{
+  text-align:center;
+  font-size:14px;
+  color:var(--text-secondary);
+  margin-bottom:28px;
+}
+/* 拖拽上传区域 */
+.upload-wrap{
+  border:2px dashed var(--border-base);
+  border-radius:var(--radius-md);
+  padding:40px 20px;
+  text-align:center;
+  cursor:pointer;
+  margin-bottom:24px;
+}
+.upload-wrap.active{
+  border-color:var(--primary);
+  background:var(--primary-light);
+}
+.upload-icon{
+  font-size:42px;
+  margin-bottom:12px;
+  color:var(--text-secondary);
+}
+.upload-text{
+  font-size:16px;
+}
+input[type="file"]{
+  display:none;
+}
+.result-box{
+  padding:20px;
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+  margin-bottom:20px;
+  display:none;
+}
+.result-label{
+  font-size:14px;
+  color:var(--text-secondary);
+  margin-bottom:8px;
+}
+.result-text{
+  word-break:break-all;
+  font-size:16px;
+  line-height:1.6;
+}
+.btn-row{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+}
+.btn{
+  flex:1;
+  padding:14px;
+  border:none;
+  border-radius:var(--radius-md);
+  font-size:16px;
+  cursor:pointer;
+}
+.btn-primary{
+  background:var(--primary);
+  color:#fff;
+}
+.btn-secondary{
+  background:var(--nav-btn-bg);
+  color:var(--text-main);
+  border:1px solid var(--border-base);
+}
+.btn-secondary:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+}
+/* 动画 */
+@keyframes pop {
+  0% {transform:scale(0.9);opacity:0;}
+  100% {transform:scale(1);opacity:1;}
+}
+.pop-animate{
+  animation:pop 0.3s ease-out forwards;
+}
+/* 手机竖屏适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+    font-size:14px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+  }
+  .btn-row{
+    flex-direction:column;
+    gap:8px;
+  }
+  .upload-wrap{
+    padding:30px 12px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>二维码解码器</h2>
+  <div class="sub-title">点击上传或拖拽图片</div>
+
+  <div class="upload-wrap" id="uploadArea">
+    <div class="upload-icon">🖼️</div>
+    <div class="upload-text">点击此处 / 拖拽图片到区域<br>支持 PNG、JPG、JPEG 格式</div>
+    <input type="file" id="fileInput" accept="image/png,image/jpg,image/jpeg">
+  </div>
+
+  <div class="result-box pop-animate" id="resultWrap">
+    <div class="result-label">识别结果：</div>
+    <div class="result-text" id="resultText"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="copyBtn">复制结果</button>
+    <button class="btn btn-secondary" id="clearBtn">清空</button>
+  </div>
+
+  <div class="tip">
+    使用说明：本地浏览器离线解析二维码，图片不会上传服务器；支持点击选择图片或拖拽上传，识别内容可一键复制，模糊图片可能识别失败。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+// 返回首页
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// DOM元素
+const uploadArea = document.getElementById("uploadArea");
+const fileInput = document.getElementById("fileInput");
+const resultWrap = document.getElementById("resultWrap");
+const resultText = document.getElementById("resultText");
+const copyBtn = document.getElementById("copyBtn");
+const clearBtn = document.getElementById("resultWrap");
+const realClear = document.getElementById("clearBtn");
+
+// 通用复制函数（兼容file/http）
+async function copyText(txt) {
+  if (!txt) return alert("暂无识别内容");
+  try{
+    await navigator.clipboard.writeText(txt);
+    alert("复制成功");
+  }catch(e){
+    const temp = document.createElement("textarea");
+    temp.value = txt;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    alert("已复制");
+  }
+}
+copyBtn.onclick = ()=>copyText(resultText.innerText);
+
+// 清空界面
+realClear.onclick = ()=>{
+  fileInput.value = "";
+  resultWrap.style.display = "none";
+  resultText.innerText = "";
+};
+
+// 点击唤起文件选择
+uploadArea.onclick = ()=>fileInput.click();
+
+// 拖拽高亮
+uploadArea.addEventListener("dragover",e=>{
+  e.preventDefault();
+  uploadArea.classList.add("active");
+})
+uploadArea.addEventListener("dragleave",()=>{
+  uploadArea.classList.remove("active");
+})
+uploadArea.addEventListener("drop",e=>{
+  e.preventDefault();
+  uploadArea.classList.remove("active");
+  const file = e.dataTransfer.files[0];
+  if(file) handleFile(file);
+})
+
+// 文件选择变更
+fileInput.addEventListener("change",()=>{
+  if(fileInput.files[0]) handleFile(fileInput.files[0]);
+})
+
+// 解析图片核心函数
+function handleFile(file){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img,0,0);
+      const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const qrRes = jsQR(imgData.data,imgData.width,imgData.height);
+      if(qrRes){
+        resultText.innerText = qrRes.data;
+        resultWrap.style.display = "block";
+      }else{
+        resultText.innerText = "未识别到二维码，请更换清晰图片";
+        resultWrap.style.display = "block";
+      }
+    }
+    img.src = e.target.result;
+  }
+  reader.readAsDataURL(file);
+}
+
+initTheme();
+</script>
+</body>
+</html>

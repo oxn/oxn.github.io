@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>🧹</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+:root {
+  --primary: #10b981;
+  --primary-light: #dcfce7;
+  --warn: #f97316;
+  --danger: #ef4444;
+  --nav-bg: #ffffff;
+  --nav-border: #e5e7eb;
+  --nav-text: #222222;
+  --text-main: #222222;
+  --text-sub: #555555;
+  --border-base: #e5e7eb;
+  --page-bg: #ffffff;
+  --card-bg: #ffffff;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+  --radius-md: 8px;
+  --space-md: 0.875rem;
+  --space-lg: 1.2rem;
+  --max-width: 1400px;
+  --transition: all 0.22s ease;
+}
+html[data-theme="dark"] {
+  --primary: #34d399;
+  --primary-light: rgba(52, 211, 153, 0.18);
+  --nav-bg: #1f2937;
+  --nav-border: #374151;
+  --nav-text: #f3f4f6;
+  --text-main: #f9fafb;
+  --text-sub: #d1d5db;
+  --border-base: #374151;
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body {
+  background: var(--page-bg);
+  color: var(--text-main);
+  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(1rem,4vw,1.75rem);
+  z-index:999;
+}
+.back-btn{
+  padding: 0.4375rem 0.625rem;
+  border:1px solid var(--nav-border);
+  border-radius:var(--radius-md);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor:pointer;
+}
+.back-btn:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.theme-btn{
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border:1px solid var(--nav-border);
+  border-radius: 50%;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor:pointer;
+  display: grid;
+  place-items: center;
+}
+.theme-btn:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--max-width);
+  margin:0 auto;
+  background:var(--card-bg);
+  padding: clamp(1.5rem,5vw,2rem);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+}
+h2{
+  text-align:center;
+  margin-bottom: 6px;
+  font-weight:600;
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-sub);
+  margin-bottom: 32px;
+}
+.opt-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1.5rem;
+  margin-bottom: var(--space-lg);
+  align-items:center;
+}
+.opt-item{
+  display:flex;
+  gap:0.4rem;
+  align-items:center;
+}
+.input-wrap{
+  margin-bottom: var(--space-lg);
+}
+.label{
+  display:block;
+  margin-bottom: 0.5rem;
+  font-weight:500;
+}
+textarea{
+  width:100%;
+  min-height: 30vh;
+  max-height: 70vh;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-family:monospace;
+  resize:vertical;
+  white-space:pre-wrap;
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: 20px;
+}
+.btn-row button{
+  flex:1;
+  min-width: 110px;
+  padding:0.85rem;
+  border-radius:var(--radius-md);
+  font-size:1rem;
+  cursor:pointer;
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+}
+.btn-row button:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.btn-main{
+  border:none;
+  background:var(--primary);
+  color:#fff;
+}
+.result-wrap{
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  padding:1rem;
+}
+.result-label{
+  font-size:0.85rem;
+  color:var(--text-sub);
+  margin-bottom:0.5rem;
+}
+#resultBox{
+  min-height: 20vh;
+  max-height: 60vh;
+  overflow:auto;
+  font-family:monospace;
+  white-space:pre-wrap;
+}
+.copy-mini{
+  padding:0.4rem 0.6rem;
+  font-size:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  cursor:pointer;
+  margin-top:10px;
+}
+.copy-mini:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.tip-desc{
+  color:var(--text-sub);
+  font-size:0.875rem;
+  line-height:1.6;
+  margin-top:var(--space-xl);
+}
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  background:var(--card-bg);
+  box-shadow:var(--shadow-lg);
+  font-size:0.95rem;
+  z-index:9999;
+  pointer-events:none;
+  transition:all 0.2s ease;
+}
+.toast-box.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.toast-success{
+  color:var(--primary);
+}
+.toast-error{
+  color:var(--danger);
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="back-btn" id="backBtn">← 返回首页</button>
+  <button class="theme-btn" id="themeBtn">🌙</button>
+</div>
+
+<div class="box">
+  <h2>文本清理器</h2>
+  <div class="sub-title">一键清理空格、空行和格式噪音</div>
+
+  <div class="opt-row">
+    <div class="opt-item">
+      <input type="checkbox" id="trimAll" checked>
+      <label for="trimAll">去掉首尾空格</label>
+    </div>
+    <div class="opt-item">
+      <input type="checkbox" id="mergeSpace" checked>
+      <label for="mergeSpace">合并多余空格</label>
+    </div>
+    <div class="opt-item">
+      <input type="checkbox" id="removeBlank" checked>
+      <label for="removeBlank">删除空行</label>
+    </div>
+    <div class="opt-item">
+      <input type="checkbox" id="mergeLine">
+      <label for="mergeLine">连续空行合并</label>
+    </div>
+  </div>
+
+  <div class="input-wrap">
+    <label class="label">原始文本</label>
+    <textarea id="sourceText" placeholder="粘贴复制后带多余空格、空行的杂乱文本"></textarea>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-outline" id="clearBtn">清空</button>
+    <button class="btn-outline" id="demoBtn">加载示例</button>
+    <button class="btn-main" id="cleanBtn">一键清理</button>
+  </div>
+
+  <div class="result-wrap">
+    <div class="result-label">清理结果</div>
+    <div id="resultBox"></div>
+    <button class="copy-mini" id="copyResultBtn">复制结果</button>
+  </div>
+
+  <div class="tip-desc">
+    使用说明：支持批量去除每行首尾空白、压缩连续空格、删除空行、多空行合并；粘贴网页复制的杂乱文本一键标准化排版，结果可直接复制。
+  </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+const sourceText = document.getElementById('sourceText');
+const resultBox = document.getElementById('resultBox');
+const trimAll = document.getElementById('trimAll');
+const mergeSpace = document.getElementById('mergeSpace');
+const removeBlank = document.getElementById('removeBlank');
+const mergeLine = document.getElementById('mergeLine');
+const clearBtn = document.getElementById('clearBtn');
+const demoBtn = document.getElementById('demoBtn');
+const cleanBtn = document.getElementById('cleanBtn');
+const copyResultBtn = document.getElementById('copyResultBtn');
+const toastBox = document.getElementById('toastBox');
+const themeBtn = document.getElementById('themeBtn');
+const backBtn = document.getElementById('backBtn');
+const STORAGE_KEY = "site_theme_mode";
+let lastResult = "";
+
+function showToast(msg, success = true) {
+  toastBox.className = "toast-box " + (success ? "toast-success" : "toast-error");
+  toastBox.innerText = msg;
+  toastBox.classList.add("show");
+  setTimeout(() => toastBox.classList.remove("show"), 2000);
+}
+
+function runClean() {
+  let raw = sourceText.value;
+  let lines = raw.split('\n');
+
+  // 每行首尾去空格
+  if (trimAll.checked) {
+    lines = lines.map(s => s.trim());
+  }
+  // 合并行内多个空格为单个
+  if (mergeSpace.checked) {
+    lines = lines.map(s => s.replace(/\s+/g, ' '));
+  }
+  // 直接删除全部空行
+  if (removeBlank.checked) {
+    lines = lines.filter(s => s !== "");
+  }
+  // 仅合并连续空行（保留单行空行）
+  if (mergeLine.checked && !removeBlank.checked) {
+    const out = [];
+    let lastEmpty = false;
+    for (let l of lines) {
+      const empty = l.trim() === "";
+      if (!(empty && lastEmpty)) out.push(l);
+      lastEmpty = empty;
+    }
+    lines = out;
+  }
+
+  const output = lines.join('\n');
+  resultBox.innerText = output;
+  lastResult = output;
+  showToast("清理完成");
+}
+
+function clearAll() {
+  sourceText.value = "";
+  resultBox.innerText = "";
+  lastResult = "";
+}
+
+function loadDemo() {
+  sourceText.value = `   前端开发    学习路线
+
+
+  HTML  CSS      JavaScript
+
+
+Vue    React     小程序`;
+  runClean();
+}
+
+async function copyResult() {
+  if (!lastResult) return showToast("暂无清理结果", false);
+  try {
+    await navigator.clipboard.writeText(lastResult);
+    showToast("复制成功");
+  } catch (e) {
+    const temp = document.createElement('textarea');
+    temp.value = lastResult;
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showToast("复制成功");
+  }
+}
+
+cleanBtn.onclick = runClean;
+clearBtn.onclick = clearAll;
+demoBtn.onclick = loadDemo;
+copyResultBtn.onclick = copyResult;
+
+// 主题切换
+function initTheme() {
+  const save = localStorage.getItem(STORAGE_KEY);
+  if (save === "dark") {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeBtn.textContent = "☀️";
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    themeBtn.textContent = "🌙";
+  }
+}
+themeBtn.onclick = () => {
+  const dark = document.documentElement.hasAttribute('data-theme');
+  if (dark) {
+    localStorage.setItem(STORAGE_KEY, 'light');
+    document.documentElement.removeAttribute('data-theme');
+    themeBtn.textContent = "🌙";
+  } else {
+    localStorage.setItem(STORAGE_KEY, 'dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeBtn.textContent = "☀️";
+  }
+};
+backBtn.onclick = () => window.location.href = "./index.html";
+
+initTheme();
+loadDemo();
+</script>
+</body>
+</html>

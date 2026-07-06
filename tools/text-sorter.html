@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>📊</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>文本排序工具</title>
+<style>
+:root {
+  --primary: #10b981;
+  --primary-light: #dcfce7;
+  --warn: #f97316;
+  --danger: #ef4444;
+  --nav-bg: #ffffff;
+  --nav-border: #e5e7eb;
+  --nav-text: #222222;
+  --text-main: #222222;
+  --text-sub: #555555;
+  --border-base: #e5e7eb;
+  --page-bg: #ffffff;
+  --card-bg: #ffffff;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+  --radius-md: 8px;
+  --space-md: 0.875rem;
+  --space-lg: 1.2rem;
+  --max-width: 1400px;
+  --transition: all 0.22s ease;
+}
+html[data-theme="dark"] {
+  --primary: #34d399;
+  --primary-light: rgba(52, 211, 153, 0.18);
+  --nav-bg: #1f2937;
+  --nav-border: #374151;
+  --nav-text: #f3f4f6;
+  --text-main: #f9fafb;
+  --text-sub: #d1d5db;
+  --border-base: #374151;
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  background: var(--page-bg);
+  color: var(--text-main);
+  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(1rem,4vw,1.75rem);
+  z-index:999;
+}
+.back-btn{
+  padding: 0.4375rem 0.625rem;
+  border:1px solid var(--nav-border);
+  border-radius:var(--radius-md);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor:pointer;
+}
+.back-btn:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.theme-btn{
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border:1px solid var(--nav-border);
+  border-radius: 50%;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor:pointer;
+  display: grid;
+  place-items: center;
+}
+.theme-btn:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--max-width);
+  margin:0 auto;
+  background:var(--card-bg);
+  padding: clamp(1.5rem,5vw,2rem);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-sub);
+  margin-bottom: var(--space-xl);
+}
+.opt-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1.5rem;
+  margin-bottom: var(--space-lg);
+  align-items:center;
+}
+.opt-item{
+  display:flex;
+  gap:0.4rem;
+  align-items:center;
+}
+.sort-radio{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem;
+  margin-bottom:1rem;
+}
+.input-wrap{
+  margin-bottom: var(--space-lg);
+}
+.label{
+  display:block;
+  margin-bottom: 0.5rem;
+  font-weight:500;
+}
+#sourceText{
+  width:100%;
+  min-height: 30vh;
+  max-height: 70vh;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-family:monospace;
+  resize:vertical;
+  white-space:pre-wrap;
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: var(--space-xl);
+}
+.btn-row button{
+  flex:1;
+  min-width: 110px;
+  padding:0.85rem;
+  border-radius:var(--radius-md);
+  font-size:1rem;
+  cursor:pointer;
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+}
+.btn-row button:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.btn-main{
+  border:none;
+  background:var(--primary);
+  color:#fff;
+}
+.result-wrap{
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  padding:1rem;
+}
+.result-label{
+  font-size:0.85rem;
+  color:var(--text-sub);
+  margin-bottom:0.5rem;
+}
+#resultBox{
+  min-height:20vh;
+  max-height:60vh;
+  overflow:auto;
+  font-family:monospace;
+  white-space:pre-wrap;
+}
+.copy-mini{
+  margin-top:0.6rem;
+  padding:0.3rem 0.6rem;
+  font-size:0.75rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  cursor:pointer;
+}
+.copy-mini:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.tip-desc{
+  margin-top: var(--space-xl);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color:var(--text-sub);
+  line-height:1.6;
+}
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  background:var(--card-bg);
+  box-shadow:var(--shadow-lg);
+  z-index:9999;
+  pointer-events:none;
+  transition:all 0.2s ease;
+}
+.toast-box.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="back-btn" id="backBtn">← 返回首页</button>
+  <button class="theme-btn" id="themeBtn">🌙</button>
+</div>
+
+<div class="box">
+  <h2>文本排序工具</h2>
+  <div class="sub-title">按行排序，支持数字、去重</div>
+
+  <div class="sort-radio">
+    <div class="opt-item">
+      <input type="radio" name="sortType" value="asc" id="sortAsc" checked>
+      <label for="sortAsc">升序</label>
+    </div>
+    <div class="opt-item">
+      <input type="radio" name="sortType" value="desc" id="sortDesc">
+      <label for="sortDesc">降序</label>
+    </div>
+    <div class="opt-item">
+      <input type="radio" name="sortType" value="num" id="sortNum">
+      <label for="sortNum">数字排序</label>
+    </div>
+  </div>
+
+  <div class="opt-row">
+    <div class="opt-item">
+      <input type="checkbox" id="trimLine">
+      <label for="trimLine">去掉首尾空格</label>
+    </div>
+    <div class="opt-item">
+      <input type="checkbox" id="clearEmpty">
+      <label for="clearEmpty">移除空行</label>
+    </div>
+    <div class="opt-item">
+      <input type="checkbox" id="doDistinct">
+      <label for="doDistinct">去重</label>
+    </div>
+  </div>
+
+  <div class="input-wrap">
+    <label class="label">原始文本</label>
+    <textarea id="sourceText" placeholder="每行一条内容，输入待排序文本"></textarea>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-outline" id="clearBtn">清空</button>
+    <button class="btn-outline" id="demoBtn">加载示例</button>
+    <button class="btn-main" id="sortBtn">执行排序</button>
+  </div>
+
+  <div class="result-wrap">
+    <div class="result-label">排序结果</div>
+    <div id="resultBox"></div>
+    <button class="copy-mini" id="copyResultBtn">复制结果</button>
+  </div>
+
+  <div class="tip-desc">
+    使用说明：支持普通文字升序、降序、纯数字排序；可自动去除首尾空格、清空空行、去除重复行，处理完成一键复制全部内容。
+  </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+const sourceText = document.getElementById('sourceText');
+const resultBox = document.getElementById('resultBox');
+const sortAsc = document.getElementById('sortAsc');
+const sortDesc = document.getElementById('sortDesc');
+const sortNum = document.getElementById('sortNum');
+const trimLine = document.getElementById('trimLine');
+const clearEmpty = document.getElementById('clearEmpty');
+const doDistinct = document.getElementById('doDistinct');
+const clearBtn = document.getElementById('clearBtn');
+const demoBtn = document.getElementById('demoBtn');
+const sortBtn = document.getElementById('sortBtn');
+const copyResultBtn = document.getElementById('copyResultBtn');
+const toastBox = document.getElementById('toastBox');
+const themeBtn = document.getElementById('themeBtn');
+const backBtn = document.getElementById('backBtn');
+const STORAGE_KEY = "site_theme_mode";
+let lastResult = "";
+
+function showToast(msg){
+  toastBox.innerText = msg;
+  toastBox.classList.add("show");
+  setTimeout(()=>toastBox.classList.remove("show"),2000);
+}
+
+function runSort(){
+  let rawLines = sourceText.value.split('\n');
+  let lines = rawLines.map(item => item);
+
+  // 去除首尾空格
+  if(trimLine.checked){
+    lines = lines.map(s => s.trim());
+  }
+  // 过滤空行
+  if(clearEmpty.checked){
+    lines = lines.filter(s => s !== "");
+  }
+  // 去重
+  if(doDistinct.checked){
+    const set = new Set(lines);
+    lines = Array.from(set);
+  }
+
+  // 排序逻辑
+  if(sortNum.checked){
+    lines.sort((a,b) => Number(a) - Number(b));
+  }else if(sortDesc.checked){
+    lines.sort((a,b) => b.localeCompare(a, undefined, {numeric:true, sensitivity:'base'}));
+  }else{
+    lines.sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+  }
+
+  const output = lines.join('\n');
+  resultBox.innerText = output;
+  lastResult = output;
+  showToast("排序完成");
+}
+
+function clearAll(){
+  sourceText.value = "";
+  resultBox.innerText = "";
+  lastResult = "";
+}
+
+function loadDemo(){
+  sourceText.value = "5\n2\n9\napple\nBanana\n3\napple";
+  runSort();
+}
+
+async function copyResult(){
+  if(!lastResult) return showToast("暂无排序结果");
+  try{
+    await navigator.clipboard.writeText(lastResult);
+    showToast("复制成功");
+  }catch(e){
+    const temp = document.createElement('textarea');
+    temp.value = lastResult;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showToast("复制成功");
+  }
+}
+
+sortBtn.onclick = runSort;
+clearBtn.onclick = clearAll;
+demoBtn.onclick = loadDemo;
+copyResultBtn.onclick = copyResult;
+
+// 主题
+function initTheme(){
+  const save = localStorage.getItem(STORAGE_KEY);
+  if(save === "dark"){
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }
+}
+themeBtn.onclick = ()=>{
+  const dark = document.documentElement.hasAttribute("data-theme");
+  if(dark){
+    localStorage.setItem(STORAGE_KEY,"light");
+    document.documentElement.removeAttribute("data-theme");
+    themeBtn.innerText = "🌙";
+  }else{
+    localStorage.setItem(STORAGE_KEY,"dark");
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }
+};
+backBtn.onclick = ()=>window.location.href="./index.html";
+
+initTheme();
+loadDemo();
+</script>
+</body>
+</html>

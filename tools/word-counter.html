@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>🔢</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>字数统计工具</title>
+<style>
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 0.375rem;
+      --space-sm: 0.625rem;
+      --space-md: 0.875rem;
+      --space-lg: 1rem;
+      --space-xl: 1.75rem;
+      --transition: all 0.22s ease;
+      --body-font-size: 1rem;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 620px;
+      --card-label-offset: 2.25rem;
+      --nav-line-height: 2.375rem;
+      --theme-btn-width: 2.25rem;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0.45);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+  position: relative;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 clamp(1rem, 4vw, 1.75rem);
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: var(--theme-btn-width);
+  height: var(--theme-btn-width);
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--content-max-width);
+  background:var(--bg-card);
+  padding: clamp(1.5rem, 5vw, 2rem);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: var(--card-label-offset);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+  font-size: clamp(1.375rem, 4vw, 1.5rem);
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+.input-label{
+  display:block;
+  margin-bottom: var(--space-xs);
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+}
+textarea{
+  width:100%;
+  min-height: 160;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-size:0.9rem;
+  resize: vertical;
+  margin-bottom: var(--space-lg);
+}
+html[data-theme="dark"] textarea{
+  background:#1f2937;
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: var(--space-xl);
+}
+.btn-row button{
+  flex:1;
+  min-width: 110px;
+  padding:0.85rem;
+  border-radius:var(--radius-md);
+  font-size:1rem;
+  cursor:pointer;
+}
+.btn-main{
+  border:none;
+  background:var(--primary);
+  color:#fff;
+}
+.btn-outline{
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+}
+.stat-wrap{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:0.8rem;
+  margin-bottom: 1rem;
+}
+.stat-item{
+  padding:0.6rem 0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-sm);
+}
+.stat-label{
+  font-size:0.85rem;
+  color:var(--text-secondary);
+}
+.stat-num{
+  font-size:1.2rem;
+  font-weight:bold;
+  color:var(--primary);
+  margin-top:0.2rem;
+}
+.read-tip{
+  text-align:center;
+  margin-top:1rem;
+  padding:0.8rem;
+  border:1px dashed var(--border-base);
+  border-radius:var(--radius-md);
+}
+.tip-desc{
+  margin-top: var(--space-xl);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  line-height:1.6;
+  opacity:0.7;
+}
+/* 无阻塞底部悬浮Toast */
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform: translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+  font-size:0.95rem;
+  z-index:9999;
+  pointer-events:none;
+  transition: all 0.2s ease;
+}
+.toast-box.show{
+  opacity:1;
+  transform: translateX(-50%) translateY(0);
+}
+html[data-theme="dark"] .toast-box{
+  background:#1e293b;
+}
+html:not([data-theme="dark"]) .toast-box{
+  background:#ffffff;
+}
+.toast-success{
+  color:var(--primary);
+}
+.toast-error{
+  color:var(--danger);
+}
+@media screen and (min-width: 768px) {
+  :root {
+    --content-max-width: 680px;
+  }
+  .box {
+    padding: 2.25rem;
+  }
+}
+@media screen and (max-width:767px) and (orientation:portrait){
+  .stat-wrap{
+    grid-template-columns: 1fr;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:0.75rem;
+  }
+  .header-btn-back{
+    padding:0.375rem 0.5rem;
+    font-size:0.6875rem;
+    height: 2.125rem;
+  }
+  .header-btn-theme{
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+  .box{
+    padding: 1.5rem 1.25rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle">🌙</button>
+</div>
+
+<div class="box">
+  <h2>字数统计工具</h2>
+  <div class="sub-title">实时统计文本的字数、词数、行数等信息</div>
+
+  <label class="input-label">输入文本</label>
+  <textarea id="inputTxt" placeholder="粘贴需要统计的文字内容"></textarea>
+
+  <div class="btn-row">
+    <button class="btn-main" id="calcBtn">实时统计</button>
+    <button class="btn-outline" id="demoBtn">加载演示</button>
+    <button class="btn-outline" id="clearBtn">清空内容</button>
+    <button class="btn-outline" id="copyBtn">复制文本</button>
+  </div>
+
+  <div class="stat-wrap">
+    <div class="stat-item"><div class="stat-label">字符数</div><div class="stat-num" id="allChar">0</div></div>
+    <div class="stat-item"><div class="stat-label">字符数(不含空格)</div><div class="stat-num" id="noSpaceChar">0</div></div>
+    <div class="stat-item"><div class="stat-label">词数</div><div class="stat-num" id="wordNum">0</div></div>
+    <div class="stat-item"><div class="stat-label">行数</div><div class="stat-num" id="lineNum">0</div></div>
+    <div class="stat-item"><div class="stat-label">中文字符</div><div class="stat-num" id="cnChar">0</div></div>
+    <div class="stat-item"><div class="stat-label">英文字符</div><div class="stat-num" id="enChar">0</div></div>
+    <div class="stat-item"><div class="stat-label">数字</div><div class="stat-num" id="digitNum">0</div></div>
+    <div class="stat-item"><div class="stat-label">标点符号</div><div class="stat-num" id="punctNum">0</div></div>
+    <div class="stat-item"><div class="stat-label">空格数</div><div class="stat-num" id="spaceNum">0</div></div>
+    <div class="stat-item"><div class="stat-label">段落数</div><div class="stat-num" id="paraNum">0</div></div>
+  </div>
+
+  <div class="read-tip">
+    预计阅读时间: <span class="stat-num" id="readMin">0</span> 分钟 (按 200 字/分钟计算)
+  </div>
+
+  <div class="tip-desc">
+    使用说明：输入文字实时自动计算全部统计数据，区分中英文、数字、标点，自动分段统计，可快速查看文章篇幅与阅读时长。
+  </div>
+</div>
+
+<div class="toast-box" id="toastText"></div>
+
+<script>
+const inputTxt = document.getElementById('inputTxt');
+const allChar = document.getElementById('allChar');
+const noSpaceChar = document.getElementById('noSpaceChar');
+const wordNum = document.getElementById('wordNum');
+const lineNum = document.getElementById('lineNum');
+const cnChar = document.getElementById('cnChar');
+const enChar = document.getElementById('enChar');
+const digitNum = document.getElementById('digitNum');
+const punctNum = document.getElementById('punctNum');
+const spaceNum = document.getElementById('spaceNum');
+const paraNum = document.getElementById('paraNum');
+const readMin = document.getElementById('readMin');
+const calcBtn = document.getElementById('calcBtn');
+const demoBtn = document.getElementById('demoBtn');
+const clearBtn = document.getElementById('clearBtn');
+const copyBtn = document.getElementById('copyBtn');
+const toastText = document.getElementById('toastText');
+const themeToggle = document.getElementById('themeToggle');
+const backHome = document.getElementById('backHome');
+const htmlRoot = document.documentElement;
+const STORAGE_KEY = 'site_theme_mode';
+
+// 悬浮提示
+function showToast(msg, success = true) {
+  toastText.className = 'toast-box ' + (success ? 'toast-success' : 'toast-error');
+  toastText.innerText = msg;
+  toastText.classList.add('show');
+  setTimeout(()=>toastText.classList.remove('show'),2000);
+}
+
+// 演示文本
+const demoText = "人生如行路，一路艰辛，一路风景。\n\n如果你此刻感到疲惫，不妨放慢脚步，整理心情再继续前行。\nLife is a long journey full of challenges and beautiful views. 123456！";
+
+// 核心统计计算
+function calcStats() {
+  const str = inputTxt.value;
+  // 总字符
+  const total = str.length;
+  // 不含空格
+  const noSpace = str.replace(/\s/g,'').length;
+  // 空格数量
+  const spaces = (str.match(/\s/g) || []).length;
+  // 行数
+  const lines = str.split('\n').length;
+  // 段落（连续换行分割）
+  const paras = str.split(/\n\s*\n/).filter(p=>p.trim()).length || 0;
+  // 中文
+  const cnArr = str.match(/[\u4e00-\u9fa5]/g) || [];
+  // 英文
+  const enArr = str.match(/[a-zA-Z]/g) || [];
+  // 数字
+  const digArr = str.match(/[0-9]/g) || [];
+  // 标点
+  const puncArr = str.match(/[^\u4e00-\u9fa5a-zA-Z0-9\s]/g) || [];
+  // 英文单词
+  const words = str.replace(/[^\sa-zA-Z]/g,' ').trim().split(/\s+/).filter(w=>w).length || 0;
+  // 阅读时间（200字/分钟）
+  const readTime = Math.ceil(cnArr.length / 200);
+
+  allChar.innerText = total;
+  noSpaceChar.innerText = noSpace;
+  spaceNum.innerText = spaces;
+  lineNum.innerText = lines;
+  paraNum.innerText = paras;
+  cnChar.innerText = cnArr.length;
+  enChar.innerText = enArr.length;
+  digitNum.innerText = digArr.length;
+  punctNum.innerText = puncArr.length;
+  wordNum.innerText = words;
+  readMin.innerText = readTime;
+}
+
+// 加载演示
+demoBtn.onclick = function(){
+  inputTxt.value = demoText;
+  calcStats();
+  showToast("已加载演示文本");
+};
+
+// 清空
+clearBtn.onclick = function(){
+  inputTxt.value = "";
+  calcStats();
+  showToast("已清空全部内容");
+};
+
+// 手动计算
+calcBtn.onclick = calcStats;
+
+// 复制原文
+copyBtn.onclick = async function(){
+  const val = inputTxt.value;
+  if(!val){
+    showToast("暂无文本可复制", false);
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(val);
+    showToast("✅ 复制成功");
+  }catch(e){
+    const temp = document.createElement('textarea');
+    temp.value = val;
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    document.body.appendChild(temp);
+    temp.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(temp);
+    ok ? showToast("✅ 复制成功") : showToast("❌ 复制失败，请手动复制", false);
+  }
+};
+
+// 输入实时统计
+inputTxt.oninput = calcStats;
+
+// 返回首页
+backHome.onclick = ()=>window.location.href="./index.html";
+
+// 主题切换
+function initTheme(){
+  const save = localStorage.getItem(STORAGE_KEY);
+  if(save === 'dark'){
+    htmlRoot.setAttribute('data-theme','dark');
+    themeToggle.innerText = '☀️';
+  }else{
+    htmlRoot.removeAttribute('data-theme');
+    themeToggle.innerText = '🌙';
+  }
+}
+themeToggle.onclick = function(){
+  const dark = htmlRoot.hasAttribute('data-theme');
+  if(dark){
+    htmlRoot.removeAttribute('data-theme');
+    localStorage.setItem(STORAGE_KEY,'light');
+    themeToggle.innerText = '🌙';
+  }else{
+    htmlRoot.setAttribute('data-theme','dark');
+    localStorage.setItem(STORAGE_KEY,'dark');
+    themeToggle.innerText = '☀️';
+  }
+};
+
+initTheme();
+calcStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>房贷计算器</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:8px;
+  font-weight:600;
+  font-size:24px;
+}
+.sub-title{
+  text-align:center;
+  font-size:14px;
+  color:var(--text-secondary);
+  margin-bottom:28px;
+}
+.row-two{
+  display:flex;
+  gap:12px;
+  width:100%;
+  margin-bottom:16px;
+}
+.col-half{
+  flex:1;
+}
+.input-item{
+  width:100%;
+}
+label{
+  display:block;
+  margin-bottom:8px;
+  font-size:15px;
+  opacity:0.85;
+}
+input,textarea{
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  background:transparent;
+  color:inherit;
+}
+select,
+input[type="number"] {
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  color:inherit;
+  background: transparent;
+}
+html[data-theme="dark"] {
+  select,
+  input[type="number"] {
+    background: #273449;
+    color: #f3f4f6;
+  }
+  select option {
+    background: #1e293b;
+    color: #f3f4f6;
+  }
+}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+.btn-row{
+  display:flex;
+  gap:10px;
+  margin:20px 0;
+}
+.btn{
+  flex:1;
+  padding:14px;
+  border:none;
+  border-radius:var(--radius-md);
+  font-size:16px;
+  cursor:pointer;
+}
+.btn-calc{
+  background:var(--primary);
+  color:#fff;
+}
+.btn-reset{
+  background:var(--nav-btn-bg);
+  color:var(--text-main);
+  border:1px solid var(--border-base);
+}
+.btn-reset:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.result-wrap{
+  padding:20px;
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+  margin-bottom:20px;
+  display:none;
+}
+.result-line{
+  margin:9px 0;
+  font-size:16px;
+}
+.result-main{
+  font-size:20px;
+  font-weight:700;
+  color:var(--primary);
+  margin:10px 0 14px;
+}
+.tip{
+  font-size:14px;
+  line-height:1.7;
+  color:var(--text-secondary);
+}
+/* 手机竖屏适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+  }
+  .row-two{
+    flex-direction:column;
+    gap:10px;
+  }
+  label{
+    font-size:14px;
+  }
+  input,select{
+    padding:12px 14px;
+    font-size:16px;
+  }
+  .result-main{
+    font-size:18px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>房贷计算器</h2>
+  <div class="sub-title">支持等额本息与等额本金，快速估算还款压力</div>
+
+  <div class="input-item">
+    <label>贷款金额 (万元)</label>
+    <input id="loanMoney" type="number" step="any" placeholder="例如 200" value="200">
+  </div>
+
+  <div class="row-two">
+    <div class="col-half input-item">
+      <label>贷款年限 (年)</label>
+      <input id="loanYear" type="number" step="1" value="30">
+    </div>
+    <div class="col-half input-item">
+      <label>年利率 (%)</label>
+      <input id="yearRate" type="number" step="0.01" value="4.3">
+    </div>
+  </div>
+
+  <div class="input-item">
+    <label>还款方式</label>
+    <select id="payType">
+      <option value="bx">等额本息</option>
+      <option value="bj">等额本金</option>
+    </select>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-calc" id="calcBtn">开始计算</button>
+    <button class="btn btn-reset" id="resetBtn">清空</button>
+  </div>
+
+  <div class="result-wrap" id="resultBox">
+    <div class="result-line">还款方式：<span id="showType">等额本息</span></div>
+    <div class="result-main">月供：<span id="monthPay">--</span> 元</div>
+    <div class="result-line">首月或每月应还：<span id="firstPay">--</span> 元</div>
+    <div class="result-line">总利息：<span id="totalInterest">--</span> 元</div>
+    <div class="result-line">还款总额：<span id="totalAll">--</span> 元</div>
+    <div class="result-line">月供递减：<span id="reduceVal">--</span> 元</div>
+    <div class="result-line">贷款本金：<span id="baseMoney">--</span> 元</div>
+    <div class="result-line">月利率：<span id="monthRate">--</span> %</div>
+    <div class="result-line">还款期数：<span id="totalMonth">--</span> 期</div>
+  </div>
+
+  <div class="tip">
+    提示：等额本息月供固定，压力稳定；等额本金前期月供高，后期逐月递减。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+// 返回首页
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// DOM元素
+const loanMoney = document.getElementById("loanMoney");
+const loanYear = document.getElementById("loanYear");
+const yearRate = document.getElementById("yearRate");
+const payType = document.getElementById("payType");
+const calcBtn = document.getElementById("calcBtn");
+const resetBtn = document.getElementById("resetBtn");
+const resultBox = document.getElementById("resultBox");
+const showType = document.getElementById("showType");
+const monthPay = document.getElementById("monthPay");
+const firstPay = document.getElementById("firstPay");
+const totalInterest = document.getElementById("totalInterest");
+const totalAll = document.getElementById("totalAll");
+const reduceVal = document.getElementById("reduceVal");
+const baseMoney = document.getElementById("monthRate");
+const monthRate = document.getElementById("monthRate");
+const totalMonth = document.getElementById("totalMonth");
+
+// 计算函数
+function calcMortgage(){
+  // 取值
+  let moneyWan = parseFloat(loanMoney.value);
+  let year = parseInt(loanYear.value);
+  let yRate = parseFloat(yearRate.value);
+  let type = payType.value;
+
+  if(isNaN(moneyWan) || moneyWan <=0 || isNaN(year) || year <=0 || isNaN(yRate)){
+    alert("请填写合法贷款数据");
+    resultBox.style.display = "none";
+    return;
+  }
+
+  const base = moneyWan * 10000; // 本金元
+  const months = year * 12; // 总期数
+  const mRate = yRate / 100 / 12; // 月利率
+
+  let monthly, firstMonth, totalI, reduce = 0;
+  if(type === "bx"){
+    // 等额本息
+    monthly = base * mRate * Math.pow(1 + mRate, months) / (Math.pow(1 + mRate, months) - 1);
+    firstMonth = monthly;
+    totalI = monthly * months - base;
+    reduce = 0;
+    showType.innerText = "等额本息";
+  }else{
+    // 等额本金
+    const perBase = base / months;
+    firstMonth = perBase + base * mRate;
+    monthly = firstMonth;
+    reduce = perBase * mRate;
+    totalI = (months + 1) * base * mRate / 2;
+    showType.innerText = "等额本金";
+  }
+  const allPay = base + totalI;
+
+  // 填充结果
+  baseMoney.innerText = base.toFixed(2);
+  monthRate.innerText = (mRate * 100).toFixed(4);
+  totalMonth.innerText = months;
+  monthPay.innerText = monthly.toFixed(2);
+  firstPay.innerText = firstMonth.toFixed(2);
+  totalInterest.innerText = totalI.toFixed(2);
+  totalAll.innerText = allPay.toFixed(2);
+  reduceVal.innerText = reduce.toFixed(2);
+
+  resultBox.style.display = "block";
+}
+
+// 计算按钮
+calcBtn.onclick = calcMortgage;
+
+// 重置清空
+resetBtn.onclick = ()=>{
+  loanMoney.value = "";
+  loanYear.value = "";
+  yearRate.value = "";
+  payType.value = "bx";
+  resultBox.style.display = "none";
+}
+
+initTheme();
+</script>
+</body>
+</html>

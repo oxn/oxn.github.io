@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>文本分割器</title>
+<style>
+    /* 全局统一主题变量 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 0.375rem;
+      --space-sm: 0.625rem;
+      --space-md: 0.875rem;
+      --space-lg: 1rem;
+      --space-xl: 1.75rem;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0.15);
+      --body-font-size: 1rem;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 620px;
+      --card-gap: 1rem;
+      --card-min-width: 300px;
+      --header-safe-gap: 1rem;
+      --card-label-offset: 2.25rem;
+      --nav-line-height: 2.375rem;
+      --theme-btn-width: 2.25rem;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 clamp(1rem, 4vw, 1.75rem);
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: var(--theme-btn-width);
+  height: var(--theme-btn-width);
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--content-max-width);
+  background:var(--bg-card);
+  padding: clamp(1.5rem, 5vw, 2rem);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: var(--card-label-offset);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+  font-size: clamp(1.375rem, 4vw, 1.5rem);
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+/* 输入框通用 */
+.input-label{
+  display:block;
+  margin-bottom: var(--space-xs);
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+}
+textarea{
+  width:100%;
+  min-height: 140px;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-size:0.9rem;
+  resize: vertical;
+  margin-bottom: var(--space-lg);
+}
+html[data-theme="dark"] textarea{
+  background:#1f2937;
+}
+/* 分隔符按钮组 */
+.sep-group{
+  display:flex;
+  flex-wrap: wrap;
+  gap:0.6rem;
+  margin-bottom: var(--space-md);
+}
+.sep-btn{
+  flex:1;
+  min-width: 75px;
+  padding:0.6rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background: transparent;
+  color:var(--text-main);
+  cursor:pointer;
+  font-size:0.9rem;
+}
+.sep-btn.active{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.custom-sep-input{
+  width:100%;
+  padding:0.7rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  margin-bottom: var(--space-lg);
+}
+html[data-theme="dark"] .custom-sep-input{
+  background:#1f2937;
+}
+/* 复选框行 */
+.check-row{
+  display:flex;
+  gap:1.5rem;
+  margin-bottom: var(--space-xl);
+}
+.count-text{
+  text-align:center;
+  font-size:1rem;
+  margin-bottom: var(--space-xl);
+  color:var(--text-secondary);
+}
+.count-num{
+  color:var(--primary);
+  font-weight:bold;
+}
+.btn-main{
+  width:100%;
+  padding:0.85rem;
+  border:none;
+  border-radius:var(--radius-md);
+  background:var(--primary);
+  color:#fff;
+  font-size:1rem;
+  cursor:pointer;
+  margin-bottom: var(--space-lg);
+}
+.tip-desc{
+  margin-top: var(--space-xl);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  line-height:1.6;
+  opacity:0.7;
+}
+/* 平板横屏 */
+@media screen and (min-width: 768px) {
+  :root {
+    --content-max-width: 680px;
+  }
+  .box {
+    padding: 2.25rem;
+  }
+}
+/* 手机竖屏 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:0.75rem;
+  }
+  .header-btn-back{
+    padding:0.375rem 0.5rem;
+    font-size:0.6875rem;
+    height: 2.125rem;
+  }
+  .header-btn-theme{
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+  .box{
+    padding: 1.5rem 1.25rem;
+  }
+  .check-row{
+    flex-direction:column;
+    gap:0.5rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>📜 文本分割器</h2>
+  <div class="sub-title">按分隔符拆分文本并统计结果</div>
+
+  <label class="input-label">输入文本</label>
+  <textarea id="inputTxt" placeholder="粘贴需要处理的文本内容"></textarea>
+
+  <label class="input-label">分隔符</label>
+  <div class="sep-group">
+    <button class="sep-btn" data-code="newline">换行</button>
+    <button class="sep-btn" data-code="comma">逗号</button>
+    <button class="sep-btn" data-code="space">空格</button>
+    <button class="sep-btn" data-code="tab">制表符</button>
+    <button class="sep-btn" data-code="custom">自定义</button>
+  </div>
+  <input class="custom-sep-input" id="customSep" placeholder="选择自定义后，在此输入分隔字符">
+
+  <div class="check-row">
+    <label><input type="checkbox" id="trimSpace"> 去除首尾空白</label>
+    <label><input type="checkbox" id="skipBlank"> 忽略空项</label>
+  </div>
+
+  <div class="count-text">共 <span class="count-num" id="totalCount">0</span> 项</div>
+
+  <button class="btn-main" id="genBtn">输出列表(每行一项)</button>
+
+  <label class="input-label">输出列表</label>
+  <textarea id="outputRes" readonly placeholder="分割完成的内容会显示在这里"></textarea>
+
+  <div class="tip-desc">
+    使用说明：选择对应分隔符分割文本，支持清理每条文本前后空白、自动过滤空内容，一键生成每行一条的结果并统计总条目数量。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// DOM元素
+const inputTxt = document.getElementById("inputTxt");
+const sepBtns = document.querySelectorAll(".sep-btn");
+const customSep = document.getElementById("customSep");
+const trimSpace = document.getElementById("trimSpace");
+const skipBlank = document.getElementById("skipBlank");
+const totalCount = document.getElementById("totalCount");
+const genBtn = document.getElementById("genBtn");
+const outputRes = document.getElementById("outputRes");
+
+// 默认选中换行
+let activeSepCode = "newline";
+let sepChar = "\n";
+
+// 分隔符映射表
+const sepMap = {
+  newline: "\n",
+  comma: ",",
+  space: " ",
+  tab: "\t",
+  custom: ""
+};
+
+// 初始化选中第一个按钮
+sepBtns[0].classList.add("active");
+
+// 切换分隔按钮
+sepBtns.forEach(btn => {
+  btn.onclick = () => {
+    sepBtns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    activeSepCode = btn.dataset.code;
+    sepChar = sepMap[activeSepCode];
+    runSplit();
+  }
+});
+
+// 核心分割函数
+function runSplit() {
+  let source = inputTxt.value;
+  let splitChar;
+  // 判断是否自定义
+  if (activeSepCode === "custom") {
+    splitChar = customSep.value;
+    if (splitChar === "") splitChar = "\n";
+  } else {
+    splitChar = sepChar;
+  }
+  // 分割
+  let arr = source.split(splitChar);
+  // 去除首尾空白
+  if (trimSpace.checked) {
+    arr = arr.map(item => item.trim());
+  }
+  // 过滤空项
+  if (skipBlank.checked) {
+    arr = arr.filter(item => item !== "");
+  }
+  // 更新计数
+  totalCount.innerText = arr.length;
+  // 拼接输出
+  outputRes.value = arr.join("\n");
+}
+
+// 实时监听变化自动分割
+inputTxt.oninput = runSplit;
+customSep.oninput = runSplit;
+trimSpace.onchange = runSplit;
+skipBlank.onchange = runSplit;
+genBtn.onclick = runSplit;
+
+// 主题切换
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+initTheme();
+runSplit();
+</script>
+</body>
+</html>

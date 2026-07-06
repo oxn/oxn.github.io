@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>掷骰子工具</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:8px;
+  font-weight:600;
+  font-size:24px;
+}
+.sub-title{
+  text-align:center;
+  font-size:14px;
+  color:var(--text-secondary);
+  margin-bottom:28px;
+}
+.row-two{
+  display:flex;
+  gap:12px;
+  width:100%;
+  margin-bottom:20px;
+}
+.col-half{
+  flex:1;
+}
+.input-item{
+  width:100%;
+}
+label{
+  display:block;
+  margin-bottom:8px;
+  font-size:15px;
+  opacity:0.85;
+}
+input[type="number"],select{
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  color:inherit;
+  background: transparent;
+}
+html[data-theme="dark"] {
+  input[type="number"],select{
+    background: #273449;
+    color: #f3f4f6;
+  }
+  select option {
+    background: #1e293b;
+    color: #f3f4f6;
+  }
+}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+.dice-display{
+  text-align:center;
+  padding:24px;
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+  margin-bottom:20px;
+  min-height:100px;
+}
+.dice-list{
+  font-size:20px;
+  margin-bottom:12px;
+  letter-spacing:2px;
+}
+.total-text{
+  font-size:22px;
+  font-weight:700;
+  color:var(--primary);
+}
+.btn-row{
+  display:flex;
+  gap:10px;
+  width:100%;
+  margin-bottom:20px;
+}
+.btn{
+  flex:1;
+  padding:14px;
+  border:none;
+  border-radius:var(--radius-md);
+  font-size:16px;
+  cursor:pointer;
+}
+.btn-roll{
+  background:var(--primary);
+  color:#fff;
+}
+.btn-reset{
+  background:var(--warn);
+  color:#fff;
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+}
+/* 骰子摇晃动画 */
+@keyframes diceShake {
+  0% { transform: rotate(-12deg) translateY(-4px); }
+  50% { transform: rotate(12deg) translateY(4px); }
+  100% { transform: rotate(-12deg) translateY(-4px); }
+}
+.shake-animate{
+  animation: diceShake 0.1s infinite;
+}
+/* 手机竖屏适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+    font-size:14px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+  }
+  .row-two{
+    flex-direction:column;
+    gap:10px;
+  }
+  .dice-list{
+    font-size:17px;
+  }
+  .total-text{
+    font-size:19px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>🎲 掷骰子工具</h2>
+  <div class="sub-title">模拟掷骰子，支持多种骰子类型</div>
+
+  <div class="row-two">
+    <div class="col-half input-item">
+      <label>骰子数量</label>
+      <input id="diceCount" type="number" min="1" max="99" value="1">
+    </div>
+    <div class="col-half input-item">
+      <label>骰子类型</label>
+      <select id="diceType">
+        <option value="4">4面 (D4)</option>
+        <option value="6" selected>6面 (D6)</option>
+        <option value="8">8面 (D8)</option>
+        <option value="10">10面 (D10)</option>
+        <option value="12">12面 (D12)</option>
+        <option value="20">20面 (D20)</option>
+        <option value="100">100面 (D100)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="dice-display" id="displayBox">
+    <div class="dice-list" id="diceResult">等待掷骰...</div>
+    <div class="total-text">总点数: <span id="totalNum">0</span></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-roll" id="rollBtn">点击按钮开始掷骰子</button>
+    <button class="btn btn-reset" id="resetBtn">重置</button>
+  </div>
+
+  <div class="tip">
+    使用说明：设置骰子数量与面数类型，点击掷骰按钮播放摇晃动画，自动生成每颗点数并计算总点数；点击重置清空结果重新投掷。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+// 返回首页
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// DOM元素
+const diceCount = document.getElementById("diceCount");
+const diceType = document.getElementById("diceType");
+const rollBtn = document.getElementById("rollBtn");
+const resetBtn = document.getElementById("resetBtn");
+const displayBox = document.getElementById("displayBox");
+const diceResult = document.getElementById("diceResult");
+const totalNum = document.getElementById("totalNum");
+
+let isRolling = false;
+
+// 掷骰子主逻辑
+function rollDice() {
+  if (isRolling) return;
+  const count = parseInt(diceCount.value);
+  const sides = parseInt(diceType.value);
+  if (isNaN(count) || count < 1 || count > 99) {
+    alert("骰子数量请输入1~99");
+    return;
+  }
+  isRolling = true;
+  rollBtn.disabled = true;
+  diceResult.innerText = "摇晃中...";
+  displayBox.classList.add("shake-animate");
+
+  // 动画模拟随机滚动
+  let tempList = [];
+  let tick = 0;
+  const tickTimer = setInterval(() => {
+    tempList = [];
+    for(let i=0;i<count;i++){
+      tempList.push(Math.floor(Math.random() * sides) + 1);
+    }
+    diceResult.innerText = tempList.join("  ");
+    tick++;
+    if(tick >= 12){
+      clearInterval(tickTimer);
+      // 最终真实结果
+      let finalArr = [];
+      let sum = 0;
+      for(let i=0;i<count;i++){
+        const num = Math.floor(Math.random() * sides) + 1;
+        finalArr.push(num);
+        sum += num;
+      }
+      displayBox.classList.remove("shake-animate");
+      diceResult.innerText = finalArr.join("  ");
+      totalNum.innerText = sum;
+      isRolling = false;
+      rollBtn.disabled = false;
+    }
+  }, 80);
+}
+
+// 重置
+resetBtn.onclick = () => {
+  isRolling = false;
+  rollBtn.disabled = false;
+  displayBox.classList.remove("shake-animate");
+  diceResult.innerText = "等待掷骰...";
+  totalNum.innerText = "0";
+  diceCount.value = 1;
+  diceType.value = "6";
+};
+
+rollBtn.onclick = rollDice;
+initTheme();
+</script>
+</body>
+</html>

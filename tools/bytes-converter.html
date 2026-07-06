@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>字节大小转换器</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:28px;
+  font-weight:600;
+  font-size:24px;
+}
+.row-two{
+  display:flex;
+  gap:12px;
+  margin-bottom:22px;
+  width:100%;
+}
+.col-half{
+  flex:1;
+}
+.input-item{
+  width:100%;
+  margin-bottom:16px;
+}
+label{
+  display:block;
+  margin-bottom:8px;
+  font-size:15px;
+  opacity:0.85;
+}
+input,textarea{
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  background:transparent;
+  color:inherit;
+}
+/* 暗黑表单统一修复 */
+select,
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="number"] {
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  color:inherit;
+  background: transparent;
+}
+html[data-theme="dark"] {
+  select,
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    background: #273449;
+    color: #f3f4f6;
+  }
+  select option {
+    background: #1e293b;
+    color: #f3f4f6;
+  }
+  ::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+.result-group{
+  margin-top:20px;
+  padding:20px;
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+}
+.result-line{
+  margin:10px 0;
+  font-size:17px;
+  font-weight:600;
+  color:var(--primary);
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+  margin-top:20px;
+}
+/* 手机竖屏适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+    font-size:14px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+    margin-bottom:24px;
+  }
+  .row-two{
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  label{
+    font-size:14px;
+    margin-bottom:6px;
+  }
+  input,select,textarea{
+    padding:12px 14px;
+    font-size:16px;
+  }
+  .result-line{
+    font-size:16px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>字节大小转换器</h2>
+
+  <div class="row-two">
+    <div class="col-half input-item">
+      <label>数值</label>
+      <input id="numInput" type="number" step="any" placeholder="输入容量数值">
+    </div>
+    <div class="col-half input-item">
+      <label>输入单位</label>
+      <select id="unitSelect">
+        <option value="B">Byte (B)</option>
+        <option value="KB">KB</option>
+        <option value="MB">MB</option>
+        <option value="GB">GB</option>
+        <option value="TB">TB</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="input-item">
+    <label>进制标准</label>
+    <select id="baseSelect">
+      <option value="1024">1024（内存/文件标准）</option>
+      <option value="1000">1000（硬盘厂商标准）</option>
+    </select>
+  </div>
+
+  <div class="result-group" id="resultBox" style="display:none;">
+    <div class="result-line" id="resB">B：--</div>
+    <div class="result-line" id="resKB">KB：--</div>
+    <div class="result-line" id="resMB">MB：--</div>
+    <div class="result-line" id="resGB">GB：--</div>
+    <div class="result-line" id="resTB">TB：--</div>
+  </div>
+
+  <div class="tip">
+    使用说明：1024进制用于电脑内存、文件；1000进制为硬盘厂商标注标准；输入数值与单位自动换算全部字节单位。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+// 返回首页
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// 元素
+const numInput = document.getElementById("numInput");
+const unitSelect = document.getElementById("unitSelect");
+const baseSelect = document.getElementById("baseSelect");
+const resultBox = document.getElementById("resultBox");
+const resB = document.getElementById("resB");
+const resKB = document.getElementById("resKB");
+const resMB = document.getElementById("resMB");
+const resGB = document.getElementById("resGB");
+const resTB = document.getElementById("resTB");
+
+// 单位权重映射
+function getWeight(unit, base) {
+  const map = {
+    B: 1,
+    KB: base,
+    MB: base * base,
+    GB: base * base * base,
+    TB: base * base * base * base
+  };
+  return map[unit];
+}
+
+// 自动换算（修复变量错误）
+function calcBytes() {
+  const num = parseFloat(numInput.value);
+  const unit = unitSelect.value;
+  const base = parseInt(baseSelect.value);
+  // 空值/非数字/负数隐藏结果
+  if (isNaN(num) || num <= 0) {
+    resultBox.style.display = "none";
+    return;
+  }
+  const totalB = num * getWeight(unit, base);
+  const kb = totalB / base;
+  const mb = totalB / Math.pow(base, 2);
+  const gb = totalB / Math.pow(base, 3);
+  const tb = totalB / Math.pow(base, 4);
+
+  // 修复：原代码错误使用 total，替换为 totalB
+  resB.innerText = `B：${totalB.toFixed(4)}`;
+  resKB.innerText = `KB：${kb.toFixed(4)}`;
+  resMB.innerText = `MB：${mb.toFixed(4)}`;
+  resGB.innerText = `GB：${gb.toFixed(4)}`;
+  resTB.innerText = `TB：${tb.toFixed(4)}`;
+  resultBox.style.display = "block";
+}
+
+// 绑定全部输入变更事件
+[numInput, unitSelect, baseSelect].forEach(el => el.addEventListener("input", calcBytes));
+
+initTheme();
+</script>
+</body>
+</html>

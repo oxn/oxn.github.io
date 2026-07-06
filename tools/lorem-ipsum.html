@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>📄</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lorem Ipsum 生成器</title>
+<style>
+:root {
+  --primary: #10b981;
+  --primary-light: #dcfce7;
+  --warn: #f97316;
+  --danger: #ef4444;
+  --nav-bg: #ffffff;
+  --nav-border: #e5e7eb;
+  --nav-text: #222222;
+  --text-main: #222222;
+  --text-sub: #555555;
+  --border-base: #e5e7eb;
+  --page-bg: #ffffff;
+  --card-bg: #ffffff;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+  --radius-md: 8px;
+  --space-md: 0.875rem;
+  --space-lg: 1.2rem;
+  --max-width: 1400px;
+}
+html[data-theme="dark"] {
+  --primary: #34d399;
+  --primary-light: rgba(52, 211, 153, 0.18);
+  --nav-bg: #1f2937;
+  --nav-border: #374151;
+  --nav-text: #f3f4f6;
+  --text-main: #f9fafb;
+  --text-sub: #d1d5db;
+  --border-base: #374151;
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, sans-serif;
+}
+body {
+  background: var(--page-bg);
+  color: var(--text-main);
+  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(1rem, 4vw, 1.75rem);
+  z-index: 999;
+}
+.header-btn {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius-md);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor: pointer;
+}
+.header-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--max-width);
+  margin:0 auto;
+  background:var(--card-bg);
+  padding: clamp(1.5rem, 5vw, 2rem);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+}
+.sub-title{
+  text-align:center;
+  font-size:0.875rem;
+  color:var(--text-sub);
+  margin-bottom: var(--space-xl);
+}
+.form-row{
+  margin-bottom: var(--space-lg);
+}
+.label{
+  display:block;
+  margin-bottom: 0.5rem;
+  font-weight:500;
+}
+.radio-group{
+  display:flex;
+  gap:1rem;
+  margin-bottom:1rem;
+}
+.radio-item{
+  display:flex;
+  gap:0.3rem;
+  align-items:center;
+}
+input[type="number"]{
+  width:100%;
+  max-width:300px;
+  padding:0.7rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-size:1rem;
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: var(--space-xl);
+}
+.btn-row button{
+  flex:1;
+  min-width: 110px;
+  padding:0.85rem;
+  border-radius:var(--radius-md);
+  font-size:1rem;
+  cursor:pointer;
+}
+.btn-main{
+  border:none;
+  background:var(--primary);
+  color:#fff;
+}
+.btn-outline{
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+}
+#resultBox{
+  width:100%;
+  min-height: 30vh;
+  max-height: 70vh;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  overflow:auto;
+  white-space:pre-wrap;
+  line-height:1.7;
+}
+.tip-desc{
+  margin-top: var(--space-xl);
+  font-size:0.875rem;
+  color:var(--text-sub);
+  line-height:1.6;
+}
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform: translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+  z-index:9999;
+  pointer-events:none;
+  transition:0.2s;
+  background:var(--card-bg);
+}
+.toast-box.show{
+  opacity:1;
+  transform: translateX(-50%) translateY(0);
+}
+@media(max-width:640px){
+  .radio-group{
+    flex-direction:column;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn" id="backBtn">← 返回首页</button>
+  <button class="header-btn" id="themeBtn">🌙</button>
+</div>
+
+<div class="box">
+  <h2>Lorem Ipsum 生成器</h2>
+  <div class="sub-title">生成占位文本用于设计和测试</div>
+
+  <div class="form-row">
+    <label class="label">类型</label>
+    <div class="radio-group">
+      <div class="radio-item">
+        <input type="radio" name="genType" value="para" id="tPara" checked>
+        <label for="tPara">段落</label>
+      </div>
+      <div class="radio-item">
+        <input type="radio" name="genType" value="sent" id="tSent">
+        <label for="tSent">句子</label>
+      </div>
+      <div class="radio-item">
+        <input type="radio" name="genType" value="word" id="tWord">
+        <label for="tWord">单词</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label class="label">数量</label>
+    <input type="number" id="countInput" min="1" max="100" value="5">
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-main" id="genBtn">生成</button>
+    <button class="btn-outline" id="clearBtn">清空</button>
+    <button class="btn-outline" id="copyBtn">复制结果</button>
+  </div>
+
+  <label class="label">生成结果</label>
+  <div id="resultBox"></div>
+
+  <div class="tip-desc">
+    使用说明：选择生成类型（段落/句子/单词），设置数量后点击生成按钮输出占位文本，可一键复制全部内容，纯本地离线生成。
+  </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+// 基础Lorem语料库
+const wordList = [
+"lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipisicing", "elit",
+"sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore",
+"magna", "aliqua", "ut", "enim", "ad", "minim", "veniam", "quis", "nostrud",
+"exercitation", "ullamco", "laboris", "nisi", "ut", "aliquip", "ex", "ea", "commodo",
+"consequat", "duis", "aute", "irure", "dolor", "in", "reprehenderit", "in", "voluptate",
+"velit", "esse", "cillum", "dolore", "eu", "fugiat", "nulla", "pariatur", "excepteur",
+"sint", "occaecat", "cupidatat", "non", "proident", "sunt", "in", "culpa", "qui",
+"officia", "deserunt", "mollit", "anim", "id", "est", "laborum"
+];
+
+const toastBox = document.getElementById('toastBox');
+const backBtn = document.getElementById('backBtn');
+const themeBtn = document.getElementById('themeBtn');
+const genBtn = document.getElementById('genBtn');
+const clearBtn = document.getElementById('copyBtn');
+const copyBtn = document.getElementById('copyBtn');
+const resultBox = document.getElementById('resultBox');
+const countInput = document.getElementById('countInput');
+const tPara = document.getElementById('tPara');
+const tSent = document.getElementById('tSent');
+const tWord = document.getElementById('tWord');
+const STORAGE_KEY = "site_theme_mode";
+
+function showToast(msg){
+  toastBox.innerText = msg;
+  toastBox.classList.add("show");
+  setTimeout(()=>toastBox.classList.remove("show"),2000);
+}
+
+// 随机取指定数量单词
+function getRandomWords(num){
+  const res = [];
+  for(let i=0;i<num;i++){
+    const idx = Math.floor(Math.random() * wordList.length);
+    res.push(wordList[idx]);
+  }
+  return res;
+}
+
+// 生成句子
+function makeSentence(){
+  const wordNum = 4 + Math.floor(Math.random() * 10);
+  const words = getRandomWords(wordNum);
+  let s = words.join(' ');
+  s = s[0].toUpperCase() + s.slice(1) + '.';
+  return s;
+}
+
+// 生成段落
+function makeParagraph(){
+  const sentNum = 3 + Math.floor(Math.random() * 5);
+  const sents = [];
+  for(let i=0;i<sentNum;i++) sents.push(makeSentence());
+  return sents.join(' ');
+}
+
+// 主生成逻辑
+function generate(){
+  const count = parseInt(countInput.value) || 1;
+  let output = "";
+  if(tPara.checked){
+    const paras = [];
+    for(let i=0;i<count;i++) paras.push(makeParagraph());
+    output = paras.join('\n\n');
+  }else if(tSent.checked){
+    const sents = [];
+    for(let i=0;i<count;i++) sents.push(makeSentence());
+    output = sents.join(' ');
+  }else{
+    const words = getRandomWords(count);
+    output = words.join(' ');
+  }
+  resultBox.innerText = output;
+  showToast("生成完成");
+}
+
+// 清空
+function clearAll(){
+  result.innerText = "";
+  showToast("已清空");
+}
+
+// 复制结果
+async function copyResult(){
+  const text = resultBox.innerText;
+  if(!text.trim()) return showToast("暂无生成内容", false);
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast("复制成功");
+  }catch(e){
+    const temp = document.createElement('textarea');
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showToast("复制成功");
+  }
+}
+
+// 绑定事件
+genBtn.onclick = generate;
+clearBtn.onclick = clearAll;
+copyBtn.onclick = copyResult;
+
+// 主题
+function initTheme(){
+  const save = localStorage.getItem(STORAGE_KEY);
+  if(save === "dark"){
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }
+}
+themeBtn.onclick = ()=>{
+  const dark = document.documentElement.hasAttribute("data-theme");
+  if(dark){
+    localStorage.setItem(STORAGE_KEY,"light");
+    document.documentElement.removeAttribute("data-theme");
+    themeBtn.innerText = "🌙";
+  }else{
+    localStorage.setItem(STORAGE_KEY,"dark");
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }
+};
+backBtn.onclick = ()=>window.location.href = "./index.html";
+initTheme();
+generate();
+</script>
+</body>
+</html>

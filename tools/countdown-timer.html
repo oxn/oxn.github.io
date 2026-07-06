@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>倒计时器</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:8px;
+  font-weight:600;
+  font-size:24px;
+}
+.sub-title{
+  text-align:center;
+  font-size:14px;
+  color:var(--text-secondary);
+  margin-bottom:28px;
+}
+.row-three{
+  display:flex;
+  gap:12px;
+  width:100%;
+  margin-bottom:24px;
+}
+.col-three{
+  flex:1;
+}
+.input-item{
+  width:100%;
+}
+label{
+  display:block;
+  margin-bottom:8px;
+  font-size:15px;
+  opacity:0.85;
+  text-align:center;
+}
+input,textarea{
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  background:transparent;
+  color:inherit;
+  text-align:center;
+}
+/* 暗黑表单统一修复 */
+select,
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="number"] {
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  color:inherit;
+  background: transparent;
+  text-align:center;
+}
+html[data-theme="dark"] {
+  select,
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    background: #273449;
+    color: #f3f4f6;
+  }
+  select option {
+    background: #1e293b;
+    color: #f3f4f6;
+  }
+  ::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+input:focus,textarea:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+.display-wrap{
+  text-align:center;
+  padding:20px;
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+  margin-bottom:24px;
+}
+.timer-display{
+  font-size:48px;
+  font-weight:700;
+  color:var(--primary);
+  letter-spacing:4px;
+}
+.btn-row{
+  display:flex;
+  gap:10px;
+  width:100%;
+  margin-bottom:20px;
+}
+.btn{
+  flex:1;
+  padding:14px;
+  border:none;
+  border-radius:var(--radius-md);
+  font-size:16px;
+  font-weight:500;
+  cursor:pointer;
+}
+.btn-start{
+  background:var(--primary);
+  color:#fff;
+}
+.btn-pause{
+  background:var(--warn);
+  color:#fff;
+}
+.btn-reset{
+  background:var(--danger);
+  color:#fff;
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+}
+/* 倒计时结束闪烁动画 */
+@keyframes blink {
+  0% { opacity:1; }
+  50% { opacity:0.3; }
+  100% { opacity:1; }
+}
+.blink{
+  animation: blink 0.5s infinite;
+}
+/* 手机竖屏适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+    font-size:14px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+  }
+  .row-three{
+    flex-direction:column;
+    gap:10px;
+  }
+  .timer-display{
+    font-size:36px;
+  }
+  .btn-row{
+    flex-direction:column;
+    gap:8px;
+  }
+  label{
+    font-size:14px;
+    margin-bottom:6px;
+  }
+  input{
+    padding:12px 14px;
+    font-size:16px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>⏱️ 倒计时器</h2>
+  <div class="sub-title">设置时间，专注当下</div>
+
+  <div class="row-three">
+    <div class="col-three input-item">
+      <label>小时</label>
+      <input id="hourIn" type="number" min="0" max="99" value="0">
+    </div>
+    <div class="col-three input-item">
+      <label>分钟</label>
+      <input id="minIn" type="number" min="0" max="59" value="0">
+    </div>
+    <div class="col-three input-item">
+      <label>秒</label>
+      <input id="secIn" type="number" min="0" max="59" value="0">
+    </div>
+  </div>
+
+  <div class="display-wrap">
+    <div class="timer-display" id="timeShow">00:00:00</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-start" id="startBtn">开始</button>
+    <button class="btn btn-pause" id="pauseBtn" disabled>暂停</button>
+    <button class="btn btn-reset" id="resetBtn">重置</button>
+  </div>
+
+  <div class="tip">
+    使用说明：填写小时、分钟、秒后点击开始倒计时；倒计时结束自动播放提示音；运行中可暂停，重置恢复00:00:00并清空输入框。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+// 返回首页
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// 提示音生成（Web Audio 内置蜂鸣，无需外部音频文件）
+function playAlarm() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  const ctx = new AudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "square";
+  osc.frequency.value = 880;
+  gain.gain.value = 0.15;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start();
+  setTimeout(()=>osc.stop(), 600);
+}
+
+// DOM元素（修复：resetBtn正确绑定按钮ID）
+const hourIn = document.getElementById("hourIn");
+const minIn = document.getElementById("minIn");
+const secIn = document.getElementById("secIn");
+const timeShow = document.getElementById("timeShow");
+const startBtn = document.getElementById("startBtn");
+const pauseBtn = document.getElementById("pauseBtn");
+const resetBtn = document.getElementById("resetBtn");
+const displayWrap = document.querySelector(".display-wrap");
+
+// 计时器变量
+let totalSec = 0;
+let remainSec = 0;
+let timerId = null;
+let isRun = false;
+
+// 格式化 HH:MM:SS
+function formatTime(s) {
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = n => String(n).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(sec)}`;
+}
+
+// 读取输入总秒数
+function readInputTotal() {
+  const h = parseInt(hourIn.value) || 0;
+  const m = parseInt(minIn.value) || 0;
+  const s = parseInt(secIn.value) || 0;
+  return h * 3600 + m * 60 + s;
+}
+
+// 更新显示
+function updateShow() {
+  timeShow.innerText = formatTime(remainSec);
+}
+
+// 倒计时主循环
+function tick() {
+  if (remainSec <= 0) {
+    clearInterval(timerId);
+    timerId = null;
+    isRun = false;
+    startBtn.disabled = false;
+    pauseBtn.disabled = true;
+    displayWrap.classList.add("blink");
+    playAlarm();
+    return;
+  }
+  remainSec--;
+  updateShow();
+}
+
+// 开始
+startBtn.onclick = () => {
+  if (isRun) return;
+  // 首次启动读取输入
+  if (!timerId && remainSec <= 0) {
+    totalSec = readInputTotal();
+    remainSec = totalSec;
+    if (totalSec <= 0) {
+      alert("请设置大于0的倒计时时长");
+      return;
+    }
+  }
+  isRun = true;
+  startBtn.disabled = true;
+  pauseBtn.disabled = false;
+  displayWrap.classList.remove("blink");
+  timerId = setInterval(tick, 1000);
+};
+
+// 暂停
+pauseBtn.onclick = () => {
+  if (!isRun) return;
+  clearInterval(timerId);
+  timerId = null;
+  isRun = false;
+  startBtn.disabled = false;
+  pauseBtn.disabled = true;
+};
+
+// 重置（修复：清空输入框+归零倒计时）
+resetBtn.onclick = () => {
+  clearInterval(timerId);
+  timerId = null;
+  isRun = false;
+  startBtn.disabled = false;
+  pauseBtn.disabled = true;
+  displayWrap.classList.remove("blink");
+  // 清空输入框
+  hourIn.value = 0;
+  minIn.value = 0;
+  secIn.value = 0;
+  // 倒计时归零
+  remainSec = 0;
+  totalSec = 0;
+  updateShow();
+};
+
+// 输入变更实时刷新预览
+[hourIn, minIn, secIn].forEach(el => {
+  el.addEventListener("input", ()=>{
+    if (!isRun) {
+      remainSec = readInputTotal();
+      updateShow();
+    }
+  })
+});
+
+// 初始化显示
+remainSec = readInputTotal();
+updateShow();
+initTheme();
+</script>
+</body>
+</html>

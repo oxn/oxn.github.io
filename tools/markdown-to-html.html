@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Markdown 转 HTML</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --primary: #10b981;
+  --primary-light: #dcfce7;
+  --danger: #ef4444;
+  --nav-bg: #fff;
+  --nav-border: #e5e7eb;
+  --text-main: #222;
+  --text-sub: #555;
+  --border: #e5e7eb;
+  --page-bg: #fff;
+  --card-bg: #fff;
+  --shadow: 0 6px 16px rgba(0,0,0,0.1);
+  --radius: 12px;
+  --max-width: 1400px;
+}
+html[data-theme="dark"] {
+  --primary: #34d399;
+  --nav-bg: #1f2937;
+  --nav-border: #374151;
+  --text-main: #f9fafb;
+  --text-sub: #d1d5db;
+  --border: #374151;
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif;}
+body {
+  background: var(--page-bg);
+  color: var(--text-main);
+  padding: 80px 3vw 40px;
+}
+.top-bar {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 3vw;
+  z-index: 99;
+}
+.top-bar button {
+  padding: 8px 14px;
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius);
+  background: var(--nav-bg);
+  color: var(--text-main);
+  cursor: pointer;
+}
+.wrap {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  background: var(--card-bg);
+  padding: 32px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+h2 {
+  text-align: center;
+  margin-bottom: 6px;
+}
+.sub-desc {
+  text-align: center;
+  color: var(--text-sub);
+  margin-bottom: 32px;
+}
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+@media (max-width:768px) {
+  .row {grid-template-columns: 1fr;gap:16px;}
+}
+.label {
+  display: block;
+  margin-bottom: 8px;
+}
+textarea {
+  width: 100%;
+  min-height: 40vh;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-main);
+  font-family: monospace;
+  resize: vertical;
+}
+.preview {
+  width: 100%;
+  min-height: 40vh;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: auto;
+}
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.btn-group button {
+  flex: 1;
+  min-width: 110px;
+  padding: 14px;
+  border-radius: var(--radius);
+  font-size: 16px;
+  cursor: pointer;
+}
+.btn-main {
+  border: none;
+  background: var(--primary);
+  color: #fff;
+}
+.btn-outline {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-main);
+}
+.tip {
+  color: var(--text-sub);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%) translateY(20px);
+  opacity: 0;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  background: var(--card-bg);
+  box-shadow: var(--shadow);
+  transition: 0.2s;
+  pointer-events: none;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+/* md预览样式 */
+.preview h1,h2,h3 {margin: 10px 0;}
+.preview p {margin: 8px 0;}
+.preview pre {padding: 10px;background:#eee;border-radius:6px;overflow-x:auto;}
+html[data-theme="dark"] .preview pre {background:#27272a;}
+.preview blockquote {border-left:4px solid #999;padding-left:12px;margin:10px 0;opacity:0.85;}
+.preview ul,ol {padding-left:24px;margin:8px 0;}
+.preview hr {margin:16px 0;border:0;border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <button id="back">← 返回首页</button>
+  <button id="theme">🌙</button>
+</div>
+
+<div class="wrap">
+  <h2>Markdown 转 HTML</h2>
+  <div class="sub-desc">实时将 Markdown 转换为 HTML 并预览</div>
+
+  <div class="row">
+    <div>
+      <label class="label">Markdown 输入</label>
+      <textarea id="mdInput" placeholder="输入Markdown内容"></textarea>
+    </div>
+    <div>
+      <label class="label">HTML 预览</label>
+      <div class="preview" id="previewBox"></div>
+    </div>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn-outline" id="clear">清空全部</button>
+    <button class="btn-outline" id="demo">加载示例</button>
+    <button class="btn-outline" id="copyHtml">复制HTML</button>
+    <button class="btn-main" id="download">下载HTML</button>
+  </div>
+
+  <div class="tip">
+    输入框高度自适应窗口，输入实时渲染；支持标题、列表、代码块、引用；可复制转换后HTML、下载完整离线文件。
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// 获取DOM
+const mdInput = document.getElementById('mdInput');
+const previewBox = document.getElementById('previewBox');
+const clearBtn = document.getElementById('clear');
+const demoBtn = document.getElementById('demo');
+const copyHtmlBtn = document.getElementById('copyHtml');
+const downloadBtn = document.getElementById('download');
+const toast = document.getElementById('toast');
+const themeBtn = document.getElementById('theme');
+const backBtn = document.getElementById('back');
+let lastHtml = '';
+
+// 提示弹窗
+function showTip(text) {
+  toast.innerText = text;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),2000);
+}
+
+// 转换渲染
+function render() {
+  const html = marked.parse(mdInput.value);
+  previewBox.innerHTML = html;
+  lastHtml = html;
+}
+
+// 加载示例
+function loadDemo() {
+  mdInput.value = `# Markdown 示例
+## 二级标题
+### 三级标题
+文本**粗体**、*斜体*、~~删除线~~、\`行内代码\`
+
+无序列表：
+- 项目1
+- 项目2
+  - 子项
+
+有序列表：
+1. 第一
+2. 第二
+
+代码块：
+\`\`\`js
+const a = 1;
+console.log(a);
+\`\`\`
+
+> 引用文本
+
+分割线
+---
+[链接](https://github.com)`;
+  render();
+  showTip("已加载示例");
+}
+
+// 清空
+function clearAll() {
+  mdInput.value = '';
+  render();
+  showTip("已清空");
+}
+
+// 复制HTML
+async function copyHtml() {
+  if (!lastHtml) return showTip("暂无转换内容");
+  try {
+    await navigator.clipboard.writeText(lastHtml);
+    showTip("HTML复制成功");
+  } catch(e) {
+    const temp = document.createElement('textarea');
+    temp.value = lastHtml;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showTip("已复制");
+  }
+}
+
+// 下载HTML文件
+function downloadFile() {
+  const full = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>MD文档</title>
+<style>
+body{max-width:700px;margin:2rem auto;padding:0 1rem;}
+pre{padding:0.6rem;background:#eee;border-radius:6px;}
+blockquote{border-left:4px solid #999;padding-left:0.8rem;}
+</style>
+</head>
+<body>${lastHtml}</body>
+</html>`;
+  const blob = new Blob([full], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'md-output.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  showTip("文件已下载");
+}
+
+// 主题切换
+function toggleTheme() {
+  const html = document.documentElement;
+  if (html.hasAttribute('data-theme')) {
+    html.removeAttribute('data-theme');
+    localStorage.setItem('theme','light');
+    themeBtn.innerText = '🌙';
+  } else {
+    html.setAttribute('data-theme','dark');
+    localStorage.setItem('theme','dark');
+    themeBtn.innerText = '☀️';
+  }
+}
+
+// 绑定事件
+clearBtn.onclick = clearAll;
+demoBtn.onclick = loadDemo;
+copyHtmlBtn.onclick = copyHtml;
+downloadBtn.onclick = downloadFile;
+themeBtn.onclick = toggleTheme;
+backBtn.onclick = ()=>window.location.href = "./index.html";
+mdInput.oninput = render;
+
+// 初始化主题
+if (localStorage.getItem('theme') === 'dark') {
+  document.documentElement.setAttribute('data-theme','dark');
+  themeBtn.innerText = '☀️';
+}
+loadDemo();
+</script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Emoji 清理器</title>
+<style>
+:root {
+  --primary: #10b981;
+  --primary-light: #dcfce7;
+  --danger: #ef4444;
+  --nav-btn-bg: #ffffff;
+  --nav-btn-border: #e5e7eb;
+  --nav-btn-text: #222222;
+  --text-main: #222;
+  --text-secondary: #666;
+  --border-base: #e5e7eb;
+  --bg-page: #fff;
+  --bg-card: #fff;
+  --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --space-lg: 1rem;
+  --transition: all 0.22s ease;
+  --content-max-width: 620px;
+  --card-label-offset: 2.25rem;
+  --nav-line-height: 2.375rem;
+  --theme-btn-width: 2.25rem;
+}
+html[data-theme="dark"] {
+  --primary: #34d399;
+  --primary-light: rgba(52, 211, 153, 0.18);
+  --nav-btn-bg: #1f2937;
+  --nav-btn-border: #374151;
+  --nav-btn-text: #f3f4f6;
+  --danger: #f87171;
+  --text-main: #f9fafb;
+  --text-secondary: #d1d5db;
+  --border-base: #374151;
+  --bg-page: #0f172a;
+  --bg-card: #1e293b;
+  --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif;transition:var(--transition);}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg-page);color:var(--text-main);padding:clamp(0.75rem,3vw,1.25rem);position:relative;}
+.top-header-bar{position:fixed;top:0.875rem;left:0;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 clamp(1rem,4vw,1.75rem);z-index:999;}
+.header-btn-back {padding:0.4375rem 0.625rem;border:1px solid var(--nav-btn-border);border-radius:var(--radius-lg);font-size:0.75rem;line-height:1;cursor:pointer;display:flex;align-items:center;gap:0.25rem;white-space:nowrap;background:var(--nav-btn-bg);color:var(--nav-btn-text);flex-shrink:0;height:var(--nav-line-height);}
+.header-btn-back:hover {border-color:var(--primary);background:var(--primary-light);color:var(--primary);}
+.header-btn-theme {width:var(--theme-btn-width);height:var(--theme-btn-width);padding:0;border:1px solid var(--nav-btn-border);border-radius:50%;font-size:1rem;cursor:pointer;display:grid;place-items:center;background:var(--nav-btn-bg);color:var(--nav-btn-text);flex-shrink:0;}
+.header-btn-theme:hover {border-color:var(--primary);background:var(--primary-light);color:var(--primary);}
+.box{width:100%;max-width:var(--content-max-width);background:var(--bg-card);padding:clamp(1.5rem,5vw,2rem);border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);margin-top:var(--card-label-offset);}
+h2{text-align:center;margin-bottom:0.375rem;font-weight:600;font-size:clamp(1.375rem,4vw,1.5rem);}
+.sub-title{text-align:center;font-size:clamp(0.8125rem,2vw,0.875rem);color:var(--text-secondary);margin-bottom:1.75rem;}
+.input-label{display:block;margin-bottom:0.375rem;font-size:clamp(0.875rem,2vw,0.9375rem);}
+textarea{width:100%;min-height:140px;padding:0.8rem;border:1px solid var(--border-base);border-radius:var(--radius-md);background:transparent;color:var(--text-main);font-size:0.9rem;resize:vertical;margin-bottom:var(--space-lg);}
+html[data-theme="dark"] textarea{background:#1f2937;}
+.count-text{text-align:center;font-size:1rem;margin-bottom:var(--space-lg);color:var(--text-secondary);}
+.count-num{color:var(--primary);font-weight:bold;}
+.btn-row{display:flex;flex-wrap:wrap;gap:0.6rem;margin-bottom:var(--space-lg);}
+.btn-row button{flex:1;min-width:110px;padding:0.85rem;border-radius:var(--radius-md);font-size:1rem;cursor:pointer;}
+.btn-main{border:none;background:var(--primary);color:#fff;}
+.btn-outline{border:1px solid var(--border-base);background:transparent;color:var(--text-main);}
+.result-area{width:100%;min-height:140px;padding:0.8rem;border:1px solid var(--border-base);border-radius:var(--radius-md);background:transparent;color:var(--text-main);white-space:pre-wrap;resize:vertical;margin-bottom:1.75rem;}
+html[data-theme="dark"] .result-area{background:#1f2937;}
+.tip-desc{margin-top:1.75rem;font-size:clamp(0.75rem,2vw,0.875rem);color:var(--text-secondary);line-height:1.6;opacity:0.7;}
+/* 无阻塞悬浮Toast，可穿透点击 */
+.toast-box{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);opacity:0;padding:0.7rem 1.4rem;border-radius:var(--radius-md);box-shadow:var(--shadow-lg);font-size:0.95rem;z-index:9999;pointer-events:none;transition:all 0.2s ease;}
+.toast-box.show{opacity:1;transform:translateX(-50%) translateY(0);}
+html[data-theme="dark"] .toast-box{background:#1e293b;}
+html:not([data-theme="dark"]) .toast-box{background:#ffffff;}
+.toast-success{color:var(--primary);}
+.toast-error{color:var(--danger);}
+@media screen and (min-width:768px){:root{--content-max-width:680px;}.box{padding:2.25rem;}}
+@media screen and (max-width:767px) and (orientation:portrait){.top-header-bar{padding:0 var(--space-lg);top:0.75rem;}.header-btn-back{padding:0.375rem 0.5rem;font-size:0.6875rem;height:2.125rem;}.header-btn-theme{width:2.125rem;height:2.125rem;}.box{padding:1.5rem 1.25rem;}}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle">🌙</button>
+</div>
+<div class="box">
+  <h2>Emoji 清理器</h2>
+  <div class="sub-title">一键移除文本中的 Emoji 表情</div>
+  <label class="input-label">输入文本</label>
+  <textarea id="inputTxt" placeholder="粘贴带表情的文本，例如：今天喝咖啡☕，国旗🇨🇳，花纹❀"></textarea>
+  <div class="count-text">移除数量: <span class="count-num" id="removeCount">0</span></div>
+  <div class="btn-row">
+    <button class="btn-main" id="clearEmojiBtn">一键清理表情</button>
+    <button class="btn-outline" id="demoBtn">加载演示文本</button>
+    <button class="btn-outline" id="clearBtn">清空内容</button>
+    <button class="btn-outline" id="copyResBtn">📜 复制结果</button>
+  </div>
+  <label class="input-label">输出结果</label>
+  <textarea class="result-area" id="outputRes" readonly placeholder="去除所有表情后的纯文本"></textarea>
+  <div class="tip-desc">自动删除全部Emoji、国旗、花纹符号、肤色复合表情，仅保留文字标点，本地离线处理。</div>
+</div>
+<div class="toast-box" id="toastText"></div>
+
+<script>
+// 预编译完整全覆盖正则（兼容所有浏览器，一次性清除☕、🇨🇳、❀、复合表情）
+const FULL_EMOJI_REG = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u0023-\u0039]\uFE0F?\u20E3|[\u203C-\u3299]\uFE0F?|\uD83E[\uDD00-\uDDFF]|\u200D|\uFE0F)/g;
+
+// 元素缓存
+const inputTxt = document.getElementById('inputTxt');
+const outputRes = document.getElementById('outputRes');
+const removeCount = document.getElementById('removeCount');
+const clearEmojiBtn = document.getElementById('clearEmojiBtn');
+const demoBtn = document.getElementById('demoBtn');
+const clearBtn = document.getElementById('clearBtn');
+const copyResBtn = document.getElementById('copyResBtn');
+const toastText = document.getElementById('toastText');
+const themeToggle = document.getElementById('themeToggle');
+const backHome = document.getElementById('backHome');
+const htmlRoot = document.documentElement;
+const STORAGE_KEY = 'site_theme_mode';
+
+// 轻提示
+function showToast(msg, success = true) {
+  toastText.className = 'toast-box ' + (success ? 'toast-success' : 'toast-error');
+  toastText.innerText = msg;
+  toastText.classList.add('show');
+  setTimeout(()=>toastText.classList.remove('show'),2000);
+}
+
+// 核心清洗函数（一键清理、实时输入共用同一逻辑，结果完全一致）
+function runClean() {
+  const raw = inputTxt.value;
+  // 统计清除总数
+  const matchList = raw.match(FULL_EMOJI_REG) || [];
+  removeCount.innerText = matchList.length;
+  // 清除所有表情与修饰符
+  let cleanStr = raw.replace(FULL_EMOJI_REG, '');
+  // 规整多余空格
+  cleanStr = cleanStr.replace(/\s+/g, ' ').trim();
+  outputRes.value = cleanStr;
+}
+
+// 演示文本（包含咖啡☕、国旗🇨🇳、花纹❀、复合肤色表情）
+const demoContent = "今天周末🏃‍♂️，早上喝咖啡☕，中午吃汉堡🍔，下午看小猫🐱，心情满分💯！国旗🇨🇳、肤色表情👩🏽‍💻、星星✨、花纹❀";
+
+// 按钮绑定
+demoBtn.onclick = function(){
+  inputTxt.value = demoContent;
+  runClean();
+  showToast("已加载演示文本");
+};
+clearBtn.onclick = function(){
+  inputTxt.value = "";
+  outputRes.value = "";
+  removeCount.innerText = "0";
+  showToast("已清空全部内容");
+};
+// 一键清理按钮直接绑定核心函数，点击立即执行
+clearEmojiBtn.onclick = runClean;
+copyResBtn.onclick = async function(){
+  const val = outputRes.value;
+  if(!val){
+    showToast("暂无内容可复制", false);
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(val);
+    showToast("✅ 复制成功");
+  }catch(e){
+    const temp = document.createElement('textarea');
+    temp.value = val;
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    document.body.appendChild(temp);
+    temp.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(temp);
+    ok ? showToast("✅ 复制成功") : showToast("❌ 复制失败，请手动复制", false);
+  }
+};
+// 输入框实时自动清理
+inputTxt.oninput = runClean;
+// 返回首页
+backHome.onclick = ()=>window.location.href="./index.html";
+// 主题切换
+function initTheme(){
+  const save = localStorage.getItem(STORAGE_KEY);
+  if(save === 'dark'){
+    htmlRoot.setAttribute('data-theme','dark');
+    themeToggle.innerText = '☀️';
+  }else{
+    htmlRoot.removeAttribute('data-theme');
+    themeToggle.innerText = '🌙';
+  }
+}
+themeToggle.onclick = function(){
+  const dark = htmlRoot.hasAttribute('data-theme');
+  if(dark){
+    htmlRoot.removeAttribute('data-theme');
+    localStorage.setItem(STORAGE_KEY,'light');
+    themeToggle.innerText = '🌙';
+  }else{
+    htmlRoot.setAttribute('data-theme','dark');
+    localStorage.setItem(STORAGE_KEY,'dark');
+    themeToggle.innerText = '☀️';
+  }
+};
+// 页面初始化执行一次
+initTheme();
+runClean();
+</script>
+</body>
+</html>

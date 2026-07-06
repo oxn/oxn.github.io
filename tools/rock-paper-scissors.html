@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>石头剪刀布</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:8px;
+  font-weight:600;
+  font-size:24px;
+}
+.sub-title{
+  text-align:center;
+  font-size:14px;
+  color:var(--text-secondary);
+  margin-bottom:28px;
+}
+.score-row{
+  display:flex;
+  justify-content: space-around;
+  text-align:center;
+  margin-bottom:30px;
+  padding:16px;
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+}
+.score-item h4{
+  font-size:14px;
+  color:var(--text-secondary);
+  margin-bottom:6px;
+}
+.score-item .num{
+  font-size:28px;
+  font-weight:700;
+  color:var(--primary);
+}
+.vs-box{
+  text-align:center;
+  font-size:26px;
+  margin:24px 0;
+  font-weight:600;
+  padding:16px;
+  border-radius:var(--radius-md);
+  transition: box-shadow 0.3s ease;
+}
+.choose-row{
+  display:flex;
+  gap:12px;
+  margin-bottom:24px;
+}
+.choose-btn{
+  flex:1;
+  padding:16px 0;
+  font-size:20px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:var(--nav-btn-bg);
+  color:var(--text-main);
+  cursor:pointer;
+}
+.choose-btn:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.result-text{
+  text-align:center;
+  font-size:18px;
+  font-weight:600;
+  margin-bottom:20px;
+  min-height:26px;
+}
+.reset-btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:var(--radius-md);
+  background:var(--warn);
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+  margin-top:20px;
+}
+
+/* 游戏动画 */
+@keyframes shake {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-8px); }
+  40%  { transform: translateX(8px); }
+  60%  { transform: translateX(-8px); }
+  80%  { transform: translateX(8px); }
+  100% { transform: translateX(0); }
+}
+@keyframes pop {
+  0%   { transform: scale(1); opacity: 0.8; }
+  50%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes winGlow {
+  0%   { box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+  50%  { box-shadow: 0 0 18px rgba(16, 185, 129, 0.6); }
+  100% { box-shadow: 0 0 0 rgba(16, 185, 129, 0); }
+}
+@keyframes loseGlow {
+  0%   { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+  50%  { box-shadow: 0 0 18px rgba(239, 68, 68, 0.6); }
+  100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+}
+@keyframes drawGlow {
+  0%   { box-shadow: 0 0 0 rgba(249, 115, 22, 0); }
+  50%  { box-shadow: 0 0 18px rgba(249, 115, 22, 0.6); }
+  100% { box-shadow: 0 0 0 rgba(249, 115, 22, 0); }
+}
+.shake {
+  animation: shake 0.45s ease-in-out;
+}
+.pop {
+  animation: pop 0.35s ease-out;
+}
+.win-glow {
+  animation: winGlow 0.6s ease-out;
+}
+.lose-glow {
+  animation: loseGlow 0.6s ease-out;
+}
+.draw-glow {
+  animation: drawGlow 0.6s ease-out;
+}
+
+/* 手机竖屏适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+    font-size:14px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+  }
+  .choose-row{
+    gap:8px;
+  }
+  .choose-btn{
+    font-size:17px;
+    padding:14px 0;
+  }
+  .score-item .num{
+    font-size:24px;
+  }
+  .vs-box{
+    font-size:22px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>✌️ 石头剪刀布</h2>
+  <div class="sub-title">经典猜拳游戏，看看谁更厉害</div>
+
+  <div class="score-row">
+    <div class="score-item">
+      <h4>玩家</h4>
+      <div class="num" id="playerScore">0</div>
+    </div>
+    <div class="score-item">
+      <h4>平局</h4>
+      <div class="num" id="drawScore">0</div>
+    </div>
+    <div class="score-item">
+      <h4>电脑</h4>
+      <div class="num" id="cpuScore">0</div>
+    </div>
+  </div>
+
+  <div class="vs-box" id="vsBox">
+    <span id="playerShow">❓</span> VS <span id="cpuShow">❓</span>
+  </div>
+
+  <div class="choose-row">
+    <button class="choose-btn" id="rock">✊ 石头</button>
+    <button class="choose-btn" id="paper">✋ 布</button>
+    <button class="choose-btn" id="scissors">✌️ 剪刀</button>
+  </div>
+
+  <div class="result-text" id="resultTip"></div>
+
+  <button class="reset-btn" id="resetAll">重置计分</button>
+
+  <div class="tip">
+    使用说明：点击石头/布/剪刀与电脑对战，点击后会有摇拳动画，自动判定胜负并累计分数；点击重置可清空所有战绩重新开始。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+// 返回首页
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// DOM元素
+const playerScore = document.getElementById("playerScore");
+const drawScore = document.getElementById("drawScore");
+const cpuScore = document.getElementById("cpuScore");
+const playerShow = document.getElementById("playerShow");
+const cpuShow = document.getElementById("cpuShow");
+const resultTip = document.getElementById("resultTip");
+const vsBox = document.getElementById("vsBox");
+const rock = document.getElementById("rock");
+const paper = document.getElementById("paper");
+const scissors = document.getElementById("scissors");
+const resetAll = document.getElementById("resetAll");
+
+// 全局变量
+let p = 0, d = 0, c = 0;
+let isAnimating = false;
+const map = {
+  rock: {text:"✊ 石头", val:0},
+  paper: {text:"✋ 布", val:1},
+  scissors: {text:"✌️ 剪刀", val:2}
+};
+const keys = ["rock","paper","scissors"];
+
+// 结算胜负逻辑
+function settleResult(user, cpu) {
+  let res;
+  let resultType;
+  if (user.val === cpu.val) {
+    d++;
+    drawScore.innerText = d;
+    res = "平局！";
+    resultType = "draw";
+  } else if(
+    (user.val === 0 && cpu.val === 2) ||
+    (user.val === 1 && cpu.val === 0) ||
+    (user.val === 2 && cpu.val === 1)
+  ){
+    p++;
+    playerScore.innerText = p;
+    res = "你赢了！";
+    resultType = "win";
+  }else{
+    c++;
+    cpuScore.innerText = c;
+    res = "电脑赢！";
+    resultType = "lose";
+  }
+  // 结果弹出动画
+  resultTip.innerText = res;
+  resultTip.classList.add("pop");
+  vsBox.classList.add(resultType + "-glow");
+  setTimeout(()=>{
+    resultTip.classList.remove("pop");
+    vsBox.classList.remove("win-glow","lose-glow","draw-glow");
+    isAnimating = false;
+  },600);
+}
+
+// 出拳主函数（带动画）
+function play(userKey){
+  if(isAnimating) return;
+  const user = map[userKey];
+  const cpuKey = keys[Math.floor(Math.random()*3)];
+  const cpu = map[cpuKey];
+  isAnimating = true;
+  resultTip.innerText = "出拳中...";
+  // 摇晃动画
+  playerShow.classList.add("shake");
+  cpuShow.classList.add("shake");
+  let count = 0;
+  const maxLoop = 8;
+  const tickInterval = setInterval(()=>{
+    const randUser = keys[Math.floor(Math.random()*3)];
+    const randCpu = keys[Math.floor(Math.random()*3)];
+    playerShow.innerText = map[randUser].text;
+    cpuShow.innerText = map[randCpu].text;
+    count++;
+    if(count >= maxLoop){
+      clearInterval(tickInterval);
+      // 定格最终手势
+      playerShow.innerText = user.text;
+      cpuShow.innerText = cpu.text;
+      playerShow.classList.remove("shake");
+      cpuShow.classList.remove("shake");
+      settleResult(user,cpu);
+    }
+  },60);
+}
+
+// 按钮绑定
+rock.onclick = ()=>play("rock");
+paper.onclick = ()=>play("paper");
+scissors.onclick = ()=>play("scissors");
+
+// 重置全部数据与动画
+resetAll.onclick = ()=>{
+  p = d = c = 0;
+  playerScore.innerText = 0;
+  drawScore.innerText = 0;
+  cpuScore.innerText = 0;
+  playerShow.innerText = "❓";
+  cpuShow.innerText = "❓";
+  resultTip.innerText = "";
+  vsBox.classList.remove("win-glow","lose-glow","draw-glow");
+  playerShow.classList.remove("shake");
+  cpuShow.classList.remove("shake");
+  isAnimating = false;
+};
+
+initTheme();
+</script>
+</body>
+</html>

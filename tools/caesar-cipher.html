@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>凯撒密码工具</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 720px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部按钮容器 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width: var(--content-max-width);
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:28px;
+  font-weight:600;
+  font-size:24px;
+}
+.input-item{
+  width:100%;
+  margin-bottom:18px;
+}
+label{
+  display:block;
+  margin-bottom:8px;
+  font-size:15px;
+  opacity:0.85;
+}
+textarea,input[type="number"]{
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  background:transparent;
+  color:inherit;
+}
+textarea{
+  min-height:160px;
+  resize: vertical;
+}
+.btn-group{
+  display:flex;
+  gap:10px;
+  margin-bottom:16px;
+}
+.btn{
+  padding:12px 20px;
+  border:none;
+  border-radius:var(--radius-md);
+  cursor:pointer;
+  font-size:16px;
+  flex:1;
+  pointer-events: auto !important;
+}
+.btn-primary{ background:var(--primary); color:#fff; }
+.btn-blue{ background:#409eff; color:#fff; }
+.btn-gray{ background:#909399; color:#fff; }
+.stat-text{
+  margin-bottom:16px;
+  font-size:14px;
+  color:var(--text-secondary);
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+}
+/* 悬浮Toast提示 */
+.toast-copy {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transition: opacity 0.25s ease;
+}
+.toast-copy.show {
+  opacity: 1;
+}
+/* 手机竖屏适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+    font-size:14px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+    margin-bottom:24px;
+  }
+  .btn-group{
+    flex-direction:column;
+  }
+  label{
+    font-size:14px;
+    margin-bottom:6px;
+  }
+  textarea,input[type="number"]{
+    padding:12px 14px;
+    font-size:16px;
+    min-height:140px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="toast-copy" id="toastTip"></div>
+
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>凯撒密码工具</h2>
+
+  <div class="input-item">
+    <label>位移量</label>
+    <input id="shiftNum" type="number" value="3" min="1" max="25">
+  </div>
+
+  <div class="input-item">
+    <label>输入</label>
+    <textarea id="inputText" placeholder="输入明文或密文"></textarea>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-gray" id="demoBtn">填充演示文本</button>
+    <button class="btn btn-primary" id="encryptBtn">加密</button>
+    <button class="btn btn-blue" id="decryptBtn">解密</button>
+    <button class="btn btn-gray" id="clearBtn">清空</button>
+  </div>
+
+  <div class="stat-text" id="convertStatus">已完成转换：无</div>
+
+  <div class="input-item">
+    <label>输出</label>
+    <textarea id="outputText" readonly placeholder="转换结果展示"></textarea>
+  </div>
+
+  <div class="btn-group">
+    <button class="btn btn-blue" id="copyBtn">复制输出</button>
+  </div>
+
+  <div class="tip">
+凯撒密码通过设置字母位移值实现加密解密，仅转换大小写英文字母；
+数字、中文、标点符号、空格保持原样；
+加密与解密仅需反向位移，全部运算在本地浏览器完成。
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const toastTip = document.getElementById('toastTip');
+const STORAGE_KEY = "site_theme_mode";
+
+// 悬浮提示
+function showToast(msg) {
+  toastTip.textContent = msg;
+  toastTip.classList.add('show');
+  setTimeout(() => toastTip.classList.remove('show'), 1800);
+}
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+initTheme();
+
+// 切换明暗
+themeToggle.addEventListener('click', function(){
+  const isDark = htmlRoot.hasAttribute("data-theme");
+  if (isDark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.innerHTML = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.innerHTML = "☀️";
+  }
+});
+
+// 返回首页
+document.getElementById("backHome").addEventListener('click', function(){
+  window.location.href = "./index.html";
+});
+
+const shiftNum = document.getElementById('shiftNum');
+const inputText = document.getElementById('inputText');
+const outputText = document.getElementById('outputText');
+const convertStatus = document.getElementById("convertStatus");
+const demoBtn = document.getElementById("demoBtn");
+const encryptBtn = document.getElementById("encryptBtn");
+const decryptBtn = document.getElementById("decryptBtn");
+const clearBtn = document.getElementById("clearBtn");
+const copyBtn = document.getElementById("copyBtn");
+
+// 演示文本
+const demoText = "Hello Caesar 123 测试密码 ABCxyz!";
+
+demoBtn.addEventListener('click', ()=>{
+  inputText.value = demoText;
+  outputText.value = "";
+  convertStatus.textContent = "已完成转换：无";
+});
+
+// 凯撒移位核心函数
+function caesarShift(str, shift){
+  let res = "";
+  shift = ((shift % 26) + 26) % 26;
+  for(let i = 0; i < str.length; i++){
+    let char = str[i];
+    let code = char.charCodeAt(0);
+    // 大写 A-Z
+    if(code >= 65 && code <= 90){
+      res += String.fromCharCode(((code - 65 + shift) % 26) + 65);
+    }
+    // 小写 a-z
+    else if(code >= 97 && code <= 122){
+      res += String.fromCharCode(((code - 97 + shift) % 26) + 97);
+    }
+    // 其他字符不变
+    else{
+      res += char;
+    }
+  }
+  return res;
+}
+
+// 加密
+encryptBtn.addEventListener('click', ()=>{
+  const val = inputText.value.trim();
+  const shift = parseInt(shiftNum.value);
+  if(!val){
+    showToast("请输入待加密文本");
+    return;
+  }
+  if(isNaN(shift) || shift < 1 || shift > 25){
+    showToast("位移范围1-25");
+    return;
+  }
+  outputText.value = caesarShift(val, shift);
+  convertStatus.textContent = "已完成转换：凯撒加密";
+});
+
+// 解密
+decryptBtn.addEventListener('click', ()=>{
+  const val = inputText.value.trim();
+  const shift = parseInt(shiftNum.value);
+  if(!val){
+    showToast("请输入待解密文本");
+    return;
+  }
+  if(isNaN(shift) || shift < 1 || shift > 25){
+    showToast("位移范围1-25");
+    return;
+  }
+  outputText.value = caesarShift(val, 26 - shift);
+  convertStatus.textContent = "已完成转换：凯撒解密";
+});
+
+// 清空
+clearBtn.addEventListener('click', ()=>{
+  inputText.value = "";
+  outputText.value = "";
+  convertStatus.textContent = "已完成转换：无";
+});
+
+// 复制函数 双兼容无弹窗
+async function copyText(text) {
+  if (!text.trim()) {
+    showToast("无内容可复制");
+    return;
+  }
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast("复制成功");
+      return;
+    } catch (err) {}
+  }
+  // 兜底兼容
+  const temp = document.createElement("textarea");
+  temp.value = text;
+  temp.style.position = "fixed";
+  temp.style.left = "-9999px";
+  document.body.appendChild(temp);
+  temp.select();
+  document.execCommand("copy");
+  document.body.removeChild(temp);
+  showToast("复制成功");
+}
+
+copyBtn.addEventListener('click', ()=>{
+  copyText(outputText.value);
+});
+
+});
+</script>
+</body>
+</html>

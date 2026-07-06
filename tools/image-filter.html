@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>图片滤镜</title>
+<style>
+    /* 全局主题统一变量 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 0.375rem;
+      --space-sm: 0.625rem;
+      --space-md: 0.875rem;
+      --space-lg: 1rem;
+      --space-xl: 1.75rem;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0.15);
+      --body-font-size: 1rem;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 540px;
+      --card-gap: 1rem;
+      --card-min-width: 300px;
+      --header-safe-gap: 1rem;
+      --card-label-offset: 2.25rem;
+      --nav-line-height: 2.375rem;
+      --theme-btn-width: 2.25rem;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 clamp(1rem, 4vw, 1.75rem);
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: var(--theme-btn-width);
+  height: var(--theme-btn-width);
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--content-max-width);
+  background:var(--bg-card);
+  padding: clamp(1.5rem, 5vw, 2rem);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: var(--card-label-offset);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+  font-size: clamp(1.375rem, 4vw, 1.5rem);
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+/* 上传区域 */
+.upload-area{
+  border:2px dashed var(--border-base);
+  border-radius:var(--radius-md);
+  padding: clamp(1.875rem, 6vw, 2.5rem) clamp(0.75rem, 2vw, 1rem);
+  text-align:center;
+  cursor:pointer;
+  margin-bottom: var(--space-xl);
+}
+.upload-area.active{
+  border-color:var(--primary);
+  background:var(--primary-light);
+}
+.upload-icon{
+  font-size: clamp(2rem, 7vw, 2.625rem);
+  margin-bottom: var(--space-sm);
+  color:var(--text-secondary);
+}
+input[type="file"]{
+  display:none;
+}
+/* 滑块输入项 */
+.slide-item{
+  width:100%;
+  margin-bottom: var(--space-lg);
+}
+label{
+  display:block;
+  margin-bottom: var(--space-xs);
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+  opacity:0.85;
+}
+input[type="range"]{
+  width:100%;
+  padding: 0.8125rem 0;
+  background: transparent;
+}
+html[data-theme="dark"] input[type="range"]::-webkit-slider-thumb{
+  background:#34d399;
+}
+.preview-box{
+  text-align:center;
+  margin-bottom: var(--space-lg);
+  min-height:100px;
+}
+.preview-box canvas{
+  max-width:100%;
+  max-height: clamp(16.25rem, 40vh, 260px);
+  border-radius:var(--radius-md);
+  object-fit: contain;
+  background:#fff;
+}
+html[data-theme="dark"] .preview-box canvas{
+  background:#222;
+}
+.btn{
+  width:100%;
+  padding: clamp(0.8125rem, 2vw, 0.875rem);
+  border:none;
+  border-radius:var(--radius-md);
+  font-size: clamp(0.9375rem, 2vw, 1rem);
+  cursor:pointer;
+}
+.btn-main{
+  background:var(--primary);
+  color:#fff;
+  margin-bottom: var(--space-sm);
+}
+.btn-orange{
+  background:var(--warn);
+  color:#fff;
+  margin-bottom: var(--space-xl);
+}
+.tip{
+  text-align:left;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+  margin-top: var(--space-xl);
+}
+/* 平板横屏 */
+@media screen and (min-width: 768px) {
+  :root {
+    --content-max-width: 620px;
+  }
+  .box {
+    padding: 2.25rem;
+  }
+  .preview-box canvas {
+    max-height: 30vh;
+  }
+}
+/* 手机竖屏 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:0.75rem;
+  }
+  .header-btn-back{
+    padding:0.375rem 0.5rem;
+    font-size:0.6875rem;
+    height: 2.125rem;
+  }
+  .header-btn-theme{
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+  .box{
+    padding: 1.5rem 1.25rem;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>图片滤镜</h2>
+  <div class="sub-title">调整亮度、对比度、饱和度等参数</div>
+
+  <div class="upload-area" id="uploadBox">
+    <div class="upload-icon">🖼️</div>
+    <div>选择图片 / 拖拽图片到此处</div>
+    <input type="file" id="fileInput" accept="image/jpg,image/jpeg,image/png,image/gif,image/webp">
+  </div>
+
+  <div class="slide-item">
+    <label>亮度：<span id="brightVal">100</span>%</label>
+    <input type="range" id="brightSlider" min="0" max="200" value="100">
+  </div>
+  <div class="slide-item">
+    <label>对比度：<span id="contVal">100</span>%</label>
+    <input type="range" id="contSlider" min="0" max="200" value="100">
+  </div>
+  <div class="slide-item">
+    <label>饱和度：<span id="satVal">100</span>%</label>
+    <input type="range" id="satSlider" min="0" max="200" value="100">
+  </div>
+  <div class="slide-item">
+    <label>灰度：<span id="grayVal">0</span>%</label>
+    <input type="range" id="graySlider" min="0" max="100" value="0">
+  </div>
+  <div class="slide-item">
+    <label>复古：<span id="sepVal">0</span>%</label>
+    <input type="range" id="sepSlider" min="0" max="100" value="0">
+  </div>
+  <div class="slide-item">
+    <label>模糊：<span id="blurVal">0</span>px</label>
+    <input type="range" id="blurSlider" min="0" max="10" value="0" step="0.5">
+  </div>
+
+  <div class="preview-box">
+    <canvas id="previewCanvas"></canvas>
+  </div>
+
+  <button class="btn btn-main" id="renderBtn">应用滤镜</button>
+  <button class="btn btn-orange" id="downloadBtn" style="display:none;">下载PNG图片</button>
+
+  <div class="tip">
+    使用说明：本地离线滤镜调色，不上传原图；拖动滑块调整各项参数，支持亮度/对比度/饱和度/灰度/复古/模糊六种滤镜叠加，导出无损PNG图片。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题切换
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// DOM
+const uploadBox = document.getElementById("uploadBox");
+const fileInput = document.getElementById("fileInput");
+// 亮度
+const brightSlider = document.getElementById("brightSlider");
+const brightVal = document.getElementById("brightVal");
+// 对比度
+const contSlider = document.getElementById("contSlider");
+const contVal = document.getElementById("contVal");
+// 饱和度
+const satSlider = document.getElementById("satSlider");
+const satVal = document.getElementById("satVal");
+// 灰度
+const graySlider = document.getElementById("graySlider");
+const grayVal = document.getElementById("grayVal");
+// 复古
+const sepSlider = document.getElementById("sepSlider");
+const sepVal = document.getElementById("sepVal");
+// 模糊
+const blurSlider = document.getElementById("blurSlider");
+const blurVal = document.getElementById("blurVal");
+
+const previewCanvas = document.getElementById("previewCanvas");
+const ctx = previewCanvas.getContext("2d");
+const renderBtn = document.getElementById("renderBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+
+let originImg = null;
+let originFile = null;
+let finalBlob = null;
+
+// 滑块实时数值（修复饱和度绑定错误）
+brightSlider.oninput = ()=> brightVal.innerText = brightSlider.value;
+contSlider.oninput = ()=> contVal.innerText = contSlider.value;
+satSlider.oninput = ()=> satVal.innerText = satSlider.value;
+graySlider.oninput = ()=> grayVal.innerText = graySlider.value;
+sepSlider.oninput = ()=> sepVal.innerText = sepSlider.value;
+blurSlider.oninput = ()=> blurVal.innerText = blurSlider.value;
+
+// 拖拽上传
+uploadBox.addEventListener("dragover", e=>{e.preventDefault(); uploadBox.classList.add("active");});
+uploadBox.addEventListener("dragleave", ()=>uploadBox.classList.remove("active"));
+uploadBox.addEventListener("drop", e=>{
+  e.preventDefault();
+  uploadBox.classList.remove("active");
+  const f = e.dataTransfer.files[0];
+  if(f) loadImg(f);
+});
+uploadBox.onclick = ()=>fileInput.click();
+fileInput.onchange = ()=>{
+  if(fileInput.files[0]) loadImg(fileInput.files[0]);
+};
+
+// 加载原图
+function loadImg(file){
+  originFile = file;
+  downloadBtn.style.display = "none";
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      originImg = img;
+      previewCanvas.width = img.width;
+      previewCanvas.height = img.height;
+      ctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+      ctx.filter = "none";
+      ctx.drawImage(img,0,0);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// 生成滤镜合成（核心修复：每次重置filter、清空画布）
+renderBtn.onclick = async ()=>{
+  if(!originImg) return alert("请先上传图片");
+  const bright = brightSlider.value;
+  const cont = contSlider.value;
+  const sat = satSlider.value;
+  const gray = graySlider.value;
+  const sep = sepSlider.value;
+  const blur = blurSlider.value;
+
+  // 每次先清空画布、重置滤镜，防止叠加残留
+  previewCanvas.width = originImg.width;
+  previewCanvas.height = originImg.height;
+  ctx.clearRect(0,0,previewCanvas.width,previewCanvas.height);
+  ctx.filter = "none";
+
+  // 拼接完整滤镜字符串
+  const filterStr = `brightness(${bright}%) contrast(${cont}%) saturate(${sat}%) grayscale(${gray}%) sepia(${sep}%) blur(${blur}px)`;
+  ctx.filter = filterStr;
+  ctx.drawImage(originImg,0,0);
+
+  // 导出PNG
+  finalBlob = await new Promise(res=>{
+    previewCanvas.toBlob(b=>res(b), "image/png", 1);
+  });
+  downloadBtn.style.display = "block";
+};
+
+// 下载图片
+downloadBtn.onclick = ()=>{
+  if(!finalBlob) return;
+  const url = URL.createObjectURL(finalBlob);
+  const a = document.createElement("a");
+  const base = originFile.name.replace(/\.\w+$/, "");
+  a.download = base + "_滤镜.png";
+  a.href = url;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+initTheme();
+</script>
+</body>
+</html>

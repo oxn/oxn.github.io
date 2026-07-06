@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>百分比计算器</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部导航栏 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:28px;
+  font-weight:600;
+  font-size:24px;
+}
+.calc-block{
+  margin-bottom:24px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--border-base);
+}
+.calc-block:last-child{
+  border-bottom:none;
+  margin-bottom:0;
+  padding-bottom:0;
+}
+.block-title{
+  font-size:17px;
+  font-weight:600;
+  margin-bottom:14px;
+}
+.row-two{
+  display:flex;
+  gap:12px;
+  width:100%;
+  margin-bottom:10px;
+  align-items:center;
+}
+.col-half{
+  flex:1;
+}
+.input-item{
+  width:100%;
+}
+label{
+  display:block;
+  margin-bottom:8px;
+  font-size:15px;
+  opacity:0.85;
+}
+input{
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  background:transparent;
+  color:inherit;
+}
+/* 暗黑表单统一修复 */
+select,
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="number"] {
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  color:inherit;
+  background: transparent;
+}
+html[data-theme="dark"] {
+  select,
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    background: #273449;
+    color: #f3f4f6;
+  }
+  select option {
+    background: #1e293b;
+    color: #f3f4f6;
+  }
+  ::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--primary);
+}
+.result-line{
+  margin-top:10px;
+  font-size:17px;
+  font-weight:600;
+  color:var(--primary);
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+  margin-top:20px;
+}
+/* 手机竖屏适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+    font-size:14px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+    margin-bottom:24px;
+  }
+  .row-two{
+    flex-direction:column;
+    gap:10px;
+    align-items:flex-start;
+  }
+  label{
+    font-size:14px;
+    margin-bottom:6px;
+  }
+  input,select{
+    padding:12px 14px;
+    font-size:16px;
+  }
+  .block-title{
+    font-size:16px;
+  }
+  .result-line{
+    font-size:16px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>百分比计算器</h2>
+
+  <!-- 模块1：X 的 Y% 是多少 -->
+  <div class="calc-block">
+    <div class="block-title">X 的 Y% 是多少？</div>
+    <div class="row-two">
+      <div class="col-half input-item">
+        <label>数值</label>
+        <input id="num1" type="number" step="any" placeholder="例如 200">
+      </div>
+      <span>的</span>
+      <div class="col-half input-item">
+        <label>百分比</label>
+        <input id="pct1" type="number" step="any" placeholder="例如 25">
+      </div>
+      <span>%</span>
+    </div>
+    <div class="result-line" id="res1">--</div>
+  </div>
+
+  <!-- 模块2：X 是 Y 的百分之几 -->
+  <div class="calc-block">
+    <div class="block-title">X 是 Y 的百分之几？</div>
+    <div class="row-two">
+      <div class="col-half input-item">
+        <label>数值</label>
+        <input id="num2" type="number" step="any" placeholder="例如 50">
+      </div>
+      <span>是</span>
+      <div class="col-half input-item">
+        <label>总数</label>
+        <input id="total2" type="number" step="any" placeholder="例如 200">
+      </div>
+    </div>
+    <div class="result-line" id="res2">--</div>
+  </div>
+
+  <!-- 模块3：增减百分比 -->
+  <div class="calc-block">
+    <div class="block-title">原始值 增加/减少 Y%</div>
+    <div class="row-two">
+      <div class="col-half input-item">
+        <label>原始值</label>
+        <input id="base3" type="number" step="any" placeholder="100">
+      </div>
+      <div class="col-half input-item">
+        <label>百分比</label>
+        <input id="pct3" type="number" step="any" placeholder="输入正数增加/负数减少">
+      </div>
+      <span>%</span>
+    </div>
+    <div class="result-line" id="res3">--</div>
+  </div>
+
+  <!-- 模块4：百分比变化 -->
+  <div class="calc-block">
+    <div class="block-title">百分比变化（从A到B）</div>
+    <div class="row-two">
+      <div class="col-half input-item">
+        <label>从</label>
+        <input id="old4" type="number" step="any" placeholder="100">
+      </div>
+      <span>→</span>
+      <div class="col-half input-item">
+        <label>到</label>
+        <input id="new4" type="number" step="any" placeholder="130">
+      </div>
+    </div>
+    <div class="result-line" id="res4">--</div>
+  </div>
+
+  <div class="tip">
+    使用说明：支持四类常用百分比计算，输入数字实时自动算出结果；折扣、涨幅、成绩占比、数据增长率均可快速计算。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题初始化与切换
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("dark");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    theme.textContent = "☀️";
+  }
+};
+// 返回首页
+document.getElementById("backHome").onclick = () => location.href = "./index.html";
+
+// 元素
+const num1 = document.getElementById("num1");
+const pct1 = document.getElementById("pct1");
+const res1 = document.getElementById("res1");
+
+const num2 = document.getElementById("num2");
+const total2 = document.getElementById("total2");
+const res2 = document.getElementById("res2");
+
+const base3 = document.getElementById("base3");
+const pct3 = document.getElementById("pct3");
+const res3 = document.getElementById("res3");
+
+const old4 = document.getElementById("old4");
+const new4 = document.getElementById("new4");
+const res4 = document.getElementById("res4");
+
+// 1. X 的 Y%
+function calc1() {
+  const n = parseFloat(num1.value);
+  const p = parseFloat(pct1.value);
+  if (isNaN(n) || isNaN(p)) {
+    res1.textContent = "--";
+    return;
+  }
+  const r = n * p / 100;
+  res1.textContent = `结果 = ${r.toFixed(4)}`;
+}
+
+// 2. X 是 Y 的百分之几
+function calc2() {
+  const x = parseFloat(num2.value);
+  const y = parseFloat(total2.value);
+  if (isNaN(x) || isNaN(y) || y === 0) {
+    res2.textContent = "--";
+    return;
+  }
+  const p = (x / y) * 100;
+  res2.textContent = `占比 = ${p.toFixed(2)} %`;
+}
+
+// 3. 原值 ± 百分比
+function calc3() {
+  const base = parseFloat(base3.value);
+  const p = parseFloat(pct3.value);
+  if (isNaN(base) || isNaN(p)) {
+    res3.textContent = "--";
+    return;
+  }
+  const r = base * (1 + p / 100);
+  const type = p >= 0 ? "增加" : "减少";
+  res1.textContent = "--";
+  res3.textContent = `结果 = ${r.toFixed(4)} (${Math.abs(p)}%${type})`;
+}
+
+// 4. 从旧到新变化率
+function calc4() {
+  const o = parseFloat(old4.value);
+  const n = parseFloat(new4.value);
+  if (isNaN(o) || isNaN(n) || o === 0) {
+    res4.textContent = "--";
+    return;
+  }
+  const diff = n - o;
+  const rate = (diff / o) * 100;
+  const text = rate >= 0 ? `上涨 ${rate.toFixed(2)}%` : `下跌 ${Math.abs(rate).toFixed(2)}%`;
+  res4.textContent = `变化：${text}`;
+}
+
+// 绑定所有输入实时计算
+[num1, pct1].forEach(el => el.addEventListener("input", calc1));
+[num2, total2].forEach(el => el.addEventListener("input", calc2));
+[base3, pct3].forEach(el => el.addEventListener("input", calc3));
+[old4, new4].forEach(el => el.addEventListener("input", calc4));
+
+initTheme();
+</script>
+</body>
+</html>

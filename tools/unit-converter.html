@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>单位换算器</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部按钮容器 贴合主站头部布局 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+/* 返回按钮：沿用主站胶囊文字样式不变 */
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+/* 明暗切换圆形图标按钮：仅图标、正圆 */
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:28px;
+  font-weight:600;
+  font-size:24px;
+}
+.row-two{
+  display:flex;
+  gap:12px;
+  margin-bottom:22px;
+  width:100%;
+}
+.col-half{
+  flex:1;
+}
+.input-item{
+  width:100%;
+  margin-bottom:16px;
+}
+label{
+  display:block;
+  margin-bottom:8px;
+  font-size:15px;
+  opacity:0.85;
+}
+input,textarea{
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  background:transparent;
+  color:inherit;
+}
+select{
+  width:100%;
+  padding:13px 16px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  font-size:16px;
+  color:inherit;
+}
+html[data-theme="dark"] select{
+  background: #273449;
+}
+textarea{
+  resize: vertical;
+  min-height: 90px;
+}
+.result-box{
+  text-align:center;
+  padding:20px;
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+  margin-bottom:20px;
+  margin-top:10px;
+}
+.result-value{
+  font-size:36px;
+  font-weight:700;
+  color:var(--primary);
+  margin-bottom:6px;
+}
+.result-desc{
+  font-size:16px;
+  color:var(--text-secondary);
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+}
+/* ========== 仅手机竖屏才启用新布局：宽度≤767px + 竖屏 ========== */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+    font-size:14px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+    margin-bottom:24px;
+  }
+  .row-two{
+    flex-direction:column;
+    gap:10px;
+    margin-bottom:20px;
+  }
+  label{
+    font-size:14px;
+    margin-bottom:6px;
+  }
+  input,select,textarea{
+    padding:12px 14px;
+    font-size:16px;
+  }
+  .result-value{
+    font-size:28px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<!-- 顶部按钮栏（固定保留返回+明暗切换） -->
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>单位换算器</h2>
+
+  <div class="input-item">
+    <label>单位类型</label>
+    <select id="convertType">
+      <option value="length">长度</option>
+      <option value="weight">重量</option>
+      <option value="temp">温度</option>
+    </select>
+  </div>
+
+  <div class="input-item">
+    <label>输入数值</label>
+    <input id="inputNum" type="number" placeholder="请输入数字" step="any">
+  </div>
+
+  <div class="row-two">
+    <div class="input-item col-half">
+      <label>从</label>
+      <select id="fromUnit"></select>
+    </div>
+    <div class="input-item col-half">
+      <label>到</label>
+      <select id="toUnit"></select>
+    </div>
+  </div>
+
+  <div class="result-box" id="resultBox" style="display:none;">
+    <div class="result-value" id="resultNum">--</div>
+    <div class="result-desc" id="resultText">换算结果</div>
+  </div>
+
+  <div class="tip">
+    使用说明：选择换算类型、输入数字、切换来源/目标单位即可实时自动换算；长度、重量采用国际标准系数换算，温度使用专用温标公式计算。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 初始化主题（固定复用）
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+// 切换主题（固定复用）
+themeToggle.onclick = () => {
+  const isDark = htmlRoot.hasAttribute("data-theme");
+  if (isDark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.innerHTML = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme", "dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.innerHTML = "☀️";
+  }
+};
+// 返回首页（固定复用）
+document.getElementById("backHome").onclick = () => {
+  window.location.href = "./index.html";
+};
+
+// 单位配置
+const unitConfig = {
+  length: {
+    base: "m",
+    map: {
+      mm: 0.001,
+      cm: 0.01,
+      m: 1,
+      km: 1000,
+      in: 0.0254,
+      ft: 0.3048
+    },
+    label: {
+      mm: "毫米(mm)",
+      cm: "厘米(cm)",
+      m: "米(m)",
+      km: "千米(km)",
+      in: "英寸(in)",
+      ft: "英尺(ft)"
+    }
+  },
+  weight: {
+    base: "kg",
+    map: {
+      g: 0.001,
+      kg: 1,
+      lb: 0.453592,
+      oz: 0.0283495
+    },
+    label: {
+      g: "克(g)",
+      kg: "千克(kg)",
+      lb: "磅(lb)",
+      oz: "盎司(oz)"
+    }
+  },
+  temp: {
+    list: ["C", "F", "K"],
+    label: {
+      C: "摄氏度(℃)",
+      F: "华氏度(℉)",
+      K: "开尔文(K)"
+    }
+  }
+};
+
+const convertType = document.getElementById("convertType");
+const fromUnit = document.getElementById("fromUnit");
+const toUnit = document.getElementById("toUnit");
+const inputNum = document.getElementById("inputNum");
+const resultBox = document.getElementById("resultBox");
+const resultNum = document.getElementById("resultNum");
+const resultText = document.getElementById("resultText");
+
+// 刷新下拉选项
+function renderUnits(type) {
+  fromUnit.innerHTML = "";
+  toUnit.innerHTML = "";
+  let items = [];
+  if (type === "temp") {
+    items = unitConfig.temp.list;
+  } else {
+    items = Object.keys(unitConfig[type].map);
+  }
+  items.forEach(key => {
+    const lab = unitConfig[type].label[key];
+    const opt1 = new Option(lab, key);
+    const opt2 = new Option(lab, key);
+    fromUnit.appendChild(opt1);
+    toUnit.appendChild(opt2);
+  });
+  calcAuto();
+}
+
+// 自动换算核心函数
+function calcAuto() {
+  const val = parseFloat(inputNum.value);
+  const type = convertType.value;
+  const uFrom = fromUnit.value;
+  const uTo = toUnit.value;
+
+  if (isNaN(val)) {
+    resultBox.style.display = "none";
+    return;
+  }
+
+  let res;
+  if (type === "temp") {
+    // 温度专用换算
+    let c;
+    if (uFrom === "C") c = val;
+    else if (uFrom === "F") c = (val - 32) * 5 / 9;
+    else c = val - 273.15;
+
+    if (uTo === "C") res = c;
+    else if (uTo === "F") res = c * 9 / 5 + 32;
+    else res = c + 273.15;
+  } else {
+    // 长度/重量 基准换算
+    const cfg = unitConfig[type];
+    const baseVal = val * cfg.map[uFrom];
+    res = baseVal / cfg.map[uTo];
+  }
+
+  resultNum.innerText = res.toFixed(4);
+  resultText.innerText = `${val} ${unitConfig[type].label[uFrom]} = ${res.toFixed(4)} ${unitConfig[type].label[uTo]}`;
+  resultBox.style.display = "block";
+}
+
+// 初始化下拉
+renderUnits("length");
+
+// 所有输入/下拉变更自动计算
+inputNum.addEventListener("input", calcAuto);
+convertType.addEventListener("change", ()=>renderUnits(convertType.value));
+fromUnit.addEventListener("change", calcAuto);
+toUnit.addEventListener("change", calcAuto);
+
+initTheme();
+</script>
+</body>
+</html>

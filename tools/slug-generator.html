@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>🔗</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>URL Slug 生成器</title>
+<style>
+:root {
+  --primary: #10b981;
+  --primary-light: #dcfce7;
+  --warn: #f97316;
+  --danger: #ef4444;
+  --nav-bg: #ffffff;
+  --nav-border: #e5e7eb;
+  --nav-text: #222222;
+  --text-main: #222222;
+  --text-sub: #555555;
+  --border-base: #e5e7eb;
+  --page-bg: #ffffff;
+  --card-bg: #ffffff;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+  --radius-md: 8px;
+  --space-md: 0.875rem;
+  --space-lg: 1.2rem;
+  --max-width: 1400px;
+  --transition: all 0.22s ease;
+}
+html[data-theme="dark"] {
+  --primary: #34d399;
+  --primary-light: rgba(52, 211, 153, 0.18);
+  --nav-bg: #1f2937;
+  --nav-border: #374151;
+  --nav-text: #f3f4f6;
+  --text-main: #f9fafb;
+  --text-sub: #d1d5db;
+  --border-base: #374151;
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  background: var(--page-bg);
+  color: var(--text-main);
+  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(1rem,4vw,1.75rem);
+  z-index:999;
+}
+/* 返回按钮：常规圆角矩形 */
+.back-btn{
+  padding: 0.4375rem 0.625rem;
+  border:1px solid var(--nav-border);
+  border-radius: var(--radius-md);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor:pointer;
+}
+.back-btn:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+/* 明暗切换：唯一圆形按钮 */
+.theme-btn{
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border:1px solid var(--nav-border);
+  border-radius: 50%;
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor:pointer;
+  display: grid;
+  place-items: center;
+}
+.theme-btn:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--max-width);
+  margin:0 auto;
+  background:var(--card-bg);
+  padding: clamp(1.5rem,5vw,2rem);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-sub);
+  margin-bottom: var(--space-xl);
+}
+.input-wrap{
+  margin-bottom: var(--space-lg);
+}
+.input-label{
+  display:block;
+  margin-bottom: var(--space-xs);
+}
+#sourceText{
+  width:100%;
+  min-height: 120px;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-size:1rem;
+  resize:vertical;
+}
+.opt-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1.5rem;
+  margin-bottom: var(--space-lg);
+  align-items:center;
+}
+.opt-item{
+  display:flex;
+  gap:0.4rem;
+  align-items:center;
+}
+.sep-group{
+  display:flex;
+  gap:0.8rem;
+  align-items:center;
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: var(--space-xl);
+}
+.btn-row button{
+  flex:1;
+  min-width: 120px;
+  padding:0.8rem;
+  border-radius:var(--radius-md);
+  cursor:pointer;
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+}
+.btn-row button:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.result-wrap{
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  padding:1rem;
+}
+.result-label{
+  font-size:0.85rem;
+  color:var(--text-sub);
+  margin-bottom:0.5rem;
+}
+#slugResult{
+  font-family:monospace;
+  word-break:break-all;
+  min-height:24px;
+}
+.copy-mini{
+  margin-top:0.6rem;
+  padding:0.4rem 0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  cursor:pointer;
+}
+.copy-mini:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.tip-desc{
+  margin-top: var(--space-xl);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color:var(--text-sub);
+  line-height:1.6;
+}
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+  font-size:0.95rem;
+  z-index:9999;
+  pointer-events:none;
+  transition: all 0.2s ease;
+}
+.toast-box.show{
+  opacity:1;
+  transform: translateX(-50%) translateY(0);
+}
+html[data-theme="dark"] .toast-box{
+  background:#1e293b;
+}
+html:not([data-theme="dark"]) .toast-box{
+  background:#ffffff;
+}
+.toast-success{
+  color:var(--primary);
+}
+.toast-error{
+  color:var(--danger);
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="back-btn" id="backBtn">← 返回首页</button>
+  <button class="theme-btn" id="themeBtn">🌙</button>
+</div>
+
+<div class="box">
+  <h2>URL Slug 生成器</h2>
+  <div class="sub-title">将标题或文本转换为 URL 友好的 slug</div>
+
+  <div class="input-wrap">
+    <label class="input-label">输入标题或文本</label>
+    <textarea id="sourceText" placeholder="输入文章标题，例如 Hello World 2025"></textarea>
+  </div>
+
+  <div class="opt-row">
+    <div class="opt-item">
+      <input type="checkbox" id="toLower" checked>
+      <label for="toLower">小写</label>
+    </div>
+    <div class="opt-item">
+      <input type="checkbox" id="removeStop">
+      <label for="removeStop">移除停用词</label>
+    </div>
+    <div class="opt-item">
+      <input type="checkbox" id="keepNum" checked>
+      <label for="keepNum">保留数字</label>
+    </div>
+    <div class="sep-group">
+      <span>分隔符:</span>
+      <div class="opt-item">
+        <input type="radio" name="sepType" value="-" id="sepDash" checked>
+        <label for="sepDash">连字符 (-)</label>
+      </div>
+      <div class="opt-item">
+        <input type="radio" name="sepType" value="_" id="sepUnderscore">
+        <label for="sepUnderscore">下划线 (_)</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-outline" id="clearBtn">清空</button>
+    <button class="btn-outline" id="demoBtn">加载示例</button>
+  </div>
+
+  <div class="result-wrap">
+    <div class="result-label">生成的 Slug</div>
+    <div id="slugResult">等待输入...</div>
+    <button class="copy-mini" id="copySlugBtn">复制 Slug</button>
+  </div>
+
+  <div class="tip-desc">
+    使用说明：输入标题自动实时生成URL友好Slug；可切换小写、移除停用词、保留数字、分隔符样式，一键复制结果，纯本地离线处理。
+  </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+const sourceText = document.getElementById('sourceText');
+const slugResult = document.getElementById('slugResult');
+const toLower = document.getElementById('toLower');
+const removeStop = document.getElementById('removeStop');
+const keepNum = document.getElementById('keepNum');
+const sepDash = document.getElementById('sepDash');
+const sepUnderscore = document.getElementById('sepUnderscore');
+const clearBtn = document.getElementById('clearBtn');
+const demoBtn = document.getElementById('demoBtn');
+const copySlugBtn = document.getElementById('copySlugBtn');
+const toastBox = document.getElementById('toastBox');
+const themeBtn = document.getElementById('themeBtn');
+const backBtn = document.getElementById('backBtn');
+const STORAGE_KEY = "site_theme_mode";
+
+// 英文停用词列表
+const stopWords = ["a","an","the","and","or","but","is","are","in","on","at","to","for","of","with","by","i","you","he","she","it","we","they","my","your"];
+
+function showToast(msg, success = true) {
+  toastBox.className = "toast-box " + (success ? "toast-success" : "toast-error");
+  toastBox.innerText = msg;
+  toastBox.classList.add("show");
+  setTimeout(() => toastBox.classList.remove("show"), 2000);
+}
+
+function getSep(){
+  return sepDash.checked ? '-' : '_';
+}
+
+function generateSlug(){
+  let raw = sourceText.value.trim();
+  if(!raw){
+    slugResult.innerText = "等待输入...";
+    return;
+  }
+  // 小写
+  if(toLower.checked) raw = raw.toLowerCase();
+  // 替换非字母数字为空格
+  raw = raw.replace(/[^a-z0-9\s]/gi, ' ');
+  // 分词
+  let words = raw.split(/\s+/).filter(w=>w);
+  // 移除停用词
+  if(removeStop.checked){
+    words = words.filter(w=>!stopWords.includes(w));
+  }
+  // 过滤纯数字（不保留数字时）
+  if(!keepNum){
+    words = words.filter(w=>!/^\d+$/.test(w));
+  }
+  const sep = getSep();
+  const slug = words.join(sep);
+  slugResult.innerText = slug;
+  window.lastSlug = slug;
+}
+
+function clearAll(){
+  sourceText.value = "";
+  generateSlug();
+  showToast("已清空");
+}
+
+function loadDemo(){
+  sourceText.value = "Hello World 2025 — How To Make A Website";
+  generateSlug();
+  showToast("已加载示例");
+}
+
+async function copySlug(){
+  if(!window.lastSlug) return showToast("暂无Slug", false);
+  try{
+    await navigator.clipboard.writeText(window.lastSlug);
+    showToast("复制成功");
+  }catch(e){
+    const t = document.createElement('textarea');
+    t.value = window.lastSlug;
+    t.style.position = 'fixed';
+    t.style.left = '-9999px';
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand('copy');
+    document.body.removeChild(t);
+    showToast("复制成功");
+  }
+}
+
+// 绑定事件
+sourceText.oninput = generateSlug;
+toLower.onchange = generateSlug;
+removeStop.onchange = generateSlug;
+keepNum.onchange = generateSlug;
+sepDash.onchange = generateSlug;
+sepUnderscore.onchange = generateSlug;
+clearBtn.onclick = clearAll;
+demoBtn.onclick = loadDemo;
+copySlugBtn.onclick = copySlug;
+
+// 主题切换
+function initTheme() {
+  const save = localStorage.getItem(STORAGE_KEY);
+  if (save === "dark") {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeBtn.textContent = "☀️";
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    themeBtn.textContent = "🌙";
+  }
+}
+themeBtn.onclick = () => {
+  const dark = document.documentElement.hasAttribute('data-theme');
+  if (dark) {
+    localStorage.setItem(STORAGE_KEY, 'light');
+    document.documentElement.removeAttribute('data-theme');
+    themeBtn.textContent = "🌙";
+  } else {
+    localStorage.setItem(STORAGE_KEY, 'dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    themeBtn.textContent = "☀️";
+  }
+};
+backBtn.onclick = () => window.location.href = "./index.html";
+
+initTheme();
+generateSlug();
+</script>
+</body>
+</html>

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>#</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+:root {
+  --primary: #10b981;
+  --primary-light: #dcfce7;
+  --warn: #f97316;
+  --danger: #ef4444;
+  --nav-bg: #ffffff;
+  --nav-border: #e5e7eb;
+  --nav-text: #222222;
+  --text-main: #222222;
+  --text-sub: #555555;
+  --border-base: #e5e7eb;
+  --page-bg: #ffffff;
+  --card-bg: #ffffff;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+  --radius-md: 8px;
+  --space-md: 0.875rem;
+  --space-lg: 1.2rem;
+  --max-width: 1400px;
+  --transition: all 0.22s ease;
+}
+html[data-theme="dark"] {
+  --primary: #34d399;
+  --primary-light: rgba(52, 211, 153, 0.18);
+  --nav-bg: #1f2937;
+  --nav-border: #374151;
+  --nav-text: #f3f4f6;
+  --text-main: #f9fafb;
+  --text-sub: #d1d5db;
+  --border-base: #374151;
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+}
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body {
+  background: var(--page-bg);
+  color: var(--text-main);
+  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(1rem,4vw,1.75rem);
+  z-index:999;
+}
+.back-btn{
+  padding: 0.4375rem 0.625rem;
+  border:1px solid var(--nav-border);
+  border-radius:var(--radius-md);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor:pointer;
+}
+.back-btn:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color:var(--primary);
+}
+.theme-btn{
+  width:40px;
+  height:40px;
+  padding:0;
+  border:1px solid var(--nav-border);
+  border-radius:50%;
+  background:var(--nav-bg);
+  color:var(--nav-text);
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+}
+.theme-btn:hover{
+  border-color:var(--primary);
+  background:var(--primary-light);
+  color:var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--max-width);
+  margin:0 auto;
+  background:var(--card-bg);
+  padding: clamp(1.5rem,5vw,2rem);
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-sub);
+  margin-bottom: var(--space-xl);
+}
+.form-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1.5rem;
+  margin-bottom:var(--space-lg);
+  align-items:center;
+}
+.form-item{
+  display:flex;
+  gap:0.4rem;
+  align-items:center;
+}
+.form-input{
+  width:100%;
+  max-width:160px;
+  padding:0.6rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+}
+.input-wrap{
+  margin-bottom: var(--space-lg);
+}
+.label{
+  display:block;
+  margin-bottom:0.5rem;
+  font-weight:500;
+}
+textarea{
+  width:100%;
+  min-height:30vh;
+  max-height:70vh;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-family:monospace;
+  resize:vertical;
+  white-space:pre-wrap;
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: 20px;
+}
+.btn-row button{
+  flex:1;
+  min-width:110px;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  cursor:pointer;
+}
+.btn-row button:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.btn-main{
+  border:none;
+  background:var(--primary);
+  color:#fff;
+}
+.result-wrap{
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  padding:1rem;
+}
+.result-label{
+  font-size:0.85rem;
+  color:var(--text-sub);
+  margin-bottom:0.5rem;
+}
+#resultOut{
+  min-height:20px;
+  font-family:monospace;
+  white-space:pre-wrap;
+  word-break:break-all;
+}
+.copy-mini{
+  margin-top:0.6rem;
+  padding:0.3rem 0.7rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  cursor:pointer;
+}
+.copy-mini:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.tip-desc{
+  margin-top:var(--space-xl);
+  font-size:clamp(0.75rem,2vw,0.875rem);
+  color:var(--text-sub);
+  line-height:1.6;
+}
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  background:var(--card-bg);
+  box-shadow:var(--shadow-lg);
+  z-index:9999;
+  pointer-events:none;
+  transition:all 0.2s ease;
+}
+.toast-box.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+</style>
+<title>行号添加器</title>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="back-btn" id="backBtn">← 返回首页</button>
+  <button class="theme-btn" id="themeBtn">🌙</button>
+</div>
+
+<div class="box">
+  <h2>行号添加器</h2>
+  <div class="sub-title">为文本快速添加行号，适合代码、清单和日志</div>
+
+  <div class="form-row">
+    <div>
+      <label class="label">起始行号</label>
+      <input class="form-input" type="number" id="startNum" min="1" value="1">
+    </div>
+    <div>
+      <label class="label">步进</label>
+      <input class="form-input" type="number" id="stepNum" min="1" value="1">
+    </div>
+    <div>
+      <label class="label">分隔符</label>
+      <input class="form-input" type="text" id="sepChar" value=". ">
+    </div>
+    <div class="form-item">
+      <input type="checkbox" id="skipEmpty">
+      <label for="skipEmpty">跳过空行</label>
+    </div>
+    <div class="form-item">
+      <input type="checkbox" id="padZero">
+      <label for="padZero">补零位数</label>
+      <input class="form-input" type="number" id="padLen" min="1" value="3" style="width:60px;">
+    </div>
+  </div>
+
+  <div class="input-wrap">
+    <label class="label">原始文本</label>
+    <textarea id="sourceInput" placeholder="粘贴代码、清单文本，每行一条"></textarea>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-outline" id="clearBtn">清空</button>
+    <button class="btn-outline" id="demoBtn">加载示例</button>
+    <button class="btn-main" id="genBtn">生成行号</button>
+  </div>
+
+  <div class="result-wrap">
+    <div class="result-label">带行号结果</div>
+    <div id="resultOut"></div>
+    <button class="copy-mini" id="copyBtn">复制结果</button>
+  </div>
+
+  <div class="tip-desc">
+    使用说明：自定义起始数字、步进、行号分隔符；支持跳过空行、数字补零对齐；一键生成带行号文本，可复制用于代码清单、日志整理。
+  </div>
+</div>
+
+<div class="toast-box" id="toastBox"></div>
+
+<script>
+const toastBox = document.getElementById('toastBox');
+const backBtn = document.getElementById('backBtn');
+const themeBtn = document.getElementById('themeBtn');
+const sourceInput = document.getElementById('sourceInput');
+const resultOut = document.getElementById('resultOut');
+const startNum = document.getElementById('startNum');
+const stepNum = document.getElementById('stepNum');
+const sepChar = document.getElementById('sepChar');
+const skipEmpty = document.getElementById('skipEmpty');
+const padZero = document.getElementById('padZero');
+const padLen = document.getElementById('padLen');
+const clearBtn = document.getElementById('clearBtn');
+const demoBtn = document.getElementById('demoBtn');
+const genBtn = document.getElementById('genBtn');
+const copyBtn = document.getElementById('copyBtn');
+const STORAGE_KEY = "site_theme_mode";
+let lastOutput = "";
+
+function showToast(msg){
+  toastBox.innerText = msg;
+  toastBox.classList.add("show");
+  setTimeout(()=>toastBox.classList.remove("show"),2000);
+}
+
+// 数字补零
+function padNumber(num, len){
+  let s = String(num);
+  while(s.length < len) s = '0' + s;
+  return s;
+}
+
+function generateLineNum(){
+  const rawLines = sourceInput.value.split('\n');
+  let current = parseInt(startNum.value) || 1;
+  const step = parseInt(stepNum.value) || 1;
+  const sep = sepChar.value;
+  const skipBlank = skipEmpty.checked;
+  const usePad = padZero.checked;
+  const padL = parseInt(padLen.value) || 3;
+  const output = [];
+
+  for(let line of rawLines){
+    let text = line;
+    if(skipBlank && text.trim() === ''){
+      output.push(text);
+      continue;
+    }
+    let numStr = String(current);
+    if(usePad) numStr = padNumber(current, padL);
+    output.push(numStr + sep + text);
+    current += step;
+  }
+  const res = output.join('\n');
+  resultOut.innerText = res;
+  lastOutput = res;
+  showToast("生成完成");
+}
+
+function clearAll(){
+  sourceInput.value = "";
+  resultOut.innerText = "";
+  lastOutput = "";
+}
+
+function loadDemo(){
+  sourceInput.value = `function hello(){
+  console.log("test");
+}
+
+let arr = [1,2,3];
+arr.map(i=>i*2);`;
+  generateLineNum();
+}
+
+async function copyResult(){
+  if(!lastOutput) return showToast("暂无结果", false);
+  try{
+    await navigator.clipboard.writeText(lastOutput);
+    showToast("复制成功");
+  }catch(e){
+    const temp = document.createElement('textarea');
+    temp.value = lastOutput;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showToast("复制成功");
+  }
+}
+
+genBtn.onclick = generateLineNum;
+clearBtn.onclick = clearAll;
+demoBtn.onclick = loadDemo;
+copyBtn.onclick = copyResult;
+
+// 主题
+function initTheme(){
+  const save = localStorage.getItem(STORAGE_KEY);
+  if(save === "dark"){
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }
+}
+themeBtn.onclick = ()=>{
+  const dark = document.documentElement.hasAttribute("data-theme");
+  if(dark){
+    localStorage.setItem(STORAGE_KEY,"light");
+    document.documentElement.removeAttribute("data-theme");
+    themeBtn.innerText = "🌙";
+  }else{
+    localStorage.setItem(STORAGE_KEY,"dark");
+    document.documentElement.setAttribute("data-theme","dark");
+    themeBtn.innerText = "☀️";
+  }
+};
+backBtn.onclick = ()=>window.location.href="./index.html";
+
+initTheme();
+loadDemo();
+</script>
+</body>
+</html>

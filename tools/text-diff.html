@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>🔍</text></svg>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>文本对比工具</title>
+<script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
+<style>
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --success-bg: #dcfce7;
+      --danger-bg: #fee2e2;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 0.375rem;
+      --space-sm: 0.625rem;
+      --space-md: 0.875rem;
+      --space-lg: 1rem;
+      --space-xl: 1.75rem;
+      --transition: all 0.22s ease;
+      --body-font-size: 1rem;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 620px;
+      --card-label-offset: 2.25rem;
+      --nav-line-height: 2.375rem;
+      --theme-btn-width: 2.25rem;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --success-bg: rgba(16, 185, 129, 0.15);
+      --danger-bg: rgba(239, 68, 68, 0.15);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+  position: relative;
+}
+.top-header-bar{
+  position: fixed;
+  top: 0.875rem;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 clamp(1rem, 4vw, 1.75rem);
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: var(--theme-btn-width);
+  height: var(--theme-btn-width);
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:var(--content-max-width);
+  background:var(--bg-card);
+  padding: clamp(1.5rem, 5vw, 2rem);
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: var(--card-label-offset);
+}
+h2{
+  text-align:center;
+  margin-bottom: var(--space-xs);
+  font-weight:600;
+  font-size: clamp(1.375rem, 4vw, 1.5rem);
+}
+.sub-title{
+  text-align:center;
+  font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+/* 显示模式单选行 */
+.mode-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1.2rem;
+  margin-bottom: var(--space-lg);
+  align-items:center;
+  justify-content:center;
+}
+.mode-item{
+  display:flex;
+  gap:0.3rem;
+  align-items:center;
+}
+.two-col{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:1rem;
+  margin-bottom: var(--space-lg);
+}
+@media(max-width:640px){
+  .two-col{
+    grid-template-columns: 1fr;
+  }
+}
+.input-label{
+  display:block;
+  margin-bottom: var(--space-xs);
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+}
+textarea{
+  width:100%;
+  min-height: 140px;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  color:var(--text-main);
+  font-size:0.9rem;
+  resize: vertical;
+  margin-bottom: var(--space-lg);
+}
+html[data-theme="dark"] textarea{
+  background:#1f2937;
+}
+.check-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1.2rem;
+  margin-bottom: var(--space-lg);
+  align-items:center;
+  justify-content:center;
+}
+.check-item{
+  display:flex;
+  gap:0.3rem;
+  align-items:center;
+}
+.count-info{
+  text-align:center;
+  font-size:1rem;
+  margin-bottom: var(--space-lg);
+  color:var(--text-secondary);
+}
+.count-num{
+  color:var(--primary);
+  font-weight:bold;
+}
+.btn-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.6rem;
+  margin-bottom: var(--space-lg);
+}
+.btn-row button{
+  flex:1;
+  min-width: 110px;
+  padding:0.85rem;
+  border-radius:var(--radius-md);
+  font-size:1rem;
+  cursor:pointer;
+}
+.btn-main{
+  border:none;
+  background:var(--primary);
+  color:#fff;
+}
+.btn-outline{
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+}
+/* 逐行统一视图 */
+.result-inline{
+  width:100%;
+  min-height: 160px;
+  padding:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  white-space:pre-wrap;
+  font-family:monospace;
+  font-size:0.9rem;
+  line-height:1.6;
+  overflow:auto;
+  margin-bottom: var(--space-xl);
+}
+/* 并行左右分栏视图 */
+.result-side{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:0.5rem;
+  width:100%;
+  min-height: 160px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  overflow:hidden;
+  margin-bottom: var(--space-xl);
+}
+.side-col{
+  padding:0.8rem;
+  min-height:160px;
+  white-space:pre-wrap;
+  font-family:monospace;
+  font-size:0.9rem;
+  line-height:1.6;
+  overflow:auto;
+}
+.side-left{
+  border-right:1px solid var(--border-base);
+}
+.line-add{
+  background:var(--success-bg);
+  color:var(--primary);
+}
+.line-del{
+  background:var(--danger-bg);
+  color:var(--danger);
+}
+.line-normal{
+  opacity:0.85;
+}
+.tip-desc{
+  margin-top: var(--space-xl);
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color:var(--text-secondary);
+  line-height:1.6;
+  opacity:0.7;
+}
+/* 无阻塞底部悬浮Toast */
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform: translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+  font-size:0.95rem;
+  z-index:9999;
+  pointer-events:none;
+  transition: all 0.2s ease;
+}
+.toast-box.show{
+  opacity:1;
+  transform: translateX(-50%) translateY(0);
+}
+html[data-theme="dark"] .toast-box{
+  background:#1e293b;
+}
+html:not([data-theme="dark"]) .toast-box{
+  background:#ffffff;
+}
+.toast-success{
+  color:var(--primary);
+}
+.toast-error{
+  color:var(--danger);
+}
+@media screen and (min-width: 768px) {
+  :root {
+    --content-max-width: 680px;
+  }
+  .box {
+    padding: 2.25rem;
+  }
+}
+@media screen and (max-width:767px) and (orientation:portrait){
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:0.75rem;
+  }
+  .header-btn-back{
+    padding:0.375rem 0.5rem;
+    font-size:0.6875rem;
+    height: 2.125rem;
+  }
+  .header-btn-theme{
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+  .box{
+    padding: 1.5rem 1.25rem;
+  }
+  .result-side{
+    grid-template-columns:1fr;
+  }
+  .side-left{
+    border-right:none;
+    border-bottom:1px solid var(--border-base);
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle">🌙</button>
+</div>
+
+<div class="box">
+  <h2>文本对比工具</h2>
+  <div class="sub-title">比较两段文本的差异，支持逐行/字符级对比、并行并排视图</div>
+
+  <!-- 新增：显示模式切换 逐行/并行 -->
+  <div class="mode-row">
+    <div class="mode-item">
+      <input type="radio" name="viewMode" id="viewInline" value="inline" checked>
+      <label for="viewInline">逐行显示</label>
+    </div>
+    <div class="mode-item">
+      <input type="radio" name="viewMode" id="viewSide" value="side">
+      <label for="viewSide">并行并排</label>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <label class="input-label">原始文本</label>
+      <textarea id="oldTxt" placeholder="粘贴原始内容"></textarea>
+    </div>
+    <div>
+      <label class="input-label">修改后的文本</label>
+      <textarea id="newTxt" placeholder="粘贴修改后内容"></textarea>
+    </div>
+  </div>
+
+  <!-- 配置复选框 -->
+  <div class="check-row">
+    <div class="check-item">
+      <input type="checkbox" id="ignoreSpace">
+      <label for="ignoreSpace">忽略空白/换行</label>
+    </div>
+    <div class="check-item">
+      <input type="checkbox" id="charDiff">
+      <label for="charDiff">字符级精细对比</label>
+    </div>
+  </div>
+
+  <div class="count-info">
+    <span>+ 新增行: <span class="count-num" id="addCount">0</span></span>
+    &nbsp;&nbsp;
+    <span>- 删除行: <span class="count-num" id="delCount">0</span></span>
+  </div>
+
+  <!-- 标准四按钮 -->
+  <div class="btn-row">
+    <button class="btn-main" id="diffBtn">开始对比</button>
+    <button class="btn-outline" id="demoBtn">加载演示</button>
+    <button class="btn-outline" id="clearBtn">清空内容</button>
+    <button class="btn-outline" id="copyBtn">复制结果</button>
+  </div>
+
+  <label class="input-label">对比结果</label>
+  <!-- 两种视图容器 -->
+  <div id="resultWrap">
+    <div class="result-inline" id="resultInline"></div>
+    <div class="result-side" id="resultSide" style="display:none;">
+      <div class="side-col side-left" id="sideLeft"></div>
+      <div class="side-col" id="sideRight"></div>
+    </div>
+  </div>
+
+  <div class="tip-desc">
+    使用说明：切换【逐行显示】统一堆叠diff、【并行并排】左右分栏对照；绿色+新增、红色-删除；可忽略空白、开启字符精细对比，纯前端本地运算不上传数据。
+  </div>
+</div>
+
+<div class="toast-box" id="toastText"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  // DOM元素缓存
+  const inputOld = document.getElementById('oldTxt');
+  const inputNew = document.getElementById('newTxt');
+  const resultInline = document.getElementById('resultInline');
+  const resultSide = document.getElementById('resultSide');
+  const sideLeft = document.getElementById('sideLeft');
+  const sideRight = document.getElementById('sideRight');
+  const addCount = document.getElementById('addCount');
+  const delCount = document.getElementById('delCount');
+  const diffBtn = document.getElementById('diffBtn');
+  const demoBtn = document.getElementById('demoBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const ignoreSpace = document.getElementById('ignoreSpace');
+  const charDiff = document.getElementById('charDiff');
+  const viewInline = document.getElementById('viewInline');
+  const viewSide = document.getElementById('viewSide');
+  const toastText = document.getElementById('toastText');
+  const themeToggle = document.getElementById('themeToggle');
+  const backHome = document.getElementById('backHome');
+  const htmlRoot = document.documentElement;
+  const STORAGE_KEY = "site_theme_mode";
+
+  // 悬浮提示
+  function showToast(msg, success = true) {
+    toastText.className = "toast-box " + (success ? "toast-success" : "toast-error");
+    toastText.innerText = msg;
+    toastText.classList.add("show");
+    setTimeout(() => toastText.classList.remove("show"), 2000);
+  }
+
+  // 切换视图显示/隐藏
+  function switchViewMode(){
+    if(viewInline.checked){
+      resultInline.style.display = "block";
+      resultSide.style.display = "none";
+    }else{
+      resultInline.style.display = "none";
+      resultSide.style.display = "grid";
+    }
+    runDiff();
+  }
+
+  // 演示文本
+  const demoOld = `第一行基础内容
+第二行不变内容
+第三行待删除文字
+第四行普通段落`;
+  const demoNew = `第一行基础内容
+第二行不变内容
+新增一行内容
+第四行普通段落
+末尾追加文字`;
+
+  // 生成统一逐行HTML
+  function buildInlineHtml(diffList){
+    let html = "";
+    diffList.forEach(item => {
+      const lines = item.value.split("\n");
+      lines.forEach(line => {
+        if (line === "") return;
+        if (item.added) {
+          html += `<div class="line-add">+ ${line}</div>`;
+        } else if (item.removed) {
+          html += `<div class="line-del">- ${line}</div>`;
+        } else {
+          html += `<div class="line-normal">  ${line}</div>`;
+        }
+      });
+    });
+    return html;
+  }
+
+  // 生成左右并行分栏HTML
+  function buildSideHtml(diffList){
+    let leftHtml = "";
+    let rightHtml = "";
+    diffList.forEach(item => {
+      const lines = item.value.split("\n");
+      lines.forEach(line => {
+        if (line === "") return;
+        if (item.added) {
+          rightHtml += `<div class="line-add">${line}</div>`;
+          leftHtml += `<div>&nbsp;</div>`;
+        } else if (item.removed) {
+          leftHtml += `<div class="line-del">${line}</div>`;
+          rightHtml += `<div>&nbsp;</div>`;
+        } else {
+          leftHtml += `<div class="line-normal">${line}</div>`;
+          rightHtml += `<div class="line-normal">${line}</div>`;
+        }
+      });
+    });
+    return {left:leftHtml, right:rightHtml};
+  }
+
+  // 核心对比计算
+  function runDiff() {
+    if(typeof Diff === "undefined"){
+      resultInline.innerHTML = "<div style='color:var(--danger)'>对比库加载失败，请刷新页面重试</div>";
+      sideLeft.innerHTML = "";
+      sideRight.innerHTML = "";
+      addCount.innerText = "0";
+      delCount.innerText = "0";
+      showToast("工具加载异常，刷新页面", false);
+      return;
+    }
+    const oldStr = inputOld.value;
+    const newStr = inputNew.value;
+    if (!oldStr.trim() && !newStr.trim()) {
+      resultInline.innerHTML = "";
+      sideLeft.innerHTML = "";
+      sideRight.innerHTML = "";
+      addCount.innerText = "0";
+      delCount.innerText = "0";
+      return;
+    }
+    // 对比配置
+    const opt = {
+      ignoreWhitespace: ignoreSpace.checked,
+      stripTrailingCr: true
+    };
+    let diffList;
+    if(charDiff.checked){
+      diffList = Diff.diffWords(oldStr, newStr, opt);
+    }else{
+      diffList = Diff.diffLines(oldStr, newStr, opt);
+    }
+    // 统计新增删除数量
+    let addNum = 0;
+    let delNum = 0;
+    diffList.forEach(item=>{
+      if(item.added) addNum += item.value.split("\n").filter(l=>l).length;
+      if(item.removed) delNum += item.value.split("\n").filter(l=>l).length;
+    });
+    addCount.innerText = addNum;
+    delCount.innerText = delNum;
+    // 根据视图模式渲染
+    if(viewInline.checked){
+      resultInline.innerHTML = buildInlineHtml(diffList);
+    }else{
+      const sideData = buildSideHtml(diffList);
+      sideLeft.innerHTML = sideData.left;
+      sideRight.innerHTML = sideData.right;
+    }
+  }
+
+  // 按钮绑定
+  demoBtn.onclick = function() {
+    inputOld.value = demoOld;
+    inputNew.value = demoNew;
+    runDiff();
+    showToast("已加载演示文本");
+  };
+  clearBtn.onclick = function() {
+    inputOld.value = "";
+    inputNew.value = "";
+    resultInline.innerHTML = "";
+    sideLeft.innerHTML = "";
+    sideRight.innerHTML = "";
+    addCount.innerText = "0";
+    delCount.innerText = "0";
+    showToast("已清空全部内容");
+  };
+  diffBtn.onclick = runDiff;
+  copyBtn.onclick = async function() {
+    let copyText = "";
+    if(viewInline.checked){
+      copyText = resultInline.innerText;
+    }else{
+      copyText = "【原始文本】\n"+sideLeft.innerText+"\n【修改后文本】\n"+sideRight.innerText;
+    }
+    if (!copyText.trim()) {
+      showToast("暂无对比结果可复制", false);
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(copyText);
+      showToast("✅ 复制成功");
+    } catch (err) {
+      const temp = document.createElement('textarea');
+      temp.value = copyText;
+      temp.style.position = 'fixed';
+      temp.style.left = '-9999px';
+      document.body.appendChild(temp);
+      temp.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(temp);
+      ok ? showToast("✅ 复制成功") : showToast("❌ 复制失败，请手动复制", false);
+    }
+  };
+
+  // 切换监听自动重绘
+  viewInline.onchange = switchViewMode;
+  viewSide.onchange = switchViewMode;
+  ignoreSpace.onchange = runDiff;
+  charDiff.onchange = runDiff;
+  inputOld.oninput = runDiff;
+  inputNew.oninput = runDiff;
+
+  // 返回首页
+  backHome.onclick = function() {
+    window.location.href = "./index.html";
+  };
+
+  // 明暗主题
+  function initTheme() {
+    const save = localStorage.getItem(STORAGE_KEY);
+    if (save === "dark") {
+      htmlRoot.setAttribute("data-theme", "dark");
+      themeToggle.innerText = "☀️";
+    } else {
+      htmlRoot.removeAttribute("data-theme");
+      themeToggle.innerText = "🌙";
+    }
+  }
+  themeToggle.onclick = function() {
+    const dark = htmlRoot.hasAttribute("data-theme");
+    if (dark) {
+      htmlRoot.removeAttribute("data-theme");
+      localStorage.setItem(STORAGE_KEY, "light");
+      themeToggle.innerText = "🌙";
+    } else {
+      htmlRoot.setAttribute("data-theme", "dark");
+      localStorage.setItem(STORAGE_KEY, "dark");
+      themeToggle.innerText = "☀️";
+    }
+  };
+
+  initTheme();
+  switchViewMode();
+  runDiff();
+});
+</script>
+</body>
+</html>

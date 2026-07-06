@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>抽签工具</title>
+<style>
+    /* 全局主题变量 与主站完全统一 */
+    :root {
+      --primary: #10b981;
+      --primary-light: #dcfce7;
+      --header-bg: #f0fdf4;
+      --warn: #f97316;
+      --danger: #ef4444;
+      --luck-great: #059669;
+      --luck-good: #3b82f6;
+      --luck-normal: #f59e0b;
+      --luck-bad: #dc2626;
+      --nav-btn-bg: #ffffff;
+      --nav-btn-border: #e5e7eb;
+      --nav-btn-text: #222222;
+      --text-main: #222222;
+      --text-secondary: #555555;
+      --text-weak: #888888;
+      --border-base: #e5e7eb;
+      --border-light: #f3f4f6;
+      --bg-page: #ffffff;
+      --bg-card: #ffffff;
+      --bg-btn: #ffffff;
+      --bg-footer: #f0fdf4;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+      --radius-xs: 4px;
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-full: 999px;
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 14px;
+      --space-lg: 16px;
+      --space-xl: 28px;
+      --transition: all 0.22s ease;
+      --key-bg: #e5e7eb;
+      --key-text: #222;
+      --key-radius: 6px;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --body-font-size: 16px;
+      --body-line-height: 1.6;
+      --title-line-height: 1.2;
+      --sub-title-line-height: 1.25;
+      --content-max-width: 1200px;
+      --card-gap: 16px;
+      --card-min-width: 300px;
+      --header-safe-gap: 16px;
+      --card-label-offset: 36px;
+      --nav-line-height: 38px;
+      --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+      --primary: #34d399;
+      --primary-light: rgba(52, 211, 153, 0.18);
+      --header-bg: #111827;
+      --nav-btn-bg: #1f2937;
+      --nav-btn-border: #374151;
+      --nav-btn-text: #f3f4f6;
+      --warn: #fdba74;
+      --danger: #f87171;
+      --luck-great: #4ade80;
+      --luck-good: #60a5fa;
+      --luck-normal: #fbbf24;
+      --luck-bad: #f87171;
+      --text-main: #f9fafb;
+      --text-secondary: #d1d5db;
+      --text-weak: #9ca3af;
+      --border-base: #374151;
+      --border-light: #1f2937;
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-btn: #1f2937;
+      --bg-footer: #111827;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --key-bg: #374151;
+      --key-text: #f9fafb;
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: var(--transition);
+}
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--bg-page);
+  color:var(--text-main);
+  padding:20px;
+  position: relative;
+}
+/* 顶部导航 */
+.top-header-bar{
+  position: fixed;
+  top: 14px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 calc(var(--space-lg));
+  z-index: 999;
+}
+.header-btn-back {
+  padding: 7px 10px;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: var(--radius-lg);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+  min-width: fit-content;
+  height: var(--nav-line-height);
+}
+.header-btn-back:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.header-btn-theme {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--nav-btn-border);
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  background: var(--nav-btn-bg);
+  color: var(--nav-btn-text);
+  flex-shrink: 0;
+}
+.header-btn-theme:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.box{
+  width:100%;
+  max-width:540px;
+  background:var(--bg-card);
+  padding:32px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);
+  margin-top: 70px;
+}
+h2{
+  text-align:center;
+  margin-bottom:8px;
+  font-weight:600;
+  font-size:24px;
+}
+.sub-title{
+  text-align:center;
+  font-size:14px;
+  color:var(--text-secondary);
+  margin-bottom:32px;
+}
+/* 签筒显示区 */
+lot-box{
+  text-align:center;
+  padding:30px 20px;
+  border-radius:var(--radius-md);
+  background:var(--primary-light);
+  margin-bottom:28px;
+  min-height:160px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+.lot-placeholder{
+  font-size:32px;
+  color:var(--text-secondary);
+}
+.lot-rank{
+  font-size:26px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+.lot-poem{
+  font-size:17px;
+  line-height:1.8;
+  margin-bottom:12px;
+}
+.lot-desc{
+  font-size:15px;
+  color:var(--text-secondary);
+  line-height:1.7;
+}
+.btn-main{
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:var(--radius-md);
+  background:var(--primary);
+  color:#fff;
+  font-size:18px;
+  font-weight:600;
+  cursor:pointer;
+  margin-bottom:14px;
+}
+.btn-reset{
+  width:100%;
+  padding:14px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:var(--nav-btn-bg);
+  color:var(--text-main);
+  font-size:16px;
+  cursor:pointer;
+}
+.btn-reset:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.tip{
+  text-align:left;
+  font-size:14px;
+  opacity:0.65;
+  line-height:1.6;
+  color:var(--text-secondary);
+  margin-top:24px;
+}
+/* 动画定义 */
+@keyframes shakeLot {
+  0% { transform: rotate(-6deg); }
+  50% { transform: rotate(6deg); }
+  100% { transform: rotate(-6deg); }
+}
+@keyframes popUp {
+  0% { transform: scale(0.5); opacity:0; }
+  70% { transform:scale(1.08); opacity:1; }
+  100% { transform:scale(1); opacity:1; }
+}
+.shake {
+  animation: shakeLot 0.12s infinite;
+}
+.pop {
+  animation: popUp 0.6s ease-out forwards;
+}
+/* 手机适配 */
+@media screen and (max-width:767px) and (orientation:portrait){
+  body{
+    padding:15px;
+  }
+  .top-header-bar{
+    padding: 0 var(--space-md);
+    top:12px;
+  }
+  .header-btn-back{
+    padding:6px 8px;
+    font-size:11px;
+    height: 34px;
+  }
+  .header-btn-theme{
+    width: 34px;
+    height: 34px;
+    font-size:14px;
+  }
+  .box{
+    padding:24px 20px;
+    margin-top: 60px;
+  }
+  h2{
+    font-size:22px;
+  }
+  .lot-placeholder{
+    font-size:26px;
+  }
+  .lot-rank{
+    font-size:22px;
+  }
+  .lot-poem{
+    font-size:16px;
+  }
+  .btn-main{
+    font-size:16px;
+    padding:14px;
+  }
+  .tip{
+    font-size:13px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="top-header-bar">
+  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+</div>
+
+<div class="box">
+  <h2>🎋 抽签工具</h2>
+  <div class="sub-title">诚心祈祷，求得一个好签</div>
+
+  <div class="lot-box" id="lotBox">
+    <div class="lot-placeholder" id="lotShow">请点击下方按钮抽签</div>
+  </div>
+
+  <button class="btn-main" id="drawBtn">开始抽签</button>
+  <button class="btn-reset" id="resetBtn">重置签筒</button>
+
+  <div class="tip">
+    使用说明：点击抽签按钮会摇晃签筒动画，随机抽取灵签；包含上上/上吉/中平/下凶四类签文，本地计算不会上传任何信息，重置可重新抽签。
+  </div>
+</div>
+
+<script>
+const htmlRoot = document.documentElement;
+const themeToggle = document.getElementById("themeToggle");
+const STORAGE_KEY = "site_theme_mode";
+
+// 主题初始化
+function initTheme() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved === "dark") {
+    htmlRoot.setAttribute("data-theme", "dark");
+    themeToggle.innerHTML = "☀️";
+  } else {
+    htmlRoot.removeAttribute("data-theme");
+    themeToggle.innerHTML = "🌙";
+  }
+}
+themeToggle.onclick = () => {
+  const dark = htmlRoot.hasAttribute("data-theme");
+  if (dark) {
+    htmlRoot.removeAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "light");
+    themeToggle.textContent = "🌙";
+  } else {
+    htmlRoot.setAttribute("data-theme");
+    localStorage.setItem(STORAGE_KEY, "dark");
+    themeToggle.textContent = "☀️";
+  }
+};
+// 返回首页
+document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+
+// DOM元素
+const lotBox = document.getElementById("lotBox");
+const lotShow = document.getElementById("lotShow");
+const drawBtn = document.getElementById("drawBtn");
+const resetBtn = document.getElementById("drawBtn");
+const realReset = document.getElementById("resetBtn");
+
+// 签文库
+const lotList = [
+  {
+    rank: "上上大吉",
+    rankColor: "var(--luck-great)",
+    poem: "云开雾散见青天，万事亨通福自绵\n贵人相助前程阔，财喜双双到眼前",
+    desc: "时来运转，阻碍消散，事业财运皆有贵人扶持，求职、求财、姻缘皆顺遂。"
+  },
+  {
+    rank: "上上大吉",
+    rankColor: "var(--luck-great)",
+    poem: "平地高楼起翠微，春风送暖入柴扉\n耕耘自有丰收日，不用忧心事事归",
+    desc: "长期付出即将迎来回报，稳步上升，适合规划长期目标，家宅安宁。"
+  },
+  {
+    rank: "上吉",
+    rankColor: "var(--luck-good)",
+    poem: "浅水游龙得自由，今朝脱去旧笼囚\n但凡谋望皆平稳，不必劳心百虑愁",
+    desc: "困境结束，恢复自在状态，做事稳妥，小财不断，适合稳步推进计划。"
+  },
+  {
+    rank: "上吉",
+    rankColor: "var(--luck-good)",
+    poem: "门前喜鹊报佳音，千里良朋送好金\n偶遇机缘难错过，心安处处是甘霖",
+    desc: "近期有喜讯、贵人消息，意外小机遇降临，把握即可有所收获。"
+  },
+  {
+    rank: "中平",
+    rankColor: "var(--luck-normal)",
+    poem: "半晴半雨半春秋，得失寻常莫强求\n守得本心无妄动，平淡之中有小收",
+    desc: "运势平平，无大喜大悲，不宜激进投资、重大变动，保守安稳为佳。"
+  },
+  {
+    rank: "中平",
+    rankColor: "var(--luck-normal)",
+    poem: "行路逢山暂歇肩，休贪捷径惹牵连\n静待风清云淡日，再扬征马向遥天",
+    desc: "当前宜暂缓重大决策，不宜冲动行事，耐心等待时机成熟再行动。"
+  },
+  {
+    rank: "下凶",
+    rankColor: "var(--luck-bad)",
+    poem: "迷雾遮途步履难，轻举容易惹波澜\n宜藏锐气守平淡，静待云开再举竿",
+    desc: "近期多阻碍，不宜大额支出、跳槽、远行，低调守成，减少争执。"
+  }
+];
+
+let isDrawing = false;
+
+// 抽签逻辑
+drawBtn.onclick = () => {
+  if (isDrawing) return;
+  isDrawing = true;
+  drawBtn.disabled = true;
+  lotShow.innerText = "摇晃中...";
+  lotShow.className = "lot-placeholder shake";
+
+  // 摇晃动画时长
+  setTimeout(() => {
+    lotShow.classList.remove("shake");
+    // 随机抽取一支签
+    const randIdx = Math.floor(Math.random() * lotList.length);
+    const lot = lotList[randIdx];
+    // 渲染签文
+    lotShow.innerHTML = `
+      <div class="lot-rank" style="color:${lot.rankColor}">${lot.rank}</div>
+      <div class="lot-poem">${lot.poem}</div>
+      <div class="lot-desc">解签：${lot.desc}</div>
+    `;
+    lotShow.classList.add("pop");
+    drawBtn.disabled = false;
+    isDrawing = false;
+  }, 1200);
+};
+
+// 重置签筒
+realReset.onclick = () => {
+  isDrawing = false;
+  drawBtn.disabled = false;
+  lotShow.classList.remove("shake", "pop");
+  lotShow.innerText = "请点击下方按钮抽签";
+  lotShow.className = "lot-placeholder";
+};
+
+initTheme();
+</script>
