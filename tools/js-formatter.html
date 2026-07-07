@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JavaScript 格式化工具</title>
+<style>
+    :root {
+        --primary: #10b981;
+        --primary-light: #dcfce7;
+        --danger: #ef4444;
+        --nav-btn-bg: #ffffff;
+        --nav-btn-border: #e5e7eb;
+        --nav-btn-text: #222222;
+        --text-main: #222222;
+        --text-weak: #888888;
+        --border-base: #e5e7eb;
+        --bg-page: #ffffff;
+        --bg-card: #ffffff;
+        --bg-btn: #ffffff;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+        --radius-sm: 6px;
+        --radius-lg: 12px;
+        --transition: all 0.3s ease;
+    }
+    html[data-theme="dark"] {
+        --primary: #10b981;
+        --primary-light: rgba(16, 185, 129, 0.15);
+        --nav-btn-bg: #1f2937;
+        --nav-btn-border: #374151;
+        --nav-btn-text: #f3f4f6;
+        --text-main: #f1f5f9;
+        --text-weak: #94a3b8;
+        --border-base: #334155;
+        --bg-page: #0f172a;
+        --bg-card: #1e293b;
+        --bg-btn: #1e293b;
+    }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        transition: var(--transition);
+    }
+    html {
+        font-family: system-ui, "Microsoft YaHei", sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    body {
+        min-height: 100vh;
+        background: var(--bg-page);
+        color: var(--text-main);
+        line-height: 1.5;
+        padding-top: 70px;
+    }
+    .container {
+        max-width: 1200px;
+        width: calc(100% - 48px);
+        margin: 0 auto;
+    }
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: var(--bg-card);
+        border-bottom: 1px solid var(--border-base);
+        z-index: 99;
+    }
+    .header-inner {
+        max-width: 1200px;
+        width: calc(100% - 48px);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+    }
+    .back-btn, .theme-btn {
+        height: 38px;
+        padding: 0 12px;
+        border: 1px solid var(--nav-btn-border);
+        border-radius: var(--radius-lg);
+        background: var(--nav-btn-bg);
+        color: var(--nav-btn-text);
+        cursor: pointer;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .back-btn:hover, .theme-btn:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .theme-btn {
+        width: 36px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 50%;
+    }
+    .page-head {
+        text-align: center;
+        margin: 20px 0 30px;
+    }
+    .page-head h1 {
+        font-size: 30px;
+        margin-bottom: 12px;
+    }
+    .desc-text {
+        color: var(--text-weak);
+        font-size: 15px;
+    }
+    .card-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+    }
+    .input-block {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .input-label {
+        font-weight: 500;
+    }
+    textarea, select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-sm);
+        background: var(--bg-btn);
+        color: var(--text-main);
+        font-family: Consolas, monospace;
+        outline: none;
+        font-size: 14px;
+    }
+    textarea {
+        min-height: 160px;
+        max-height: 320px;
+        resize: vertical;
+    }
+    textarea:focus, select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
+    }
+    .btn-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+    }
+    .op-btn {
+        height: 44px;
+        padding: 0 18px;
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-sm);
+        background: var(--bg-btn);
+        color: var(--text-main);
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .op-btn.primary {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .op-btn.warn {
+        color: var(--danger);
+        border-color: #fecdd3;
+    }
+    .op-btn:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .err-tip {
+        color: var(--danger);
+        margin: 8px 0;
+        font-size: 14px;
+        padding: 6px 10px;
+        background: rgba(239,68,68,0.08);
+        border-radius: var(--radius-sm);
+        min-height: 24px;
+    }
+    .toast-copy {
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 32px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        z-index: 99999;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s ease;
+    }
+    .toast-copy.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    .toast-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #22c55e;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+    }
+    .toast-text {
+        font-size: 28px;
+        color: #16a34a;
+    }
+    html[data-theme="dark"] .toast-copy {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+    html[data-theme="dark"] .toast-text {
+        color: #4ade80;
+    }
+    @media (max-width: 640px) {
+        .page-head h1 { font-size: 28px; }
+        .toast-text { font-size: 20px; }
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="header-inner">
+        <button class="back-btn" onclick="history.back()">← 返回首页</button>
+        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+    </div>
+</header>
+
+<div class="container">
+    <div class="page-head">
+        <h1>JavaScript 格式化工具</h1>
+        <div class="desc-text">纯本地离线运行，无外部依赖，支持2/4空格、Tab缩进</div>
+    </div>
+
+    <div class="card-box">
+        <div class="input-block">
+            <label class="input-label">缩进格式</label>
+            <select id="indentSel">
+                <option value="2">2 空格</option>
+                <option value="4" selected>4 空格</option>
+                <option value="tab">Tab 制表符</option>
+            </select>
+        </div>
+
+        <div class="input-block">
+            <label class="input-label">原始 JS 代码</label>
+            <textarea id="jsInput" placeholder="粘贴压缩单行JS代码"></textarea>
+        </div>
+
+        <div class="btn-row">
+            <button class="op-btn primary" onclick="doFormat()">格式化</button>
+            <button class="op-btn" onclick="fillDemo()">填充示例</button>
+            <button class="op-btn primary" onclick="copyResult()">复制结果</button>
+            <button class="op-btn warn" onclick="clearAll()">清空</button>
+        </div>
+
+        <div class="err-tip" id="errTip"></div>
+
+        <div class="input-block">
+            <label class="input-label">格式化输出</label>
+            <textarea id="jsOutput" readonly></textarea>
+        </div>
+    </div>
+</div>
+
+<div class="toast-copy" id="toast">
+    <div class="toast-icon">✓</div>
+    <span class="toast-text">复制成功</span>
+</div>
+
+<script>
+// ========== 通用工具函数（全ES5兼容，无任何ES6 API） ==========
+// 兼容所有浏览器的字符串重复方法，替代 String.repeat
+function repeatStr(str, count) {
+    var res = '';
+    for (var i = 0; i < count; i++) {
+        res += str;
+    }
+    return res;
+}
+
+// ========== 主题切换 ==========
+var STORAGE_KEY = "site_theme_mode";
+var mediaDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+function applyTheme(mode) {
+    if (mode === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.getElementById('themeBtn').innerText = '☀️';
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.getElementById('themeBtn').innerText = '🌙';
+    }
+}
+
+function toggleTheme() {
+    var now = document.documentElement.hasAttribute('data-theme') ? 'dark' : 'light';
+    var next = now === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(STORAGE_KEY, next);
+    applyTheme(next);
+}
+
+window.onload = function() {
+    var save = localStorage.getItem(STORAGE_KEY);
+    if (save) {
+        applyTheme(save);
+    } else {
+        applyTheme(mediaDark.matches ? 'dark' : 'light');
+    }
+};
+
+mediaDark.addEventListener('change', function() {
+    if (!localStorage.getItem(STORAGE_KEY)) {
+        applyTheme(mediaDark.matches ? 'dark' : 'light');
+    }
+});
+
+// ========== 复制提示 ==========
+var toastTimer = null;
+function showToast() {
+    var toast = document.getElementById('toast');
+    if (toastTimer) clearTimeout(toastTimer);
+    toast.classList.add('show');
+    toastTimer = setTimeout(function() {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// ========== 核心格式化函数 ==========
+function formatCode(raw, indentType) {
+    var s = raw.replace(/[\r\n\t]/g, ' ').replace(/\s+/g, ' ').trim();
+    s = s.replace(/\{/g, ' {\n');
+    s = s.replace(/\}/g, '\n}');
+    s = s.replace(/;/g, ';\n');
+    s = s.replace(/,/g, ', ');
+
+    var tempLines = s.split('\n');
+    var lines = [];
+    for (var i = 0; i < tempLines.length; i++) {
+        var line = tempLines[i].replace(/^\s+|\s+$/g, '');
+        if (line.length > 0) {
+            lines.push(line);
+        }
+    }
+
+    var indent;
+    if (indentType === 'tab') {
+        indent = '\t';
+    } else {
+        indent = repeatStr(' ', Number(indentType));
+    }
+
+    var depth = 0;
+    var result = [];
+    for (var j = 0; j < lines.length; j++) {
+        var line = lines[j];
+        if (line.charAt(0) === '}') {
+            depth--;
+        }
+        result.push(repeatStr(indent, depth) + line);
+
+        var openCnt = (line.match(/\{/g) || []).length;
+        var closeCnt = (line.match(/\}/g) || []).length;
+        depth += openCnt - closeCnt;
+        if (depth < 0) depth = 0;
+    }
+
+    return result.join('\n');
+}
+
+// ========== 按钮全局事件 ==========
+function doFormat() {
+    var input = document.getElementById('jsInput').value.replace(/^\s+|\s+$/g, '');
+    var errTip = document.getElementById('errTip');
+    errTip.innerHTML = '';
+
+    if (!input) {
+        errTip.innerHTML = '请输入JS代码';
+        document.getElementById('jsOutput').value = '';
+        return;
+    }
+
+    var indentType = document.getElementById('indentSel').value;
+    var result = formatCode(input, indentType);
+    document.getElementById('jsOutput').value = result;
+}
+
+function fillDemo() {
+    var demo = "function getList(page){var arr=[];if(page>0){arr=[{id:1,name:'测试'},{id:2,name:'工具'}];}return arr;}";
+    document.getElementById('jsInput').value = demo;
+    document.getElementById('errTip').innerHTML = '';
+    doFormat();
+}
+
+function copyResult() {
+    var out = document.getElementById('jsOutput').value.replace(/^\s+|\s+$/g, '');
+    if (!out) {
+        document.getElementById('errTip').innerHTML = '先生成格式化结果';
+        return;
+    }
+
+    try {
+        var textarea = document.createElement('textarea');
+        textarea.style.position = 'fixed';
+        textarea.style.left = '-9999px';
+        textarea.value = out;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showToast();
+    } catch (e) {
+        document.getElementById('errTip').innerHTML = '复制失败，请手动复制';
+    }
+}
+
+function clearAll() {
+    document.getElementById('jsInput').value = '';
+    document.getElementById('jsOutput').value = '';
+    document.getElementById('errTip').innerHTML = '';
+}
+</script>
+
+</body>
+</html>

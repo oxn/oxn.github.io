@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cron 表达式生成器</title>
+<style>
+    :root {
+        --primary: #10b981;
+        --primary-light: #dcfce7;
+        --warn: #f97316;
+        --danger: #ef4444;
+        --success: #10b981;
+        --nav-btn-bg: #ffffff;
+        --nav-btn-border: #e5e7eb;
+        --nav-btn-text: #222222;
+        --text-main: #222222;
+        --text-secondary: #555555;
+        --text-weak: #888888;
+        --border-base: #e5e7eb;
+        --border-light: #f3f4f6;
+        --bg-page: #ffffff;
+        --bg-card: #ffffff;
+        --bg-btn: #ffffff;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+        --shadow-lg: 0 6px 16px rgba(0,0.1);
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --transition: all 0.3s ease;
+        --content-max-width: 1200px;
+        --nav-line-height: 38px;
+        --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+        --primary: #10b981;
+        --primary-light: rgba(16, 185, 129, 0.15);
+        --nav-btn-bg: #1f2937;
+        --nav-btn-border: #374151;
+        --nav-btn-text: #f3f4f6;
+        --text-main: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-weak: #94a3b8;
+        --border-base: #334155;
+        --border-light: #334155;
+        --bg-page: #0f172a;
+        --bg-card: #1e293b;
+        --bg-btn: #1e293b;
+        --shadow-sm: 0 1px 3px rgba(0,0,0.2);
+    }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        transition: var(--transition);
+    }
+    html {
+        font-family: system-ui, "Microsoft YaHei", sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    body {
+        min-height: 100vh;
+        background: var(--bg-page);
+        color: var(--text-main);
+        line-height: 1.5;
+        overflow-x: hidden;
+        padding-top: 70px;
+    }
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+    button {
+        font-family: inherit;
+        font-size: inherit;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        border-radius: var(--radius-sm,6px);
+    }
+    .container {
+        max-width: var(--content-max-width);
+        width: calc(100% - 48px);
+        margin: 0 auto;
+    }
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 99;
+        background: var(--bg-page);
+        border-bottom: 1px solid var(--border-base);
+    }
+    .header-inner {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+        max-width: var(--content-max-width);
+        width: calc(100% - 48px);
+        margin: 0 auto;
+    }
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--nav-btn-text);
+        font-size: 12px;
+        font-weight: 500;
+        padding: 7px 10px;
+        border: 1px solid var(--nav-btn-border);
+        border-radius: var(--radius-lg,12px);
+        background: var(--nav-btn-bg);
+        height: var(--nav-line-height);
+    }
+    .back-btn:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .theme-switch-wrap {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .header-btn-circle {
+        width: var(--theme-btn-width);
+        height: var(--theme-btn-width);
+        border: 1px solid var(--nav-btn-border);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--nav-btn-bg);
+        color: var(--nav-btn-text);
+    }
+    .header-btn-circle:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .header-spacer {
+        width: 100%;
+        height: 60px;
+    }
+    main.container {
+        margin-top: 12px;
+        padding-bottom: 60px;
+    }
+    .page-head {
+        text-align: center;
+        margin: 20px 0 30px;
+    }
+    .page-head h1 {
+        font-size: 30px;
+        margin-bottom: 12px;
+        color: var(--text-main);
+    }
+    .desc-text {
+        color: var(--text-weak);
+        font-size: 15px;
+    }
+    .card-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-lg,12px);
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+    }
+    .cron-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 16px;
+        background: var(--primary-light);
+        border-radius: var(--radius-md,8px);
+        margin-bottom: 20px;
+    }
+    .cron-item {
+        font-size: 22px;
+        font-weight: bold;
+        color: var(--primary);
+        font-family: Consolas;
+    }
+    .cron-desc {
+        text-align: center;
+        margin-bottom: 24px;
+        font-size: 16px;
+        color: var(--text-secondary);
+    }
+    .template-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 24px;
+    }
+    .template-btn {
+        padding: 8px 12px;
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-sm,6px);
+        background: var(--bg-btn);
+        font-size: 14px;
+    }
+    .template-btn:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .field-wrap {
+        margin-bottom: 20px;
+    }
+    .field-title {
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: var(--text-main);
+    }
+    .radio-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-bottom: 10px;
+    }
+    .radio-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .num-input {
+        width: 80px;
+        padding: 8px;
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-sm,6px);
+        background: var(--bg-btn);
+        color: var(--text-main);
+        outline: none;
+    }
+    .next-title {
+        margin: 28px 0 12px;
+        font-weight: 500;
+    }
+    .next-list {
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-sm,6px);
+        overflow: hidden;
+    }
+    .next-item {
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border-base);
+        font-family: Consolas;
+    }
+    .next-item:last-child {
+        border-bottom: none;
+    }
+    .err-tip {
+        color: var(--danger);
+        margin: 8px 0;
+        font-size: 14px;
+        padding: 6px 10px;
+        background: rgba(239,68,68,0.08);
+        border-radius: var(--radius-sm,6px);
+        min-height:24px;
+    }
+    .toast-copy {
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 32px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: var(--radius-lg,12px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        z-index: 999999;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s ease;
+        min-height: 72px;
+    }
+    .toast-copy.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    .toast-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #22c55e;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+    }
+    .toast-text {
+        font-size: 28px;
+        color: #16a34a;
+    }
+    html[data-theme="dark"] .toast-copy {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+    html[data-theme="dark"] .toast-text {
+        color: #4ade80;
+    }
+    @media (max-width:640px) {
+        .cron-display {flex-wrap:wrap;}
+        .cron-item {font-size:18px;}
+        .page-head h1 {font-size:28px;}
+        .toast-text {font-size:20px;}
+    }
+</style>
+</head>
+<body>
+<header id="headerDom">
+    <div class="header-inner">
+        <button class="back-btn" onclick="history.back()">← 返回首页</button>
+        <div class="theme-switch-wrap">
+            <button class="header-btn-circle" id="themeToggle" onclick="toggleTheme()">🌙</button>
+        </div>
+    </div>
+</header>
+<div class="header-spacer" id="headerSpacer"></div>
+
+<main class="container">
+    <div class="page-head">
+        <h1>Cron 表达式生成器</h1>
+        <div class="desc-text">可视化配置定时任务，生成标准5位crontab表达式，自动计算最近5次执行时间</div>
+    </div>
+
+    <div class="card-box">
+        <!-- 当前Cron展示 -->
+        <div class="cron-display">
+            <span class="cron-item" id="minPart">*</span>
+            <span class="cron-item" id="hourPart">*</span>
+            <span class="cron-item" id="dayPart">*</span>
+            <span class="cron-item" id="monthPart">*</span>
+            <span class="cron-item" id="weekPart">*</span>
+        </div>
+        <div class="cron-desc" id="cronDesc">每分钟执行一次</div>
+
+        <!-- 常用模板 -->
+        <div class="template-row">
+            <button class="template-btn" onclick="setTemplate('* * * * *')">每分钟</button>
+            <button class="template-btn" onclick="setTemplate('*/5 * * * *')">每5分钟</button>
+            <button class="template-btn" onclick="setTemplate('0 * * * *')">每小时</button>
+            <button class="template-btn" onclick="setTemplate('0 0 * * *')">每天0点</button>
+            <button class="template-btn" onclick="setTemplate('0 0 * * 1-5')">工作日每日0点</button>
+            <button class="template-btn" onclick="setTemplate('0 0 1 * *')">每月1号0点</button>
+        </div>
+
+        <!-- 分钟配置 -->
+        <div class="field-wrap">
+            <div class="field-title">分钟(0-59)</div>
+            <div class="radio-group">
+                <label class="radio-item"><input type="radio" name="minMode" value="all" checked onchange="updateCron()">每一分钟(*)</label>
+                <label class="radio-item"><input type="radio" name="minMode" value="step" onchange="updateCron()">每 <input class="num-input" type="number" min="1" max="59" value="5" id="minStep"> 分钟</label>
+                <label class="radio-item"><input type="radio" name="minMode" value="fixed" onchange="updateCron()">固定 <input class="num-input" type="number" min="0" max="59" value="0" id="minFix"></label>
+            </div>
+        </div>
+
+        <!-- 小时配置 -->
+        <div class="field-wrap">
+            <div class="field-title">小时(0-23)</div>
+            <div class="radio-group">
+                <label class="radio-item"><input type="radio" name="hourMode" value="all" checked onchange="updateCron()">每小时(*)</label>
+                <label class="radio-item"><input type="radio" name="hourMode" value="step" onchange="updateCron()">每 <input class="num-input" type="number" min="1" max="23" value="1" id="hourStep"> 小时</label>
+                <label class="radio-item"><input type="radio" name="hourMode" value="fixed" onchange="updateCron()">固定 <input class="num-input" type="number" min="0" max="23" value="0" id="hourFix"></label>
+            </div>
+        </div>
+
+        <!-- 日期配置 -->
+        <div class="field-wrap">
+            <div class="field-title">日期(1-31)</div>
+            <div class="radio-group">
+                <label class="radio-item"><input type="radio" name="dayMode" value="all" checked onchange="updateCron()">每日(*)</label>
+                <label class="radio-item"><input type="radio" name="dayMode" value="fixed" onchange="updateCron()">每月 <input class="num-input" type="number" min="1" max="31" value="1" id="dayFix"> 号</label>
+            </div>
+        </div>
+
+        <!-- 月份配置 -->
+        <div class="field-wrap">
+            <div class="field-title">月份(1-12)</div>
+            <div class="radio-group">
+                <label class="radio-item"><input type="radio" name="monthMode" value="all" checked onchange="updateCron()">每月(*)</label>
+                <label class="radio-item"><input type="radio" name="monthMode" value="fixed" onchange="updateCron()">每年 <input class="num-input" type="number" min="1" max="12" value="1" id="monthFix"> 月</label>
+            </div>
+        </div>
+
+        <!-- 星期配置 -->
+        <div class="field-wrap">
+            <div class="field-title">星期(0/7=周日,1周一~6周六)</div>
+            <div class="radio-group">
+                <label class="radio-item"><input type="radio" name="weekMode" value="all" checked onchange="updateCron()">每周全部(*)</label>
+                <label class="radio-item"><input type="radio" name="weekMode" value="work" onchange="updateCron()">工作日(1-5)</label>
+                <label class="radio-item"><input type="radio" name="weekMode" value="fixed" onchange="updateCron()">星期 <input class="num-input" type="number" min="0" max="7" value="1" id="weekFix"></label>
+            </div>
+        </div>
+
+        <div class="err-tip" id="errTip"></div>
+
+        <!-- 下次执行时间 -->
+        <h3 class="next-title">下次执行时间</h3>
+        <div class="next-list" id="nextList"></div>
+    </div>
+</main>
+
+<div class="toast-copy" id="toast">
+    <div class="toast-icon">✓</div>
+    <span class="toast-text">复制成功</span>
+</div>
+
+<script>
+// 复制弹窗
+var toastTimer = null;
+function showToast() {
+    var toast = document.getElementById('toast');
+    if(toastTimer) clearTimeout(toastTimer);
+    toast.classList.add('show');
+    toastTimer = setTimeout(function(){toast.classList.remove('show');},3000);
+}
+async function copyStr(t){
+    try{
+        await navigator.clipboard.writeText(t);
+        showToast();
+    }catch(e){
+        var ta=document.createElement('textarea');
+        ta.style.position='fixed';
+        ta.style.left='-9999px';
+        ta.value=t;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast();
+    }
+}
+
+// 主题切换
+var STORAGE_KEY="site_theme_mode";
+var mediaDark=window.matchMedia('(prefers-color-scheme:dark)');
+function applyTheme(mode){
+    var root=document.documentElement;
+    var btn=document.getElementById('themeToggle');
+    if(mode==='dark'){
+        root.setAttribute('data-theme','dark');
+        btn.innerText='☀️';
+    }else{
+        root.removeAttribute('data-theme');
+        btn.innerText='🌙';
+    }
+}
+function toggleTheme(){
+    var root=document.documentElement;
+    var now=root.hasAttribute('data-theme')?'dark':'light';
+    var next=now==='dark'?'light':'dark';
+    localStorage.setItem(STORAGE_KEY,next);
+    applyTheme(next);
+}
+// 头部自适应
+function syncHeader(){
+    var hDom=document.getElementById('headerDom');
+    var spacer=document.getElementById('headerSpacer');
+    spacer.style.height=hDom.offsetHeight+'px';
+}
+window.addEventListener('resize',syncHeader);
+mediaDark.addEventListener('change',function(){
+    if(!localStorage.getItem(STORAGE_KEY)) applyTheme(mediaDark.matches?'dark':'light');
+});
+
+// 全局Cron分段存储
+var cronParts = {
+    min:'*',
+    hour:'*',
+    day:'*',
+    month:'*',
+    week:'*'
+};
+
+// 模板切换
+function setTemplate(expr){
+    var arr=expr.split(' ');
+    cronParts.min=arr[0];
+    cronParts.hour=arr[1];
+    cronParts.day=arr[2];
+    cronParts.month=arr[3];
+    cronParts.week=arr[4];
+    renderCron();
+    calcNext();
+}
+
+// 渲染顶部Cron展示
+function renderCron(){
+    document.getElementById('minPart').innerText=cronParts.min;
+    document.getElementById('hourPart').innerText=cronParts.hour;
+    document.getElementById('dayPart').innerText=cronParts.day;
+    document.getElementById('monthPart').innerText=cronParts.month;
+    document.getElementById('weekPart').innerText=cronParts.week;
+    var desc='';
+    // 分钟描述
+    if(cronParts.min==='*') desc+='每分 ';
+    else if(cronParts.min.indexOf('*/')===0) desc+='每'+cronParts.min.replace('*/','')+'分 ';
+    else desc+='第'+cronParts.min+'分 ';
+    // 小时
+    if(cronParts.hour==='*') desc+='每小时 ';
+    else if(cronParts.hour.indexOf('*/')===0) desc+='每'+cronParts.hour.replace('*/','')+'小时 ';
+    else desc+='第'+cronParts.hour+'时 ';
+    // 日期
+    if(cronParts.day==='*') desc+='每日 ';
+    else desc+='每月'+cronParts.day+'号 ';
+    // 月份
+    if(cronParts.month==='*') desc+='每月 ';
+    else desc+='每年'+cronParts.month+'月 ';
+    // 星期
+    if(cronParts.week==='*') desc+='每周任意天';
+    else if(cronParts.week==='1-5') desc+='周一至周五';
+    else desc+='星期'+cronParts.week;
+    document.getElementById('cronDesc').innerText=desc;
+}
+
+// 更新Cron配置
+function updateCron(){
+    var errTip=document.getElementById('errTip');
+    errTip.textContent='';
+    // 分钟
+    var minMode=document.querySelector('input[name="minMode"]:checked').value;
+    if(minMode==='all') cronParts.min='*';
+    else if(minMode==='step') cronParts.min='*/'+document.getElementById('minStep').value;
+    else cronParts.min=document.getElementById('minFix').value;
+    // 小时
+    var hourMode=document.querySelector('input[name="hourMode"]:checked').value;
+    if(hourMode==='all') cronParts.hour='*';
+    else if(hourMode==='step') cronParts.hour='*/'+document.getElementById('hourStep').value;
+    else cronParts.hour=document.getElementById('hourFix').value;
+    // 日期
+    var dayMode=document.querySelector('input[name="dayMode"]:checked').value;
+    if(dayMode==='all') cronParts.day='*';
+    else cronParts.day=document.getElementById('dayFix').value;
+    // 月份
+    var monthMode=document.querySelector('input[name="monthMode"]:checked').value;
+    if(monthMode==='all') cronParts.month='*';
+    else cronParts.month=document.getElementById('monthFix').value;
+    // 星期
+    var weekMode=document.querySelector('input[name="weekMode"]:checked').value;
+    if(weekMode==='all') cronParts.week='*';
+    else if(weekMode==='work') cronParts.week='1-5';
+    else cronParts.week=document.getElementById('weekFix').value;
+    renderCron();
+    calcNext();
+}
+
+// 日期格式化
+function formatDate(d){
+    var y=d.getFullYear();
+    var m=(d.getMonth()+1).toString().padStart(2,'0');
+    var day=d.getDate().toString().padStart(2,'0');
+    var h=d.getHours().toString().padStart(2,'0');
+    var mi=d.getMinutes().toString().padStart(2,'0');
+    var s=d.getSeconds().toString().padStart(2,'0');
+    return y+'/'+m+' '+h+':'+mi+':'+s;
+}
+
+// 字段匹配判断
+function matchField(val, target, min, max){
+    if(val==='*') return true;
+    if(val.indexOf('*/')===0){
+        var step=Number(val.split('/')[1]);
+        return target % step ===0;
+    }
+    return Number(val)===target;
+}
+
+// 计算下次执行时间
+function calcNext(){
+    var listDom=document.getElementById('nextList');
+    var now=new Date();
+    var result=[];
+    var cursor=new Date(now);
+    cursor.setSeconds(0);
+    var limit=0;
+    var maxLoop=100000;
+    while(result.length<5 && limit<maxLoop){
+        var m=cursor.getMinutes();
+        var h=cursor.getHours();
+        var d=cursor.getDate();
+        var mo=cursor.getMonth()+1;
+        var w=cursor.getDay();
+        var okMin=matchField(cronParts.min,m,0,59);
+        var okH=matchField(cronParts.hour,h,0,23);
+        var okD=matchField(cronParts.day,d,1,31);
+        var okMo=matchField(cronParts.month,mo,1,12);
+        var okW=false;
+        if(cronParts.week==='*') okW=true;
+        else if(cronParts.week==='1-5') okW=(w>=1 && w<=5);
+        else{
+            var wNum=Number(cronParts.week);
+            okW=(wNum===w) || (wNum===7 && w===0);
+        }
+        if(okMin && okH && okD && okMo && okW){
+            result.push(new Date(cursor));
+        }
+        cursor.setMinutes(cursor.getMinutes()+1);
+        limit++;
+    }
+    listDom.innerHTML='';
+    if(result.length===0){
+        listDom.innerHTML='<div class="next-item">无匹配执行时间</div>';
+        return;
+    }
+    for(var i=0;i<result.length;i++){
+        var div=document.createElement('div');
+        div.className='next-item';
+        div.innerText=formatDate(result[i]);
+        listDom.appendChild(div);
+    }
+}
+
+// 页面加载完成初始化
+window.onload=function(){
+    var save=localStorage.getItem(STORAGE_KEY);
+    if(save) applyTheme(save);
+    else applyTheme(mediaDark.matches?'dark':'light');
+    syncHeader();
+    renderCron();
+    calcNext();
+};
+</script>
+</body>
+</html>

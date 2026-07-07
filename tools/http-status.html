@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>HTTP 状态码查询</title>
+<style>
+    :root {
+        --primary: #10b981;
+        --primary-light: #dcfce7;
+        --warn: #f97316;
+        --danger: #ef4444;
+        --nav-btn-bg: #ffffff;
+        --nav-btn-border: #e5e7eb;
+        --nav-btn-text: #222222;
+        --text-main: #222222;
+        --text-secondary: #555555;
+        --text-weak: #888888;
+        --border-base: #e5e7eb;
+        --border-light: #f3f4f6;
+        --bg-page: #ffffff;
+        --bg-card: #ffffff;
+        --bg-btn: #ffffff;
+        --shadow-sm: 0 1px 3px rgba(0,0,0.06);
+        --shadow-lg: 0 6px 16px rgba(0,0.1);
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+        --radius-full: 999px;
+        --space-xs: 6px;
+        --space-sm: 10px;
+        --space-md: 14px;
+        --space-lg: 16px;
+        --transition: all 0.3s ease;
+        --body-font-size: 16px;
+        --desktop-font-ratio: 0.85;
+        --content-max-width: 1200px;
+        --nav-line-height: 38px;
+        --theme-btn-width: 36px;
+    }
+    html[data-theme="dark"] {
+        --primary: #10b981;
+        --primary-light: rgba(16, 185, 129, 0.15);
+        --nav-btn-bg: #1f2937;
+        --nav-btn-border: #374151;
+        --nav-btn-text: #f3f4f6;
+        --warn: #f97316;
+        --text-main: #f1f5f9;
+        --text-secondary: #cbd5e1;
+        --text-weak: #94a3b8;
+        --border-base: #334155;
+        --border-light: #334155;
+        --bg-page: #0f172a;
+        --bg-card: #1e293b;
+        --bg-btn: #1e293b;
+        --shadow-sm: 0 1px 3px rgba(0,0,0.2);
+        --shadow-lg: 0 6px 16px rgba(0,0.35);
+    }
+    html {
+        font-family: system-ui, "Microsoft YaHei", sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    body {
+        min-height: 100vh;
+        background: var(--bg-page);
+        display: flex;
+        flex-direction: column;
+        line-height: 1.5;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        transition: var(--transition);
+    }
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+    button {
+        font-family: inherit;
+        font-size: inherit;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        border-radius: var(--radius-sm);
+    }
+    .container {
+        max-width: var(--content-max-width);
+        width: calc(100% - 48px);
+        margin: 0 auto;
+    }
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 99;
+    }
+    .header-inner {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 0;
+    }
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--nav-btn-text);
+        font-size: 12px;
+        font-weight: 500;
+        padding: 7px 10px;
+        border: 1px solid var(--nav-btn-border);
+        border-radius: var(--radius-lg);
+        background: var(--nav-btn-bg);
+        height: var(--nav-line-height);
+    }
+    .back-btn:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .theme-switch-wrap {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .header-btn-circle {
+        width: var(--theme-btn-width);
+        height: var(--theme-btn-width);
+        border: 1px solid var(--nav-btn-border);
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: var(--nav-btn-bg);
+        color: var(--nav-btn-text);
+    }
+    .header-btn-circle:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .header-spacer {
+        width: 100%;
+        height: 60px;
+    }
+    main.container {
+        margin-top: 12px;
+        padding-bottom: 60px;
+    }
+    .page-head {
+        text-align: center;
+        margin: 20px 0 30px;
+    }
+    .page-head h1 {
+        font-size: calc(30px * var(--desktop-font-ratio));
+        margin-bottom: 12px;
+        color: var(--text-main);
+    }
+    .desc-text {
+        color: var(--text-weak);
+        font-size: calc(15px * var(--desktop-font-ratio));
+    }
+    .card-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 24px;
+    }
+    .input-block {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .input-label {
+        display: block;
+        color: var(--text-main);
+        font-weight: 500;
+    }
+    input[type="text"], input[type="number"], textarea, select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-sm);
+        background: var(--bg-btn);
+        color: var(--text-main);
+        font-family: Consolas, monospace;
+        outline: none;
+    }
+    input:focus, textarea:focus, select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(16,185,129,0.15);
+    }
+    .btn-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 20px 0;
+    }
+    .op-btn {
+        height: 44px;
+        padding: 0 18px;
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-sm);
+        background: var(--bg-btn);
+        color: var(--text-main);
+        white-space: nowrap;
+    }
+    .op-btn.primary {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .op-btn.warn {
+        color: #ef4444;
+        border-color: #fecdd3;
+    }
+    .op-btn:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+        color: var(--primary);
+    }
+    .err-tip {
+        color: #ef4444;
+        margin: 8px 0;
+        font-size: 14px;
+        padding: 6px 10px;
+        background: rgba(239,68,68,0.08);
+        border-radius: var(--radius-sm);
+    }
+    /* 状态码分组标题 */
+    .group-heading {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin: 32px 0 12px;
+    }
+    /* 状态码网格 */
+    .status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    .status-item {
+        padding: 10px 12px;
+        border: 1px solid var(--border-base);
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        background: var(--bg-btn);
+    }
+    .status-item:hover {
+        border-color: var(--primary);
+    }
+    .status-code {
+        font-weight: 600;
+        color: var(--text-main);
+    }
+    .status-name {
+        font-size: 13px;
+        color: var(--text-weak);
+    }
+    /* 复制弹窗统一样式 */
+    .toast-copy {
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-20px);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 32px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 16px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        z-index: 999999;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s ease;
+        min-height: 72px;
+    }
+    .toast-copy.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    .toast-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #22c55e;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        font-size: 22px;
+        font-weight: bold;
+    }
+    .toast-text {
+        font-size: 28px;
+        color: #16a34a;
+        font-weight: 500;
+    }
+    html[data-theme="dark"] .toast-copy {
+        background: rgba(34, 197, 94, 0.12);
+        border-color: rgba(34, 197, 94, 0.3);
+    }
+    html[data-theme="dark"] .toast-text {
+        color: #4ade80;
+    }
+    @media (max-width:640px) {
+        .page-head h1 {font-size:28px;}
+        .toast-text {font-size: 20px;}
+    }
+    @media screen and (max-width:767px) and (orientation:portrait){
+        .header-btn-circle{width:34px;height:34px;font-size:14px;}
+    }
+</style>
+</head>
+<body>
+<header id="headerDom">
+    <div class="container header-inner">
+        <a href="index.html" class="back-btn">← 返回首页</a>
+        <div class="theme-switch-wrap">
+            <button id="themeToggle" class="header-btn-circle">🌙</button>
+        </div>
+    </div>
+</header>
+<div class="header-spacer" id="headerSpacer"></div>
+
+<main class="container">
+    <div class="page-head">
+        <h1>HTTP 状态码查询</h1>
+        <div class="desc-text">输入状态码快速查询完整释义，浏览全部常用HTTP响应码</div>
+    </div>
+
+    <!-- 搜索卡片 -->
+    <div class="card-box">
+        <div class="input-block">
+            <label class="input-label">状态码检索</label>
+            <input type="number" id="codeInput" placeholder="输入数字，例如 200 / 404 / 500">
+        </div>
+        <div class="btn-row">
+            <button class="op-btn primary" id="searchBtn">查询</button>
+            <button class="op-btn" id="clearSearchBtn">清空输入</button>
+        </div>
+        <!-- 查询结果 -->
+        <div class="input-block" id="resultWrap" style="display:none;">
+            <label class="input-label">查询结果</label>
+            <textarea id="resultText" readonly></textarea>
+            <div class="btn-row">
+                <button class="op-btn primary" id="copyResultBtn">复制本条说明</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1xx 信息类 -->
+    <h3 class="group-heading">1xx 信息提示</h3>
+    <div class="status-grid" id="grid1"></div>
+
+    <!-- 2xx 成功类 -->
+    <h3 class="group-heading">2xx 请求成功</h3>
+    <div class="status-grid" id="grid2"></div>
+
+    <!-- 3xx 重定向 -->
+    <h3 class="group-heading">3xx 资源重定向</h3>
+    <div class="status-grid" id="grid3"></div>
+
+    <!-- 4xx 客户端错误 -->
+    <h3 class="group-heading">4xx 客户端错误</h3>
+    <div class="status-grid" id="grid4"></div>
+
+    <!-- 5xx 服务端错误 -->
+    <h3 class="group-heading">5xx 服务器错误</h3>
+    <div class="status-grid" id="grid5"></div>
+</main>
+
+<div class="toast-copy" id="copyToast">
+    <div class="toast-icon">✓</div>
+    <span class="toast-text">复制成功</span>
+</div>
+
+<script>
+// 统一复制弹窗逻辑
+const copyToast = document.getElementById('copyToast');
+let toastTimer = null;
+function showToast() {
+    if(toastTimer) clearTimeout(toastTimer);
+    copyToast.classList.add('show');
+    toastTimer = setTimeout(()=>copyToast.classList.remove('show'), 3000);
+}
+async function copyStr(text){
+    try {
+        await navigator.clipboard.writeText(text);
+        showToast();
+    } catch (e) {
+        const temp = document.createElement('textarea');
+        temp.style.position='fixed';
+        temp.style.left='-9999px';
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        showToast();
+    }
+}
+
+// 明暗主题切换（全站统一逻辑）
+const htmlRoot=document.documentElement;
+const themeBtn=document.getElementById("themeToggle");
+const mediaDark=window.matchMedia('(prefers-color-scheme: dark)');
+const STORAGE_KEY="site_theme_mode";
+function applyTheme(mode){
+    if(mode==='dark'){htmlRoot.setAttribute('data-theme','dark');themeBtn.innerText='☀️';}
+    else {htmlRoot.removeAttribute('data-theme');themeBtn.innerText='🌙';}
+}
+function initTheme(){
+    const save=localStorage.getItem(STORAGE_KEY);
+    if(save) applyTheme(save);
+    else applyTheme(mediaDark.matches?'dark':'light');
+}
+function toggleTheme(){
+    const now=htmlRoot.hasAttribute('data-theme')?'dark':'light';
+    const next=now==='dark'?'light':'dark';
+    localStorage.setItem(STORAGE_KEY,next);
+    applyTheme(next);
+}
+mediaDark.addEventListener('change',()=>{if(!localStorage.getItem(STORAGE_KEY)) applyTheme(mediaDark.matches?'dark':'light');});
+initTheme();
+themeBtn.onclick=toggleTheme;
+
+// 头部自适应高度
+const headerDom=document.getElementById('headerDom');
+const headerSpacer=document.getElementById('headerSpacer');
+function syncHeader(){headerSpacer.style.height=headerDom.offsetHeight+'px';}
+window.addEventListener('resize',syncHeader);
+syncHeader();
+
+// 返回首页按钮
+document.querySelector('.back-btn').onclick=e=>{
+    e.preventDefault();
+    if(history.length>1) history.back();
+};
+
+// 全部HTTP状态码数据
+const statusList = {
+    100: { name: "Continue", desc: "请求已接收，客户端可继续发送剩余请求数据" },
+    101: { name: "Switching Protocols", desc: "服务器同意切换至客户端请求的新传输协议" },
+    200: { name: "OK", desc: "请求处理成功，正常返回对应资源数据" },
+    201: { name: "Created", desc: "POST创建资源请求成功，新数据已持久化" },
+    202: { name: "Accepted", desc: "请求已接收，后台异步处理尚未完成" },
+    204: { name: "No Content", desc: "请求成功，无任何响应内容返回" },
+    301: { name: "Moved Permanently", desc: "资源永久迁移，搜索引擎更新目标地址" },
+    302: { name: "Found", desc: "临时重定向，仅本次访问跳转新地址" },
+    304: { name: "Not Modified", desc: "资源未更新，直接使用本地缓存节省流量" },
+    400: { name: "Bad Request", desc: "请求参数、格式错误，服务器无法解析" },
+    401: { name: "Unauthorized", desc: "未登录/身份凭证失效，需要授权访问" },
+    403: { name: "Forbidden", desc: "已登录，但权限不足禁止访问资源" },
+    404: { name: "Not Found", desc: "请求URL对应的资源不存在" },
+    409: { name: "Conflict", desc: "资源状态冲突，如重复创建同名数据" },
+    413: { name: "Payload Too Large", desc: "上传请求体超出服务器限制大小" },
+    415: { name: "Unsupported Media Type", desc: "提交的数据格式服务端不支持解析" },
+    429: { name: "Too Many Requests", desc: "接口请求频率过高，触发限流拦截" },
+    500: { name: "Internal Server Error", desc: "服务器内部代码异常，通用服务故障" },
+    502: { name: "Bad Gateway", desc: "网关/代理转发后端服务失败" },
+    503: { name: "Service Unavailable", desc: "服务停机、过载，暂时无法处理请求" },
+    504: { name: "Gateway Timeout", desc: "网关等待后端服务响应超时" }
+};
+
+// DOM绑定
+const codeInput = document.getElementById('codeInput');
+const searchBtn = document.getElementById('searchBtn');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
+const resultWrap = document.getElementById('resultWrap');
+const resultText = document.getElementById('resultText');
+const copyResultBtn = document.getElementById('copyResultBtn');
+const grid1 = document.getElementById('grid1');
+const grid2 = document.getElementById('grid2');
+const grid3 = document.getElementById('grid3');
+const grid4 = document.getElementById('grid4');
+const grid5 = document.getElementById('grid5');
+
+let cacheResultText = "";
+
+// 渲染所有状态码格子
+function renderAllStatus() {
+    Object.entries(statusList).forEach(([code, item]) => {
+        const num = Number(code);
+        let targetGrid;
+        if(num < 200) targetGrid = grid1;
+        else if(num < 300) targetGrid = grid2;
+        else if(num < 400) targetGrid = grid3;
+        else if(num < 500) targetGrid = grid4;
+        else targetGrid = grid5;
+
+        const div = document.createElement('div');
+        div.className = "status-item";
+        div.innerHTML = `
+            <div class="status-code">${code}</div>
+            <div class="status-name">${item.name}</div>
+        `;
+        // 点击填入输入框并查询
+        div.onclick = () => {
+            codeInput.value = code;
+            handleSearch();
+        };
+        targetGrid.appendChild(div);
+    });
+}
+
+// 查询逻辑
+function handleSearch() {
+    const val = codeInput.value.trim();
+    resultWrap.style.display = "none";
+    cacheResultText = "";
+    if(!val) return;
+    const target = statusList[val];
+    if(!target) {
+        resultWrap.style.display = "block";
+        const tip = `状态码 ${val} 暂无收录释义`;
+        resultText.value = tip;
+        cacheResultText = tip;
+        return;
+    }
+    // 拼接完整文本
+    const fullTxt = `${val} ${target.name}：${target.desc}`;
+    cacheResultText = fullTxt;
+    resultText.value = fullTxt;
+    resultWrap.style.display = "block";
+}
+
+// 清空搜索
+function clearSearch() {
+    codeInput.value = "";
+    resultWrap.style.display = "none";
+    cacheResultText = "";
+}
+
+// 绑定按钮事件
+searchBtn.onclick = handleSearch;
+clearSearchBtn.onclick = clearSearch;
+copyResultBtn.onclick = async ()=>{
+    if(cacheResultText) await copyStr(cacheResultText);
+};
+// 回车触发查询
+codeInput.addEventListener('keydown', e=>{
+    if(e.key === "Enter") handleSearch();
+});
+
+// 页面初始化渲染
+renderAllStatus();
+</script>
+</body>
+</html>
