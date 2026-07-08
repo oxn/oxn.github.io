@@ -276,7 +276,7 @@ textarea{
 <div class="toast-copy" id="toastTip"></div>
 
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -352,8 +352,9 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
+  // 改为浏览器后退
   document.getElementById("backHome").addEventListener('click', function(){
-    window.location.href = "./index.html";
+    history.back();
   });
 
   const inputText = document.getElementById('inputText');
@@ -451,8 +452,6 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     const temp = document.createElement('textarea');
     temp.value = text;
-    temp.style.position = 'fixed';
-    temp.style.left = '-9999px';
     document.body.appendChild(temp);
     temp.select();
     document.execCommand('copy');

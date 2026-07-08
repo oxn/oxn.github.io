@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>🔁</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>文本反转工具</title>
 <style>
@@ -44,7 +45,7 @@
       --body-line-height: 1.6;
       --title-line-height: 1.2;
       --sub-title-line-height: 1.25;
-      --content-max-width: 1200px;
+      --content-max-width: 640px;
       --card-gap: 16px;
       --card-min-width: 300px;
       --header-safe-gap: 16px;
@@ -70,7 +71,7 @@
       --bg-btn: #1f2937;
       --bg-footer: #111827;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
-      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.45);
       --key-bg: #374151;
       --key-text: #f9fafb;
       --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
@@ -89,7 +90,7 @@ body{
   justify-content:center;
   background:var(--bg-page);
   color:var(--text-main);
-  padding:20px;
+  padding:calc(var(--card-label-offset) + 16px) 3vw 3rem;
   position: relative;
 }
 /* 顶部按钮容器 贴合主站头部布局 */
@@ -133,7 +134,7 @@ body{
   height: 40px;
   padding: 0;
   border: 1px solid var(--nav-btn-border);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   font-size: 16px;
   cursor: pointer;
   display: grid;
@@ -149,12 +150,11 @@ body{
 }
 .box{
   width:100%;
-  max-width:640px;
+  max-width:var(--content-max-width);
   background:var(--bg-card);
   padding:32px;
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
-  margin-top: 70px;
 }
 h2{
   text-align:center;
@@ -188,7 +188,7 @@ textarea{
 .btn-group{
   display:flex;
   gap:10px;
-  margin-bottom:20px;
+  margin-bottom:var(--space-lg);
 }
 .btn{
   padding:12px 20px;
@@ -209,24 +209,32 @@ textarea{
   line-height:1.6;
   color:var(--text-secondary);
 }
-/* 复制悬浮提示 */
+/* 统一全局悬浮Toast提示 */
 .toast-copy {
   position: fixed;
   bottom: 40px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(20px);
   padding: 10px 20px;
-  background: rgba(0,0,0,0.65);
-  color: #fff;
+  background: var(--bg-card);
+  color: var(--text-main);
   border-radius: var(--radius-md);
   font-size: 14px;
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   pointer-events: none;
   z-index: 9999;
-  transition: opacity 0.25s ease;
+  transition: all 0.25s ease;
 }
 .toast-copy.show {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast-success {
+  color: var(--primary);
+}
+.toast-error {
+  color: var(--danger);
 }
 /* ========== 仅手机竖屏才启用新布局：宽度≤767px + 竖屏 ========== */
 @media screen and (max-width:767px) and (orientation:portrait){
@@ -249,7 +257,6 @@ textarea{
   }
   .box{
     padding:24px 20px;
-    margin-top: 60px;
   }
   h2{
     font-size:22px;
@@ -278,7 +285,7 @@ textarea{
 
 <!-- 顶部按钮栏 -->
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -326,11 +333,13 @@ textarea{
 document.addEventListener('DOMContentLoaded', function(){
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
-const STORAGE_KEY = "site_theme_mode";
+const backHome = document.getElementById("backHome");
 const toastTip = document.getElementById('toastTip');
+const STORAGE_KEY = "site_theme_mode";
 
-// 悬浮提示
-function showToast(msg) {
+// 统一Toast提示
+function showToast(msg, success = true) {
+  toastTip.className = "toast-copy " + (success ? "toast-success" : "toast-error");
   toastTip.textContent = msg;
   toastTip.classList.add('show');
   setTimeout(() => toastTip.classList.remove('show'), 1800);
@@ -363,9 +372,9 @@ themeToggle.addEventListener('click', function(){
   }
 });
 
-// 返回首页
-document.getElementById("backHome").addEventListener('click', function(){
-  window.location.href = "./index.html";
+// 返回：浏览器后退
+backHome.addEventListener('click', function(){
+  history.back();
 });
 
 const inputText = document.getElementById("inputText");
@@ -379,7 +388,7 @@ const copyBtn = document.getElementById("copyBtn");
 function doReverse() {
   const text = inputText.value.trim();
   if (!text) {
-    showToast("请输入待反转文本");
+    showToast("请输入待反转文本", false);
     return;
   }
   const mode = reverseMode.value;
@@ -397,12 +406,13 @@ function doReverse() {
       break;
   }
   outputText.value = result;
+  showToast("反转完成");
 }
 
 // 复制兼容函数
 async function copyText(text) {
   if (!text.trim()) {
-    showToast("无结果可复制");
+    showToast("无结果可复制", false);
     return false;
   }
   if (navigator.clipboard && window.isSecureContext) {
@@ -412,7 +422,7 @@ async function copyText(text) {
       return true;
     } catch (err) {}
   }
-  // 兜底复制
+  // 兜底降级复制
   const temp = document.createElement("textarea");
   temp.value = text;
   temp.style.position = "fixed";
@@ -432,6 +442,7 @@ runBtn.addEventListener('click', doReverse);
 clearBtn.addEventListener('click', function(){
   inputText.value = "";
   outputText.value = "";
+  showToast("已清空");
 });
 
 // 复制按钮

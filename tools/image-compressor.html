@@ -26,7 +26,7 @@
       --bg-footer: #f0fdf4;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
       --shadow-lg: 0 6px 16px rgba(0,0,0.1);
-      --radius-xs: 4;
+      --radius-xs: 4px;
       --radius-sm: 6px;
       --radius-md: 8px;
       --radius-lg: 12px;
@@ -40,7 +40,7 @@
       --key-bg: #e5e7eb;
       --key-text: #222;
       --key-radius: 6px;
-      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --key-shadow: 0 1px 2px rgba(0,0,0.15);
       --body-font-size: 16px;
       --body-line-height: 1.6;
       --title-line-height: 1.2;
@@ -71,7 +71,7 @@
       --bg-card: #1e293b;
       --bg-btn: #1f2937;
       --bg-footer: #111827;
-      --shadow-sm: 0 1px 3 rgba(0,0,0,0.25);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
       --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
       --key-bg: #374151;
       --key-text: #f9fafb;
@@ -247,6 +247,7 @@ input:focus,select:focus{
   border-radius:var(--radius-md);
   background:var(--primary-light);
   margin-bottom:20px;
+  position:relative;
 }
 .info-line{
   font-size:15px;
@@ -268,6 +269,41 @@ input:focus,select:focus{
   line-height:1.6;
   color:var(--text-secondary);
   margin-top:24px;
+}
+/* 复制按钮统一原版样式 */
+.copy-btn{
+  position: absolute;
+  top:12px;
+  right:12px;
+  padding:6px 10px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--primary);
+  background:transparent;
+  color:var(--primary);
+  cursor:pointer;
+  font-size:13px;
+}
+.copy-btn:hover{
+  background:var(--primary);
+  color:#fff;
+}
+/* 复制悬浮提示原版固定样式，无修改 */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+}
+.copy-toast.show{
+  opacity:1;
 }
 /* 手机竖屏适配 */
 @media screen and (max-width:767px) and (orientation:portrait){
@@ -304,12 +340,16 @@ input:focus,select:focus{
   .tip{
     font-size:13px;
   }
+  .copy-btn{
+    padding:4px 8px;
+    font-size:12px;
+  }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -341,6 +381,7 @@ input:focus,select:focus{
   <button class="btn-main" id="compressBtn" disabled>开始压缩</button>
 
   <div class="info-box" id="infoWrap" style="display:none;">
+    <button class="copy-btn" id="copyInfoBtn">复制信息</button>
     <div class="info-line">原图大小: <span id="origSize">--</span></div>
     <div class="info-line">压缩后: <span id="compSize">--</span></div>
     <div class="info-line">压缩率: <span id="rateText">--</span></div>
@@ -356,11 +397,41 @@ input:focus,select:focus{
     使用说明：全部图片处理在本地浏览器完成，不会上传服务器；质量越低体积越小，PNG格式为无损模式，质量参数不生效。
   </div>
 </div>
+<!-- 原版复制提示弹窗，无改动 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+
+// 返回按钮DOM
+const backBtn = document.getElementById("backBtn");
+// 复制相关DOM
+const copyInfoBtn = document.getElementById("copyInfoBtn");
+const copyToast = document.getElementById("copyToast");
+const origSize = document.getElementById("origSize");
+const compSize = document.getElementById("compSize");
+const rateText = document.getElementById("rateText");
+
+// 返回逻辑统一 history.back()
+backBtn.onclick = () => history.back();
+
+// 原版复制提示函数，无修改
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
+// 复制压缩信息
+copyInfoBtn.onclick = async ()=>{
+  const text = `原图大小：${origSize.innerText}\n压缩后：${compSize.innerText}\n压缩率：${rateText.innerText}`;
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast();
+  }catch(err){
+    alert("复制失败，请手动复制");
+  }
+};
 
 // 主题初始化
 function initTheme() {
@@ -385,7 +456,6 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
 // DOM
 const uploadBox = document.getElementById("uploadBox");
@@ -395,9 +465,6 @@ const qualityVal = document.getElementById("qualityVal");
 const formatSel = document.getElementById("formatSel");
 const compressBtn = document.getElementById("compressBtn");
 const infoWrap = document.getElementById("infoWrap");
-const origSize = document.getElementById("origSize");
-const compSize = document.getElementById("compSize");
-const rateText = document.getElementById("rateText");
 const previewWrap = document.getElementById("previewWrap");
 const previewImg = document.getElementById("previewImg");
 const downloadBtn = document.getElementById("downloadBtn");

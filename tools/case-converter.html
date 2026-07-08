@@ -21,9 +21,14 @@
   --card-bg: #ffffff;
   --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
   --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 999px;
   --space-md: 0.875rem;
   --space-lg: 1.2rem;
-  --max-width: 1400px;
+  --max-width: 900px;
+  --card-label-offset: 2.25rem;
+  --nav-line-height: 2.375rem;
+  --theme-btn-width: 2.25rem;
   --transition: all 0.22s ease;
 }
 html[data-theme="dark"] {
@@ -49,7 +54,7 @@ html[data-theme="dark"] {
 body{
   background: var(--page-bg);
   color: var(--text-main);
-  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+  padding: calc(var(--card-label-offset) + 16px) 3vw 3rem;
 }
 .top-header-bar{
   position: fixed;
@@ -64,7 +69,9 @@ body{
 .header-btn{
   padding: 0.4375rem 0.625rem;
   border:1px solid var(--nav-border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  font-size:0.75rem;
+  line-height:1;
   background: var(--nav-bg);
   color: var(--nav-text);
   cursor:pointer;
@@ -80,7 +87,7 @@ body{
   margin:0 auto;
   background:var(--card-bg);
   padding: clamp(1.5rem,5vw,2rem);
-  border-radius:var(--radius-md);
+  border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
 }
 h2{
@@ -126,6 +133,7 @@ h2{
   border:1px solid var(--border-base);
   background:transparent;
   color:var(--text-main);
+  font-size:1rem;
 }
 .btn-row button:hover{
   background:var(--primary-light);
@@ -173,29 +181,27 @@ h2{
   word-break:break-all;
   min-height:20px;
 }
-.toast-box{
+/* 全局统一底部复制悬浮提示 固定样式 */
+.copy-toast{
   position:fixed;
+  bottom:30px;
   left:50%;
-  bottom:40px;
-  transform:translateX(-50%) translateY(20px);
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  color:#fff;
+  font-size:14px;
   opacity:0;
-  padding:0.7rem 1.4rem;
-  border-radius:var(--radius-md);
-  background:var(--card-bg);
-  box-shadow:var(--shadow-lg);
-  z-index:9999;
   pointer-events:none;
-  transition:all 0.2s ease;
+  z-index:9999;
+  transition:opacity 0.2s ease;
 }
-.toast-box.show{
-  opacity:1;
-  transform:translateX(-50%) translateY(0);
-}
+.copy-toast.show{opacity:1;}
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn" id="backBtn">← 返回首页</button>
+  <button class="header-btn" id="backBtn">← 返回</button>
   <button class="header-btn" id="themeBtn">🌙</button>
 </div>
 
@@ -281,7 +287,8 @@ h2{
   </div>
 </div>
 
-<div class="toast-box" id="toastBox"></div>
+<!-- 全局统一复制悬浮提示 -->
+<div class="copy-toast" id="copyToast"></div>
 
 <script>
 const sourceText = document.getElementById('sourceText');
@@ -297,15 +304,18 @@ const resKebab = document.getElementById('resKebab');
 const clearBtn = document.getElementById('clearBtn');
 const demoBtn = document.getElementById('demoBtn');
 const copyAllBtn = document.getElementById('copyAllBtn');
-const toastBox = document.getElementById('toastBox');
+const copyToast = document.getElementById('copyToast');
 const themeBtn = document.getElementById('themeBtn');
 const backBtn = document.getElementById('backBtn');
+const htmlRoot = document.documentElement;
 const STORAGE_KEY = "site_theme_mode";
 
-function showToast(msg){
-  toastBox.innerText = msg;
-  toastBox.classList.add("show");
-  setTimeout(()=>toastBox.classList.remove("show"),2000);
+// 统一复制提示函数
+function showToast(msg, success = true){
+  copyToast.style.background = success ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.85)";
+  copyToast.innerText = msg;
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
 }
 
 // 提取纯单词数组
@@ -391,6 +401,8 @@ async function copyAllResult(){
     `CONSTANT: ${resConstant.innerText}`,
     `kebab-case: ${resKebab.innerText}`
   ].join('\n');
+  const val = lines.trim();
+  if(!val) return showToast("暂无转换内容", false);
   try{
     await navigator.clipboard.writeText(lines);
     showToast("全部结果已复制");
@@ -410,21 +422,21 @@ document.querySelectorAll('.copy-mini').forEach(btn=>{
   btn.onclick = async ()=>{
     const targetId = btn.dataset.target;
     const targetEl = document.getElementById(targetId);
-    const text = targetEl.innerText;
-    if(!text) return showToast("暂无内容");
+    const text = targetEl.innerText.trim();
+    if(!text) return showToast("暂无内容", false);
     try{
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(targetEl.innerText);
       showToast("单项复制成功");
     }catch(e){
       const temp = document.createElement('textarea');
-      temp.value = text;
+      temp.value = targetEl.innerText;
       document.body.appendChild(temp);
       temp.select();
       document.execCommand('copy');
       document.body.removeChild(temp);
       showToast("单项复制成功");
     }
-  }
+  };
 });
 
 // 绑定基础事件
@@ -433,30 +445,32 @@ clearBtn.onclick = clearAll;
 demoBtn.onclick = loadDemo;
 copyAllBtn.onclick = copyAllResult;
 
+// 返回标准化
+backBtn.onclick = ()=>history.back();
+
 // 主题切换
 function initTheme(){
   const save = localStorage.getItem(STORAGE_KEY);
   if(save === "dark"){
-    document.documentElement.setAttribute("data-theme","dark");
+    htmlRoot.setAttribute("data-theme","dark");
     themeBtn.innerText = "☀️";
   }else{
-    document.documentElement.removeAttribute("data-theme");
+    htmlRoot.removeAttribute("data-theme");
     themeBtn.innerText = "🌙";
   }
 }
-themeBtn.onclick = ()=>{
-  const dark = document.documentElement.hasAttribute("data-theme");
+themeBtn.onclick = function(){
+  const dark = htmlRoot.hasAttribute("data-theme");
   if(dark){
     localStorage.setItem(STORAGE_KEY,"light");
-    document.documentElement.removeAttribute("data-theme");
+    htmlRoot.removeAttribute("data-theme");
     themeBtn.innerText = "🌙";
   }else{
     localStorage.setItem(STORAGE_KEY,"dark");
-    document.documentElement.setAttribute("data-theme","dark");
+    htmlRoot.setAttribute("data-theme","dark");
     themeBtn.innerText = "☀️";
   }
 };
-backBtn.onclick = ()=>window.location.href="./index.html";
 
 initTheme();
 loadDemo();

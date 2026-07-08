@@ -24,7 +24,7 @@
       --bg-btn: #ffffff;
       --bg-footer: #f0fdf4;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-      --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
       --radius-xs: 4px;
       --radius-sm: 6px;
       --radius-md: 8px;
@@ -253,6 +253,57 @@ input,select{
   color:var(--text-secondary);
 }
 
+/* 复制弹窗 超大z-index杜绝遮挡 */
+.toast-copy {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 32px;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(16, 185, 0.15);
+    z-index: 999999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    min-height: 72px;
+}
+.toast-copy.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #22c55e;
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.toast-text {
+    font-size: 16px;
+    color: #16a34a;
+    font-weight: 500;
+    white-space: nowrap;
+}
+html[data-theme="dark"] .toast-copy {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+html[data-theme="dark"] .toast-text {
+    color: #4ade80;
+}
+
 /* ========== 仅手机竖屏才启用新布局：宽度≤767px + 竖屏 ========== */
 @media screen and (max-width:767px) and (orientation:portrait){
   body{
@@ -324,14 +375,16 @@ input,select{
   .tip{
     font-size:13px;
   }
+  .toast-text {
+      font-size: 16px;
+  }
 }
 </style>
 </head>
 <body>
 <!-- 顶部按钮栏 -->
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
-  <!-- 圆形纯图标明暗切换按钮 -->
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -388,14 +441,62 @@ input,select{
   <div class="tip">纯html全部运算在本地浏览器，密钥不会上传服务器；<br>兼容Google Authenticator、Authy、Microsoft Authenticator、Aegis、2FAS、1Password、Bitwarden等所有TOTP类两步验证软件均可通用。 </div>
 </div>
 
+<!-- 复制弹窗DOM 完整存在 -->
+<div class="toast-copy" id="copyToast">
+    <div class="toast-icon">✓</div>
+    <span class="toast-text">复制成功</span>
+</div>
+
 <script>
 const BASE32_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-// 主题Key与主站完全一致，跨页面同步
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
 
-// 初始化主题 逻辑与主站统一
+// 弹窗全局变量
+const copyToast = document.getElementById('copyToast');
+let toastTimer = null;
+
+// 稳定弹窗显示函数 requestAnimationFrame 解决动画失效
+function showToast() {
+    clearTimeout(toastTimer);
+    copyToast.classList.remove('show');
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            copyToast.classList.add('show');
+        });
+    });
+    toastTimer = setTimeout(() => {
+        copyToast.classList.remove('show');
+    }, 1800);
+}
+
+// 兼容全浏览器复制函数（解决file本地/HTTP复制失效）
+function copyText(text) {
+    return new Promise((resolve) => {
+        // 优先现代Clipboard API
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => resolve(true)).catch(() => fallbackCopy(text, resolve));
+        } else {
+            fallbackCopy(text, resolve);
+        }
+    });
+}
+// 传统textarea兜底复制
+function fallbackCopy(text, resolve) {
+    const temp = document.createElement('textarea');
+    temp.style.position = 'fixed';
+    temp.style.left = '-99999px';
+    temp.style.top = '-99999px';
+    temp.value = text;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    resolve(true);
+}
+
+// 主题初始化
 function initTheme() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved === "dark") {
@@ -406,7 +507,6 @@ function initTheme() {
     themeToggle.innerHTML = "🌙";
   }
 }
-// 切换主题函数
 themeToggle.onclick = () => {
   const isDark = htmlRoot.hasAttribute("data-theme");
   if (isDark) {
@@ -419,15 +519,15 @@ themeToggle.onclick = () => {
     themeToggle.innerHTML = "☀️";
   }
 };
-// 返回首页 指向项目根目录首页
+
+// 返回按钮：原生浏览器后退
 document.getElementById("backHome").onclick = () => {
-  window.location.href = "./index.html";
+  history.back();
 };
 
 function cleanSecret(s) {
   return s.toUpperCase().replace(/[\s\-=]/g, '');
 }
-
 function base32Decode(raw) {
   const s = cleanSecret(raw);
   let bits = '';
@@ -439,7 +539,6 @@ function base32Decode(raw) {
   const byteStr = bits.match(/.{8}/g) || [];
   return Uint8Array.from(byteStr.map(b => parseInt(b, 2)));
 }
-
 function randomBase32(len = 16) {
   let res = '';
   const arr = new Uint32Array(len);
@@ -454,18 +553,15 @@ async function calcTOTP(secret, algo, digits, periodSec, offsetMs = 0, customTs 
   const keyBytes = base32Decode(secret);
   const ts = customTs ?? (Date.now() + offsetMs);
   const step = Math.floor(ts / (periodSec * 1000));
-
   const counterBuf = new ArrayBuffer(8);
   const dv = new DataView(counterBuf);
   dv.setBigUint64(0, BigInt(step), false);
   const counter = new Uint8Array(counterBuf);
-
   const cryptoKey = await crypto.subtle.importKey(
     'raw', keyBytes, { name: 'HMAC', hash: algo }, false, ['sign']
   );
   const hmacRaw = await crypto.subtle.sign('HMAC', cryptoKey, counter);
   const hmac = new Uint8Array(hmacRaw);
-
   const offset = hmac[hmac.length - 1] & 0x0F;
   const binCode = ((hmac[offset] & 0x7F) << 24)
     | (hmac[offset + 1] << 16)
@@ -493,10 +589,8 @@ async function refreshView() {
   const remain = stepMs - (now % stepMs);
   const pct = (remain / stepMs) * 100;
   document.getElementById('progressBar').style.width = pct + '%';
-
   const codeBox = document.getElementById('currentCode');
   const nextBox = document.getElementById('nextCode');
-
   if (!cfg.secret.trim()) {
     codeBox.innerText = '------';
     nextBox.innerText = '下一码：------';
@@ -519,11 +613,16 @@ document.getElementById('genRandom').onclick = () => {
   refreshView();
 };
 
+// 复制按钮 增加日志+兼容复制+弹窗
 document.getElementById('copyCode').onclick = async () => {
+  console.log("复制按钮点击触发");
   const code = document.getElementById('currentCode').innerText;
   if (/^\d{6,8}$/.test(code)) {
-    await navigator.clipboard.writeText(code);
-    alert('已复制验证码');
+    await copyText(code);
+    showToast();
+    console.log("复制成功，弹窗已触发");
+  } else {
+    console.log("验证码无效，不执行复制");
   }
 };
 
@@ -531,7 +630,6 @@ document.getElementById('copyCode').onclick = async () => {
   document.getElementById(id).oninput = refreshView;
 });
 
-// 页面加载初始化
 initTheme();
 refreshView();
 refreshTimer = setInterval(refreshView, 1000);

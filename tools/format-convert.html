@@ -119,7 +119,6 @@
             align-items: center;
             gap: 6px;
             color: var(--nav-btn-text);
-            text-decoration: none;
             font-size: 12px;
             font-weight: 500;
             padding: 7px 10px;
@@ -128,6 +127,7 @@
             border: 1px solid var(--nav-btn-border);
             height: var(--nav-line-height);
             flex-shrink: 0;
+            cursor: pointer;
         }
         .back-btn:hover {
             border-color: var(--primary);
@@ -297,18 +297,18 @@
             box-shadow: var(--shadow-sm);
         }
         .info-card h3 {
-            font-size: calc(32px * var(--desktop-font-ratio));
+            font-size: calc(20px * var(--desktop-font-ratio));
             font-weight: bold;
             color: var(--text-main);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             line-height: 1.3;
         }
         .info-card p {
-            font-size: calc(17px * var(--desktop-font-ratio));
+            font-size: calc(15px * var(--desktop-font-ratio));
             line-height: 1.8;
             color: var(--text-secondary);
         }
-        /* 复制弹窗 */
+        /* 统一复制弹窗（全站标准） */
         .toast-copy {
             position: fixed;
             top: 80px;
@@ -322,7 +322,7 @@
             border: 1px solid #bbf7d0;
             border-radius: 16px;
             box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
-            z-index: 99999;
+            z-index: 999999;
             opacity: 0;
             pointer-events: none;
             transition: all 0.3s ease;
@@ -331,6 +331,7 @@
         .toast-copy.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
         }
         .toast-icon {
             width: 40px;
@@ -345,7 +346,7 @@
             flex-shrink: 0;
         }
         .toast-text {
-            font-size: 28px;
+            font-size: 16px;
             color: #16a34a;
             font-weight: 500;
             white-space: nowrap;
@@ -368,13 +369,17 @@
             .info-card-section {
                 grid-template-columns: 1fr;
             }
+            .toast-text {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
 <header id="headerDom">
     <div class="container header-inner">
-        <a href="index.html" class="back-btn">← 返回首页</a>
+        <!-- 修改：移除a跳转链接，改为div按钮，文字统一← 返回 -->
+        <div class="back-btn" id="backHome">← 返回</div>
         <div class="theme-switch-wrap">
             <button id="themeToggle" class="header-btn-circle">🌙</button>
         </div>
@@ -440,13 +445,14 @@
         </div>
     </main>
 
+<!-- 复制成功弹窗 -->
 <div class="toast-copy" id="copyToast">
     <div class="toast-icon">✓</div>
     <span class="toast-text">复制成功</span>
 </div>
 
 <script>
-    // 主题统一逻辑
+    // ====================== 全局统一明暗主题逻辑（复用cytools通用代码） ======================
     const htmlRoot = document.documentElement;
     const themeBtn = document.getElementById("themeToggle");
     const mediaDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -477,26 +483,52 @@
     initTheme();
     themeBtn.onclick = toggleTheme;
 
-    // 复制弹窗
-    const copyToast = document.getElementById('copyToast');
-    function showToast() {
-        copyToast.classList.remove('show');
-        setTimeout(() => copyToast.classList.add('show'), 10);
-        setTimeout(() => copyToast.classList.remove('show'), 1800);
+    // 头部高度自适应
+    const headerDom = document.getElementById('headerDom');
+    const headerSpacer = document.getElementById('headerSpacer');
+    function syncHeaderHeight() {
+        headerSpacer.style.height = headerDom.offsetHeight + "px";
     }
-    function copyStr(text) {
-        const temp = document.createElement('textarea');
-        temp.style.position = 'fixed';
-        temp.style.left = '-9999px';
-        temp.style.top = '-9999px';
-        temp.value = text;
-        document.body.appendChild(temp);
-        temp.select();
+    window.addEventListener('resize', syncHeaderHeight);
+    syncHeaderHeight();
+
+    // ====================== 统一复制弹窗+全兼容复制函数（全站标准） ======================
+    const copyToast = document.getElementById('copyToast');
+    let toastTimer = null;
+    // 双层requestAnimationFrame稳定弹窗动画
+    function showCopyToast() {
+        clearTimeout(toastTimer);
+        copyToast.classList.remove('show');
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                copyToast.classList.add('show');
+            });
+        });
+        toastTimer = setTimeout(() => copyToast.classList.remove('show'), 1800);
+    }
+    // 异步Promise封装复制函数，优先Clipboard，本地file兜底
+    function copyTextToClipboard(text) {
+        return new Promise((resolve) => {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => resolve(true)).catch(() => fallbackCopy(text, resolve));
+            } else {
+                fallbackCopy(text, resolve);
+            }
+        });
+    }
+    function fallbackCopy(text, resolve) {
+        const tempTextarea = document.createElement('textarea');
+        tempTextarea.style.position = 'fixed';
+        tempTextarea.style.left = '-9999px';
+        tempTextarea.value = text;
+        document.body.appendChild(tempTextarea);
+        tempTextarea.select();
         document.execCommand('copy');
-        document.body.removeChild(temp);
+        document.body.removeChild(tempTextarea);
+        resolve(true);
     }
 
-    // DOM
+    // ====================== DOM 元素绑定 ======================
     const sourceText = document.getElementById('sourceText');
     const targetText = document.getElementById('targetText');
     const convertBtn = document.getElementById('convertBtn');
@@ -506,6 +538,12 @@
     const errorTip = document.getElementById('errorTip');
     const sourceRadios = document.querySelectorAll('input[name="sourceType"]');
     const targetRadios = document.querySelectorAll('input[name="targetType"]');
+    const backHome = document.getElementById('backHome');
+
+    // 返回按钮浏览器原生后退逻辑
+    backHome.onclick = () => {
+        history.back();
+    };
 
     // 简易YAML解析/序列化（轻量实现，无需外部库）
     const YAML = {
@@ -668,12 +706,12 @@
         errorTip.textContent = '';
     }
 
-    // 复制结果
-    copyResult.onclick = () => {
+    // 复制结果（异步调用统一复制函数+弹窗）
+    copyResult.onclick = async () => {
         const val = targetText.value.trim();
         if(!val) return;
-        copyStr(val);
-        showToast();
+        await copyTextToClipboard(val);
+        showCopyToast();
     }
 
     // 输入框回车转换

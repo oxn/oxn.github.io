@@ -311,7 +311,7 @@
             line-height: 1.8;
             color: var(--text-secondary);
         }
-        /* 复制弹窗 */
+        /* 复制弹窗 文字统一16px，层级拉满 */
         .toast-copy {
             position: fixed;
             top: 80px;
@@ -325,7 +325,7 @@
             border: 1px solid #bbf7d0;
             border-radius: 16px;
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
-            z-index: 99999;
+            z-index: 999999;
             opacity: 0;
             pointer-events: none;
             transition: all 0.3s ease;
@@ -349,7 +349,7 @@
             flex-shrink: 0;
         }
         .toast-text {
-            font-size: calc(28px * var(--desktop-font-ratio));
+            font-size: 16px;
             color: #16a34a;
             font-weight: 500;
             white-space: nowrap;
@@ -396,7 +396,7 @@
                 font-size: 16px;
             }
             .toast-text {
-                font-size: 20px;
+                font-size: 16px;
             }
             .btn-row {
                 flex-wrap: wrap;
@@ -420,7 +420,8 @@
 <body>
 <header id="headerDom">
     <div class="container header-inner">
-        <a href="index.html" class="back-btn">← 返回首页</a>
+        <!-- 修改：移除href跳转，文字改为← 返回 -->
+        <span class="back-btn" id="backHome">← 返回</span>
         <div class="theme-switch-wrap">
             <button id="themeToggle" class="header-btn-circle">🌙</button>
         </div>
@@ -526,13 +527,48 @@
     window.addEventListener('resize', syncHeaderHeight);
     syncHeaderHeight();
 
-    // 弹窗提示
+    // 弹窗稳定逻辑
     const copyToast = document.getElementById('copyToast');
+    let toastTimer = null;
     function showToast() {
+        clearTimeout(toastTimer);
         copyToast.classList.remove('show');
-        setTimeout(() => copyToast.classList.add('show'), 10);
-        setTimeout(() => copyToast.classList.remove('show'), 1800);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                copyToast.classList.add('show');
+            });
+        });
+        toastTimer = setTimeout(() => {
+            copyToast.classList.remove('show');
+        }, 1800);
     }
+    // 全兼容复制函数（本地file/HTTP环境兜底）
+    function copyText(text) {
+        return new Promise((resolve) => {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => resolve(true)).catch(() => fallbackCopy(text, resolve));
+            } else {
+                fallbackCopy(text, resolve);
+            }
+        });
+    }
+    function fallbackCopy(text, resolve) {
+        const temp = document.createElement('textarea');
+        temp.style.position = 'fixed';
+        temp.style.left = '-99999px';
+        temp.style.top = '-99999px';
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        resolve(true);
+    }
+
+    // 返回按钮原生后退逻辑
+    document.getElementById("backHome").onclick = () => {
+        history.back();
+    };
 
     // MD5 核心加密算法（纯JS内置，无外部依赖）
     function md5(str) {
@@ -722,14 +758,13 @@
         calcMD5();
     };
 
-    // 复制按钮事件
+    // 复制按钮 替换兼容复制+稳定弹窗
     copyBtns.forEach(btn => {
-        btn.onclick = () => {
+        btn.onclick = async () => {
             const targetId = btn.dataset.target;
             const input = document.getElementById(targetId);
             if (!input.value) return;
-            input.select();
-            document.execCommand('copy');
+            await copyText(input.value);
             showToast();
         }
     })

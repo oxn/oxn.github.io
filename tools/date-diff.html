@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>📅</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>日期差值计算器</title>
 <style>
@@ -11,6 +12,7 @@
       --primary-light: #dcfce7;
       --header-bg: #f0fdf4;
       --warn: #f97316;
+      --danger: #ef4444;
       --nav-btn-bg: #ffffff;
       --nav-btn-border: #e5e7eb;
       --nav-btn-text: #222222;
@@ -60,6 +62,7 @@
       --nav-btn-border: #374151;
       --nav-btn-text: #f3f4f6;
       --warn: #fdba74;
+      --danger: #f87171;
       --text-main: #f9fafb;
       --text-secondary: #d1d5db;
       --text-weak: #9ca3af;
@@ -89,7 +92,7 @@ body{
   justify-content:center;
   background:var(--bg-page);
   color:var(--text-main);
-  padding:20px;
+  padding:calc(var(--card-label-offset) + 16px) 3vw 3rem;
   position: relative;
 }
 /* 顶部按钮容器 贴合主站头部布局 */
@@ -154,7 +157,6 @@ body{
   padding:32px;
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
-  margin-top: 70px;
 }
 h2{
   text-align:center;
@@ -280,7 +282,6 @@ textarea{
   }
   .box{
     padding:24px 20px;
-    margin-top: 60px;
   }
   h2{
     font-size:22px;
@@ -315,7 +316,7 @@ textarea{
 <body>
 <!-- 顶部按钮栏（固定保留返回+明暗切换） -->
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -349,6 +350,7 @@ textarea{
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
+const backHome = document.getElementById("backHome");
 const STORAGE_KEY = "site_theme_mode";
 
 // 初始化主题（固定复用）
@@ -376,8 +378,8 @@ themeToggle.onclick = () => {
   }
 };
 // 返回首页（固定复用）
-document.getElementById("backHome").onclick = () => {
-  window.location.href = "./index.html";
+backHome.onclick = () => {
+  history.back();
 };
 
 // 元素

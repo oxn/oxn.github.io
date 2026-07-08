@@ -125,7 +125,6 @@ header {
     align-items: center;
     gap: 6px;
     color: var(--nav-btn-text);
-    text-decoration: none;
     font-size: 14px;
     font-weight: 500;
     padding: 7px 10px;
@@ -134,6 +133,7 @@ header {
     border: 1px solid var(--nav-btn-border);
     height: var(--nav-line-height);
     flex-shrink: 0;
+    cursor: pointer;
 }
 .back-btn:hover {
     border-color: var(--primary);
@@ -272,26 +272,6 @@ select:focus, input:focus {
     flex-direction: column;
     gap: 12px;
 }
-/* 生成结果区域 */
-.result-wrap {
-    margin-bottom: 20px;
-}
-.result-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-}
-.result-title {
-    font-size: 22px;
-    font-weight: 500;
-    color: var(--text-main);
-}
-.result-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
 .uuid-item {
     display: flex;
     justify-content: space-between;
@@ -370,7 +350,7 @@ select:focus, input:focus {
     line-height: 1.7;
     color: var(--text-secondary);
 }
-/* 复制弹窗 */
+/* 复制弹窗 统一规范：16px文字、超高层级、稳定动画 */
 .toast-copy {
     position: fixed;
     top: 80px;
@@ -384,7 +364,7 @@ select:focus, input:focus {
     border: 1px solid #bbf7d0;
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
-    z-index: 99999;
+    z-index: 999999;
     opacity: 0;
     pointer-events: none;
     transition: all 0.3s ease;
@@ -407,7 +387,7 @@ select:focus, input:focus {
     flex-shrink: 0;
 }
 .toast-text {
-    font-size: 18px;
+    font-size: 16px;
     color: #16a34a;
     font-weight: 500;
 }
@@ -435,13 +415,17 @@ html[data-theme="dark"] .toast-text {
     .btn-copy-all {
         margin-left: 0;
     }
+    .toast-text {
+        font-size: 16px;
+    }
 }
 </style>
 </head>
 <body>
 <header id="headerDom">
     <div class="container header-inner">
-        <a href="index.html" class="back-btn">← 返回首页</a>
+        <!-- 修改：移除a跳转链接，文字改为← 返回，原生history.back -->
+        <span class="back-btn" id="backHome">← 返回</span>
         <div class="theme-switch-wrap">
             <button id="themeToggle" class="header-btn-circle">🌙</button>
         </div>
@@ -589,25 +573,48 @@ function syncHeaderHeight() {
 window.addEventListener('resize', syncHeaderHeight);
 syncHeaderHeight();
 
-// ====================== 2. 复制弹窗工具 ======================
+// ====================== 2. 统一复制弹窗+全兼容复制函数 ======================
 const copyToast = document.getElementById('copyToast');
+let toastTimer = null;
+// 稳定弹窗动画渲染
 function showCopyToast() {
+    clearTimeout(toastTimer);
     copyToast.classList.remove('show');
-    setTimeout(() => copyToast.classList.add('show'), 10);
-    setTimeout(() => copyToast.classList.remove('show'), 1800);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            copyToast.classList.add('show');
+        });
+    });
+    toastTimer = setTimeout(() => copyToast.classList.remove('show'), 1800);
 }
+// 全兼容复制（安全域+本地file兜底）
 function copyTextToClipboard(text) {
+    return new Promise((resolve) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => resolve(true)).catch(() => fallbackCopy(text, resolve));
+        } else {
+            fallbackCopy(text, resolve);
+        }
+    });
+}
+function fallbackCopy(text, resolve) {
     const tempTextarea = document.createElement('textarea');
     tempTextarea.style.position = 'fixed';
-    tempTextarea.style.left = '-9999px';
+    tempTextarea.style.left = '-99999px';
     tempTextarea.value = text;
     document.body.appendChild(tempTextarea);
     tempTextarea.select();
     document.execCommand('copy');
     document.body.removeChild(tempTextarea);
+    resolve(true);
 }
 
-// ====================== 3. DOM 元素绑定 ======================
+// ====================== 3. 返回按钮原生后退逻辑 ======================
+document.getElementById("backHome").onclick = () => {
+    history.back();
+};
+
+// ====================== 4. DOM 元素绑定 ======================
 const uuidVersion = document.getElementById('uuidVersion');
 const genCount = document.getElementById('genCount');
 const fmtType = document.getElementById('fmtType');
@@ -625,7 +632,7 @@ const statLatest = document.getElementById('statLatest');
 let totalGen = 0;
 let uuidAllList = [];
 
-// ====================== 4. UUID v4 标准生成算法 ======================
+// ====================== 5. UUID v4 标准生成算法 ======================
 function generateV4UUID() {
     const array = new Uint32Array(4);
     window.crypto.getRandomValues(array);
@@ -667,9 +674,9 @@ function renderAllItems() {
     });
     // 绑定单行复制按钮事件
     document.querySelectorAll(".copy-line-btn").forEach(btn => {
-        btn.onclick = function() {
+        btn.onclick = async function() {
             const idx = Number(this.dataset.index);
-            copyTextToClipboard(uuidAllList[idx]);
+            await copyTextToClipboard(uuidAllList[idx]);
             showCopyToast();
         };
     });
@@ -682,9 +689,9 @@ function renderAllItems() {
     }
 }
 
-// ====================== 5. 按钮事件 ======================
+// ====================== 6. 按钮事件 ======================
 // 生成按钮：追加新条目，不覆盖旧数据
-btnGen.addEventListener("click", function() {
+btnGen.addEventListener("click", async function() {
     const num = parseInt(genCount.value);
     const fmt = fmtType.value;
     const tempList = [];
@@ -703,9 +710,9 @@ btnGen.addEventListener("click", function() {
 });
 
 // 复制全部按钮
-btnCopyAll.addEventListener("click", function() {
+btnCopyAll.addEventListener("click", async function() {
     if (uuidAllList.length > 0) {
-        copyTextToClipboard(uuidAllList.join("\n"));
+        await copyTextToClipboard(uuidAllList.join("\n"));
         showCopyToast();
     }
 });

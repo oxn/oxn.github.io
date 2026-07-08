@@ -41,7 +41,7 @@
       --body-line-height: 1.6;
       --title-line-height: 1.2;
       --sub-title-line-height: 1.25;
-      --content-max-width: 620px;
+      --content-max-width: 900px;
       --card-label-offset: 2.25rem;
       --nav-line-height: 2.375rem;
       --theme-btn-width: 2.25rem;
@@ -142,6 +142,7 @@ body{
   padding: clamp(1.5rem, 5vw, 2rem);
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
+  margin:0 auto;
   margin-top: var(--card-label-offset);
 }
 h2{
@@ -156,10 +157,28 @@ h2{
   color:var(--text-secondary);
   margin-bottom: var(--space-xl);
 }
-.input-label{
-  display:block;
+.label-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   margin-bottom: var(--space-xs);
+}
+.input-label{
   font-size: clamp(0.875rem, 2vw, 0.9375rem);
+}
+.copy-mini{
+  padding:0.3rem 0.7rem;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+  font-size:0.8rem;
+  cursor:pointer;
+}
+.copy-mini:hover{
+  border-color:var(--primary);
+  color:var(--primary);
+  background:var(--primary-light);
 }
 textarea{
   width:100%;
@@ -234,40 +253,28 @@ html[data-theme="dark"] .result-area{
   line-height:1.6;
   opacity:0.7;
 }
-/* 无遮罩悬浮Toast，可穿透点击，不阻塞操作 */
-.toast-box{
+/* 全站统一底部悬浮复制提示 */
+.copy-toast{
   position:fixed;
+  bottom:30px;
   left:50%;
-  bottom:40px;
-  transform: translateX(-50%) translateY(20px);
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
   opacity:0;
-  padding:0.7rem 1.4rem;
-  border-radius:var(--radius-md);
-  box-shadow:var(--shadow-lg);
-  font-size:0.95rem;
-  z-index:9999;
   pointer-events:none;
-  transition: all 0.2s ease;
+  z-index:9999;
+  transition:opacity 0.2s ease;
 }
-.toast-box.show{
+.copy-toast.show{
   opacity:1;
-  transform: translateX(-50%) translateY(0);
-}
-html[data-theme="dark"] .toast-box{
-  background:#1e293b;
-}
-html:not([data-theme="dark"]) .toast-box{
-  background:#ffffff;
-}
-.toast-success{
-  color:var(--primary);
-}
-.toast-error{
-  color:var(--danger);
 }
 @media screen and (min-width: 768px) {
   :root {
-    --content-max-width: 680px;
+    --content-max-width: 900px;
   }
   .box {
     padding: 2.25rem;
@@ -295,7 +302,7 @@ html:not([data-theme="dark"]) .toast-box{
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -303,7 +310,10 @@ html:not([data-theme="dark"]) .toast-box{
   <h2>📐 文本换行器</h2>
   <div class="sub-title">按指定宽度自动换行</div>
 
-  <label class="input-label">输入文本</label>
+  <div class="label-row">
+    <label class="input-label">输入文本</label>
+    <button class="copy-mini" id="copyInputBtn">复制输入</button>
+  </div>
   <textarea id="inputTxt" placeholder="粘贴需要自动换行的长文本"></textarea>
 
   <label class="input-label">每行字符宽度</label>
@@ -313,10 +323,12 @@ html:not([data-theme="dark"]) .toast-box{
     <button class="btn-main" id="wrapBtn">执行自动换行</button>
     <button class="btn-outline" id="demoBtn">加载演示文本</button>
     <button class="btn-outline" id="clearBtn">清空内容</button>
-    <button class="btn-outline" id="copyResBtn">📜 复制结果</button>
   </div>
 
-  <label class="input-label">换行结果</label>
+  <div class="label-row">
+    <label class="input-label">换行结果</label>
+    <button class="copy-mini" id="copyOutputBtn">复制结果</button>
+  </div>
   <textarea class="result-area" id="outputRes" readonly placeholder="按宽度截断换行后的文本"></textarea>
 
   <div class="tip-desc">
@@ -324,10 +336,11 @@ html:not([data-theme="dark"]) .toast-box{
   </div>
 </div>
 
-<div class="toast-box" id="toastText"></div>
+<!-- 全局统一复制悬浮提示 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
-// 预取全部DOM，避免延迟获取失效
+// 预取全部DOM
 const $ = s => document.querySelector(s);
 const htmlRoot = document.documentElement;
 const themeToggle = $("#themeToggle");
@@ -336,17 +349,58 @@ const widthNum = $("#widthNum");
 const wrapBtn = $("#wrapBtn");
 const demoBtn = $("#demoBtn");
 const clearBtn = $("#clearBtn");
-const copyResBtn = $("#copyResBtn");
+const copyInputBtn = $("#copyInputBtn");
+const copyOutputBtn = $("#copyOutputBtn");
 const outputRes = $("#outputRes");
-const toastText = $("#toastText");
+const copyToast = $("#copyToast");
 const STORAGE_KEY = "site_theme_mode";
 
-// 悬浮提示函数（无遮罩，不拦截点击）
-function showToast(msg, isSuccess = true) {
-  toastText.className = "toast-box " + (isSuccess ? "toast-success" : "toast-error");
-  toastText.innerText = msg;
-  toastText.classList.add("show");
-  setTimeout(() => toastText.classList.remove("show"), 2000);
+// 统一复制提示函数
+function showToast(msg, success = true){
+  copyToast.style.background = success ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.85)";
+  copyToast.innerText = msg;
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
+
+// 复制输入文本
+async function copyInput(){
+  const text = inputTxt.value.trim();
+  if(!text) return showToast("暂无输入内容", false);
+  try{
+    await navigator.clipboard.writeText(inputTxt.value);
+    showToast("复制成功");
+  } catch (err) {
+    const temp = document.createElement("textarea");
+    temp.value = inputTxt.value;
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    showToast("复制成功");
+  }
+}
+
+// 复制输出结果
+async function copyOutput(){
+  const text = outputRes.value.trim();
+  if(!text) return showToast("暂无换行结果", false);
+  try{
+    await navigator.clipboard.writeText(outputRes.value);
+    showToast("复制成功");
+  } catch (err) {
+    const temp = document.createElement("textarea");
+    temp.value = outputRes.value;
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    showToast("复制成功");
+  }
 }
 
 // 演示文本
@@ -397,31 +451,15 @@ clearBtn.onclick = () => {
   showToast("已清空所有内容");
 };
 wrapBtn.onclick = runWrap;
-copyResBtn.onclick = async () => {
-  const copyText = outputRes.value;
-  if (!copyText) {
-    showToast("暂无可复制内容", false);
-    return;
-  }
-  try {
-    await navigator.clipboard.writeText(copyText);
-    showToast("✅ 复制成功，可直接粘贴", true);
-  } catch (err) {
-    const temp = document.createElement("textarea");
-    temp.value = copyText;
-    temp.style.position = "fixed";
-    temp.style.left = "-9999px";
-    document.body.appendChild(temp);
-    temp.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(temp);
-    ok ? showToast("✅ 复制成功") : showToast("❌ 复制失败，请手动选中", false);
-  }
-};
+copyInputBtn.onclick = copyInput;
+copyOutputBtn.onclick = copyOutput;
 
 // 实时输入监听
 inputTxt.addEventListener("input", runWrap);
 widthNum.addEventListener("input", runWrap);
+
+// 返回上一页标准化
+$("#backHome").onclick = ()=>history.back();
 
 // 主题切换
 function initTheme() {
@@ -446,9 +484,7 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-$("#backHome").onclick = () => window.location.href = "./index.html";
 
-// 页面初始化执行一次
 initTheme();
 runWrap();
 </script>

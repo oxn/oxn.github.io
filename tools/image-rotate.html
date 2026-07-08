@@ -290,6 +290,41 @@ html[data-theme="dark"] .preview-box canvas{
   color:var(--text-secondary);
   margin-top: var(--space-xl);
 }
+/* 原版复制按钮样式，无修改 */
+.copy-btn{
+  position: absolute;
+  top:12px;
+  right:12px;
+  padding:6px 10px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--primary);
+  background:transparent;
+  color:var(--primary);
+  cursor:pointer;
+  font-size:13px;
+}
+.copy-btn:hover{
+  background:var(--primary);
+  color:#fff;
+}
+/* 原版复制悬浮提示，特效完全不变 */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+}
+.copy-toast.show{
+  opacity:1;
+}
 /* 平板横屏优化 */
 @media screen and (min-width: 768px) {
   :root {
@@ -326,12 +361,16 @@ html[data-theme="dark"] .preview-box canvas{
   .flip-btn-group{
     flex-direction:column;
   }
+  .copy-btn{
+    padding:4px 8px;
+    font-size:12px;
+  }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -375,11 +414,24 @@ html[data-theme="dark"] .preview-box canvas{
     使用说明：本地浏览器离线处理图片，不上传服务器；拖动滑块调整旋转角度，点击按钮水平/垂直镜像，支持PNG/JPG/WebP三种导出格式。
   </div>
 </div>
+<!-- 原版复制提示弹窗 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+
+// 返回DOM
+const backBtn = document.getElementById("backBtn");
+// 返回逻辑 history.back()
+backBtn.onclick = () => history.back();
+
+// 原版复制提示函数，无任何改动
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
 
 // 主题初始化
 function initTheme() {
@@ -404,7 +456,6 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
 // DOM
 const uploadBox = document.getElementById("uploadBox");
@@ -412,7 +463,7 @@ const fileInput = document.getElementById("fileInput");
 const angleSlider = document.getElementById("angleSlider");
 const angleVal = document.getElementById("angleVal");
 const flipH = document.getElementById("flipH");
-const flipV = document.getElementById("formatSel");
+const flipV = document.getElementById("flipV");
 const formatSel = document.getElementById("formatSel");
 const previewCanvas = document.getElementById("previewCanvas");
 const ctx = previewCanvas.getContext("2d");

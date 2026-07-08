@@ -169,10 +169,27 @@ h2{
   margin-bottom: var(--space-xl);
 }
 /* 输入框通用 */
-.input-label{
-  display:block;
+.input-label-wrap{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   margin-bottom: var(--space-xs);
+}
+.input-label{
   font-size: clamp(0.875rem, 2vw, 0.9375rem);
+}
+.copy-small-btn{
+  padding:0.3rem 0.7rem;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+  font-size:0.8rem;
+  cursor:pointer;
+}
+.copy-small-btn:hover{
+  border-color:var(--primary);
+  color:var(--primary);
 }
 textarea{
   width:100%;
@@ -258,6 +275,25 @@ html[data-theme="dark"] .custom-sep-input{
   line-height:1.6;
   opacity:0.7;
 }
+/* 全站统一底部复制悬浮toast */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+  transition:opacity 0.2s;
+}
+.copy-toast.show{
+  opacity:1;
+}
 /* 平板横屏 */
 @media screen and (min-width: 768px) {
   :root {
@@ -294,7 +330,7 @@ html[data-theme="dark"] .custom-sep-input{
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -302,7 +338,10 @@ html[data-theme="dark"] .custom-sep-input{
   <h2>📜 文本分割器</h2>
   <div class="sub-title">按分隔符拆分文本并统计结果</div>
 
-  <label class="input-label">输入文本</label>
+  <div class="input-label-wrap">
+    <label class="input-label">输入文本</label>
+    <button class="copy-small-btn" id="copyInputBtn">复制输入</button>
+  </div>
   <textarea id="inputTxt" placeholder="粘贴需要处理的文本内容"></textarea>
 
   <label class="input-label">分隔符</label>
@@ -324,7 +363,10 @@ html[data-theme="dark"] .custom-sep-input{
 
   <button class="btn-main" id="genBtn">输出列表(每行一项)</button>
 
-  <label class="input-label">输出列表</label>
+  <div class="input-label-wrap">
+    <label class="input-label">输出列表</label>
+    <button class="copy-small-btn" id="copyOutputBtn">复制结果</button>
+  </div>
   <textarea id="outputRes" readonly placeholder="分割完成的内容会显示在这里"></textarea>
 
   <div class="tip-desc">
@@ -332,10 +374,24 @@ html[data-theme="dark"] .custom-sep-input{
   </div>
 </div>
 
+<!-- 统一复制悬浮提示 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
+
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+
+// 返回按钮标准化
+const backBtn = document.getElementById("backBtn");
+backBtn.onclick = () => history.back();
+
+// 全站统一复制弹窗函数
+const copyToast = document.getElementById("copyToast");
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
 
 // DOM元素
 const inputTxt = document.getElementById("inputTxt");
@@ -346,6 +402,9 @@ const skipBlank = document.getElementById("skipBlank");
 const totalCount = document.getElementById("totalCount");
 const genBtn = document.getElementById("genBtn");
 const outputRes = document.getElementById("outputRes");
+// 新增复制按钮
+const copyInputBtn = document.getElementById("copyInputBtn");
+const copyOutputBtn = document.getElementById("copyOutputBtn");
 
 // 默认选中换行
 let activeSepCode = "newline";
@@ -401,6 +460,45 @@ function runSplit() {
   outputRes.value = arr.join("\n");
 }
 
+// 复制输入文本
+copyInputBtn.onclick = async () => {
+  const text = inputTxt.value;
+  if (!text) return alert("暂无内容可复制");
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast();
+  } catch (err) {
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    showToast();
+  }
+};
+// 复制输出结果
+copyOutputBtn.onclick = async () => {
+  const text = outputRes.value;
+  if (!text) return alert("暂无分割结果可复制");
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast();
+  } catch (err) {
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    showToast();
+  }
+};
+
 // 实时监听变化自动分割
 inputTxt.oninput = runSplit;
 customSep.oninput = runSplit;
@@ -431,7 +529,6 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
 initTheme();
 runSplit();

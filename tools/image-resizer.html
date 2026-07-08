@@ -25,7 +25,7 @@
       --bg-btn: #ffffff;
       --bg-footer: #f0fdf4;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-      --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
       --radius-xs: 4px;
       --radius-sm: 6px;
       --radius-md: 8px;
@@ -241,6 +241,7 @@ input:focus,select:focus{
   border-radius:var(--radius-md);
   background:var(--primary-light);
   margin-bottom:20px;
+  position:relative;
 }
 .info-line{
   font-size:15px;
@@ -285,6 +286,41 @@ input:focus,select:focus{
   color:var(--text-secondary);
   margin-top:24px;
 }
+/* 原版复制按钮样式，无修改 */
+.copy-btn{
+  position: absolute;
+  top:12px;
+  right:12px;
+  padding:6px 10px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--primary);
+  background:transparent;
+  color:var(--primary);
+  cursor:pointer;
+  font-size:13px;
+}
+.copy-btn:hover{
+  background:var(--primary);
+  color:#fff;
+}
+/* 原版复制悬浮提示，特效完全不变 */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+}
+.copy-toast.show{
+  opacity:1;
+}
 /* 手机竖屏适配 */
 @media screen and (max-width:767px) and (orientation:portrait){
   body{
@@ -320,12 +356,16 @@ input:focus,select:focus{
   .tip{
     font-size:13px;
   }
+  .copy-btn{
+    padding:4px 8px;
+    font-size:12px;
+  }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -367,6 +407,7 @@ input:focus,select:focus{
   <button class="btn-main" id="resizeBtn" disabled>生成调整后图片</button>
 
   <div class="info-box" id="infoWrap" style="display:none;">
+    <button class="copy-btn" id="copyInfoBtn">复制信息</button>
     <div class="info-line">原图尺寸：<span id="oriSize">--</span></div>
     <div class="info-line">原图大小：<span id="oriByte">--</span></div>
     <div class="info-line">调整后大小：<span id="newByte">--</span></div>
@@ -382,11 +423,40 @@ input:focus,select:focus{
     使用说明：本地浏览器处理图片不上传服务器；勾选锁定比例修改宽度自动同步高度，取消可自由拉伸尺寸；PNG为无损格式，JPG/WebP可缩小文件体积。
   </div>
 </div>
+<!-- 原版复制提示弹窗 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+
+// 返回、复制DOM
+const backBtn = document.getElementById("backBtn");
+const copyInfoBtn = document.getElementById("copyInfoBtn");
+const copyToast = document.getElementById("copyToast");
+const oriSize = document.getElementById("oriSize");
+const oriByte = document.getElementById("oriByte");
+const newByte = document.getElementById("newByte");
+
+// 返回逻辑 history.back()
+backBtn.onclick = () => history.back();
+
+// 原版复制提示函数，无任何改动
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
+// 复制尺寸信息
+copyInfoBtn.onclick = async ()=>{
+  const text = `原图尺寸：${oriSize.innerText}\n原图大小：${oriByte.innerText}\n调整后大小：${newByte.innerText}`;
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast();
+  }catch(err){
+    alert("复制失败，请手动复制");
+  }
+};
 
 // 主题初始化
 function initTheme() {
@@ -411,7 +481,6 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
 // DOM
 const uploadBox = document.getElementById("uploadBox");
@@ -422,9 +491,6 @@ const lockRatio = document.getElementById("lockRatio");
 const formatSel = document.getElementById("formatSel");
 const resizeBtn = document.getElementById("resizeBtn");
 const infoWrap = document.getElementById("infoWrap");
-const oriSize = document.getElementById("oriSize");
-const oriByte = document.getElementById("oriByte");
-const newByte = document.getElementById("newByte");
 const previewWrap = document.getElementById("previewWrap");
 const previewImg = document.getElementById("previewImg");
 const downloadBtn = document.getElementById("downloadBtn");
@@ -453,7 +519,7 @@ uploadBox.addEventListener("drop", e=>{
   if(f) handleFile(f);
 });
 uploadBox.onclick = ()=>fileInput.click();
-file.onchange = ()=>{
+fileInput.onchange = ()=>{
   if(fileInput.files[0]) handleFile(fileInput.files[0]);
 };
 
@@ -485,14 +551,14 @@ function handleFile(file){
 // 锁定比例联动宽高
 wInput.oninput = ()=>{
   if(!lockRatio.checked || !originImg) return;
-  const w = Number(w.value);
+  const w = Number(wInput.value);
   if(isNaN(w) || w <= 0) return;
   const ratio = originH / originW;
   hInput.value = Math.round(w * ratio);
 };
 hInput.oninput = ()=>{
   if(!lockRatio.checked || !originImg) return;
-  const h = Number(h.value);
+  const h = Number(hInput.value);
   if(isNaN(h) || h <= 0) return;
   const ratio = originW / originH;
   wInput.value = Math.round(h * ratio);
@@ -521,7 +587,7 @@ async function resizeImage(){
 
 resizeBtn.onclick = async ()=>{
   resBlob = await resizeImage();
-  resUrl = URL.createObject(resBlob);
+  resUrl = URL.createObjectURL(resBlob);
   newByte.innerText = formatByte(resBlob.size);
   previewImg.src = resUrl;
   previewWrap.style.display = "block";

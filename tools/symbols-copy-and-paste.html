@@ -14,6 +14,10 @@
         :root {
             --primary: #10b981;
             --primary-light: #dcfce7;
+            --success: #22c55e;
+            --success-light: #dcfce7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
             --header-bg: transparent;
             --warn: #f97316;
             --nav-btn-bg: #ffffff;
@@ -28,7 +32,7 @@
             --bg-card: #ffffff;
             --bg-btn: #ffffff;
             --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-            --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+            --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
             --radius-xs: 4px;
             --radius-sm: 6px;
             --radius-md: 8px;
@@ -58,6 +62,10 @@
         html[data-theme="dark"] {
             --primary: #10b981;
             --primary-light: rgba(16, 185, 129, 0.15);
+            --success: #34d399;
+            --success-light: rgba(34, 197, 94, 0.12);
+            --danger: #f87171;
+            --danger-light: rgba(248, 113, 113, 0.12);
             --header-bg: transparent;
             --nav-btn-bg: #1f2937;
             --nav-btn-border: #374151;
@@ -385,6 +393,7 @@ select,
             font-size: calc(15px * var(--desktop-font-ratio));
             color: var(--text-weak);
         }
+        /* 统一双状态弹窗样式（成功/失败） */
         .toast-copy {
             position: fixed;
             top: 80px;
@@ -394,15 +403,21 @@ select,
             align-items: center;
             gap: 16px;
             padding: 16px 32px;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
             border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 99999;
             opacity: 0;
             pointer-events: none;
             transition: all 0.3s ease;
             min-height: 72px;
+        }
+        .toast-success {
+            background: var(--success-light);
+            border: 1px solid #bbf7d0;
+        }
+        .toast-fail {
+            background: var(--danger-light);
+            border: 1px solid #fecdd3;
         }
         .toast-copy.show {
             opacity: 1;
@@ -413,26 +428,44 @@ select,
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #22c55e;
-            color: #fff;
             display: grid;
             place-items: center;
             font-size: calc(22px * var(--desktop-font-ratio));
             font-weight: bold;
             flex-shrink: 0;
         }
+        .icon-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .icon-fail {
+            background: var(--danger);
+            color: #fff;
+        }
         .toast-text {
-            font-size: calc(28px * var(--desktop-font-ratio));
-            color: #16a34a;
+            font-size: calc(16px * var(--desktop-font-ratio));
             font-weight: 500;
             white-space: nowrap;
         }
-        html[data-theme="dark"] .toast-copy {
-            background: rgba(34, 197, 94, 0.12);
-            border-color: rgba(34, 197, 94, 0.3);
+        .text-success {
+            color: #16a34a;
         }
-        html[data-theme="dark"] .toast-text {
+        .text-fail {
+            color: var(--danger);
+        }
+        html[data-theme="dark"] .toast-success {
+            background: rgba(34,197,94,0.12);
+            border-color: rgba(34,197,94,0.3);
+        }
+        html[data-theme="dark"] .text-success {
             color: #4ade80;
+        }
+        html[data-theme="dark"] .toast-fail {
+            background: rgba(248, 113, 113, 0.12);
+            border-color: rgba(248, 113, 113, 0.3);
+        }
+        html[data-theme="dark"] .text-fail {
+            color: #f87171;
         }
         @media (max-width: 640px) {
             body {
@@ -481,7 +514,7 @@ select,
                 font-size: 16px;
             }
             .toast-text {
-                font-size: 20px;
+                font-size: 16px;
             }
             .search-bar-row {
                 flex-wrap: wrap;
@@ -526,7 +559,8 @@ select,
 <body>
 <header id="headerDom">
     <div class="container header-inner">
-        <a href="index.html" class="back-btn">← 返回首页</a>
+        <!-- 修改为button，移除a标签，文字简化为← 返回 -->
+        <button class="back-btn" id="backHome">← 返回</button>
         <div class="theme-switch-wrap">
             <button id="themeToggle" class="header-btn-circle">🌙</button>
         </div>
@@ -571,10 +605,10 @@ select,
     </div>
 </main>
 
+<!-- 弹窗DOM重构：拆分图标、文字独立节点，动态切换样式 -->
 <div class="toast-copy" id="copyToast">
-    <div class="toast-icon">✓</div>
-    <span class="toast-text">复制成功：</span>
-    <span class="toast-text" id="toastChar"></span>
+    <div class="toast-icon" id="toastIcon"></div>
+    <span class="toast-text" id="toastMsg"></span>
 </div>
 
 <script>
@@ -582,6 +616,35 @@ select,
     const themeBtn = document.getElementById("themeToggle");
     const mediaDark = window.matchMedia('(prefers-color-scheme: dark)');
     const STORAGE_KEY = "site_theme_mode";
+    const copyToast = document.getElementById("copyToast");
+    const toastIcon = document.getElementById("toastIcon");
+    const toastMsg = document.getElementById("toastMsg");
+    let toastTimer = null;
+
+    // 统一弹窗渲染函数：区分成功/失败
+    function showToast(isSuccess, msg) {
+        clearTimeout(toastTimer);
+        copyToast.classList.remove("show", "toast-success", "toast-fail");
+        toastIcon.className = "toast-icon";
+        toastMsg.className = "toast-text";
+        if(isSuccess) {
+            copyToast.classList.add("toast-success");
+            toastIcon.classList.add("icon-success");
+            toastIcon.textContent = "✓";
+            toastMsg.classList.add("text-success");
+        } else {
+            copyToast.classList.add("toast-fail");
+            toastIcon.classList.add("icon-fail");
+            toastIcon.textContent = "×";
+            toastMsg.classList.add("text-fail");
+        }
+        toastMsg.textContent = msg;
+        requestAnimationFrame(()=>{
+            requestAnimationFrame(()=>copyToast.classList.add("show"));
+        });
+        toastTimer = setTimeout(()=>copyToast.classList.remove("show"),1800);
+    }
+
     function applyTheme(mode) {
         if (mode === "dark") {
             htmlRoot.setAttribute("data-theme", "dark");
@@ -608,6 +671,9 @@ select,
     initTheme();
     themeBtn.onclick = toggleTheme;
 
+    // 返回按钮逻辑：history.back原生后退
+    document.getElementById("backHome").onclick = ()=>history.back();
+
     const headerDom = document.getElementById('headerDom');
     const headerSpacer = document.getElementById('headerSpacer');
     function syncHeaderHeight() {
@@ -622,56 +688,59 @@ select,
     const searchInput = document.getElementById('searchSym');
     const catWrap = document.getElementById('catWrap');
     const allSymBlocks = document.getElementById('allSymBlocks');
-    const copyToast = document.getElementById('copyToast');
-    const toastChar = document.getElementById('toastChar');
     let activeCat = "all";
 
-    function showCopyToast(text) {
-        toastChar.textContent = text;
-        copyToast.classList.remove('show');
-        setTimeout(() => copyToast.classList.add('show'), 10);
-        setTimeout(() => copyToast.classList.remove('show'), 2000);
+    // 重构通用复制函数：前置空值校验、双方案复制、成功失败弹窗
+    async function copyText(text) {
+        const target = text.trim();
+        // 空白直接拦截
+        if(!target) {
+            showToast(false,"暂无可复制内容");
+            return false;
+        }
+        try{
+            await navigator.clipboard.writeText(target);
+            return true;
+        }catch(err){
+            // 兜底兼容方案
+            const temp = document.createElement('textarea');
+            temp.style.position = 'fixed';
+            temp.style.left = '-9999px';
+            temp.style.top = '-9999px';
+            temp.value = target;
+            document.body.appendChild(temp);
+            temp.select();
+            const ok = document.execCommand('copy');
+            document.body.removeChild(temp);
+            return ok;
+        }
     }
 
-    // 纯同步复制，无异步、无常驻textarea
-    function copyText(text) {
-        const temp = document.createElement('textarea');
-        temp.style.position = 'fixed';
-        temp.style.left = '-9999px';
-        temp.style.top = '-9999px';
-        temp.value = text;
-        document.body.appendChild(temp);
-        temp.select();
-        document.execCommand('copy');
-        document.body.removeChild(temp);
-        return true;
-    }
-
+    // 符号点击复制
     function bindSymClick() {
         const items = document.querySelectorAll('.sym-item');
         items.forEach(item => {
-            item.onclick = function() {
+            item.onclick = async function() {
                 const txt = this.innerText;
-                const ok = copyText(txt);
+                const ok = await copyText(txt);
                 resultOutput.value += txt;
                 resultOutput.scrollTop = resultOutput.scrollHeight;
-                if (ok) showCopyToast(txt);
+                if(ok) showToast(true,`已复制符号：${txt}`);
+                else showToast(false,"复制失败，请手动复制");
             }
         })
     }
 
     clearResultBtn.onclick = () => {
         resultOutput.value = "";
+        showToast(true,"已清空拼接内容");
     }
 
-    copyResultBtn.onclick = () => {
+    // 批量复制结果区
+    copyResultBtn.onclick = async () => {
         const txt = resultOutput.value.trim();
-        if (!txt) {
-            alert("暂无拼接内容");
-            return;
-        }
-        const ok = copyText(txt);
-        if (ok) showCopyToast("全部拼接内容");
+        const ok = await copyText(txt);
+        if(ok) showToast(true,"全部拼接内容复制成功");
     }
 
     function filterByCat() {
@@ -699,7 +768,7 @@ select,
     const symData = {
         math: {
             title: "数学符号",
-            list: "≥≮≠≢^∽≌≯≈＜＞≥≤⩾⩽⋘⋙=≈≝≞‖∠∡∢≡+-×÷＋－±/㏑∨⊙㏒‖∑∈⌒∶∴∵∷&%∩∪∝∞Ω∏∐∫∮∟⊿∀∁∃∅∆∇⊥∧∨⊂⊃⊄⊅⊆⊇⊈⊉∈∋∉∌√∛∜℅‰‱∫∬∭∮∯∰∱∲∳v̄"
+            list: "≥≮≠≢^∽≌≯≈＜＞≥≤⩾⩽⋘⋙=≈≝≞‖∠∡∢≡+-×÷＋－±/㏑∨⊙㏒‖∑∈⌒∶∴∵∷&%∩∪∝∞Ω∏∐∫∮∟⊿∀∁∃∅∆∇⊥∧∨⊂⊃⊄⊅⊆⊇⊈⊉∈∋∉∌√∛∜℅‰‱∫∬∭∮∯∰∱∲∳v̄"
         },
         num: {title:"数字符号",list:"⓪①②③④⑤⑥⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳⓵⓶⓷⓸⓹⓺⓻⓼⓽⓾⓿❶❷❸❹❺❻❼❽❾❿⓫⓬⓭⓮⓯⓰⓱⓲⓳⓴㊀㊁㊂㊃㊄㊅㊆㊇㊈㊉㈠㈡㈢㈣㈤㈥㈦㈧㈨㈩⑴⑵⑶⑷⑸⑹⑺⑻⑼⑽⑾⑿⒀⒁⒂⒃⒄⒅⒆⒇⒈⒉⒊⒋⒌⒍⒎⒏⒐⒑⒒⒓⒔⒕⒖⒗⒘⒙⒚⒛〇一二三四五六七八九十百千万亿零壹贰叁肆伍陆柒捌玖拾佰仟萬億0️⃣1️⃣2️⃣3️⃣4️⃣5️⃣6️⃣7️⃣8️⃣9️⃣🔟ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹ½⅓⅔¼¾⅛⅜⅝⅞⅟⅕⅙⅖⅚⅗⅘"},
         date: {title:"时间日期",list:"㋀㋁㋂㋃㋄㋅㋆㋇㋈㋉㋊㋋㏠㏡㏢㏣㏤㏥㏦㏧㏨㏩㏪㏫㏬㏭㏮㏯㏰㏱㏲㏳㏴㏵㏶㏷㏸㏹㏺㏻㏼㏽㏾㍙㍚㍛㍜㍝㍞㍟㍠㍡㍢㍣㍤㍥㍦㍧㍨㍩㍪㍫㍬㍭㍮㍯㍰㍘"},

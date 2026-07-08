@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>图片 Base64 互转</title>
 <style>
-    /* 全局主题变量 与主站完全统一 */
     :root {
       --primary: #10b981;
       --primary-light: #dcfce7;
-      --header-bg: #f0fdf4;
-      --warn: #f97316;
+      --success: #22c55e;
+      --success-light: #dcfce7;
       --danger: #ef4444;
+      --danger-light: #fee2e2;
       --nav-btn-bg: #ffffff;
       --nav-btn-border: #e5e7eb;
       --nav-btn-text: #222222;
@@ -19,63 +19,39 @@
       --text-secondary: #555555;
       --text-weak: #888888;
       --border-base: #e5e7eb;
-      --border-light: #f3f4f6;
       --bg-page: #ffffff;
       --bg-card: #ffffff;
       --bg-btn: #ffffff;
-      --bg-footer: #f0fdf4;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
       --shadow-lg: 0 6px 16px rgba(0,0,0.1);
-      --radius-xs: 4px;
-      --radius-sm: 6px;
       --radius-md: 8px;
       --radius-lg: 12px;
       --radius-full: 999px;
-      --space-xs: 6px;
-      --space-sm: 10px;
-      --space-md: 14px;
-      --space-lg: 16px;
-      --space-xl: 28px;
       --transition: all 0.22s ease;
-      --key-bg: #e57eb;
-      --key-text: #222;
-      --key-radius: 6px;
-      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
       --body-font-size: 16px;
-      --body-line-height: 1.6;
-      --title-line-height: 1.2;
-      --sub-title-line-height: 1.25;
-      --content-max-width: 1200px;
-      --card-gap: 16px;
-      --card-min-width: 300px;
-      --header-safe-gap: 16px;
-      --card-label-offset: 36px;
       --nav-line-height: 38px;
       --theme-btn-width: 36px;
+      --single-card-max-width: 600px;
     }
     html[data-theme="dark"] {
       --primary: #34d399;
       --primary-light: rgba(52, 211, 153, 0.18);
-      --header-bg: #111827;
+      --success: #34d399;
+      --success-light: rgba(34, 197, 94, 0.15);
+      --danger: #f87171;
+      --danger-light: rgba(248, 113, 113, 0.15);
       --nav-btn-bg: #1f2937;
       --nav-btn-border: #374151;
       --nav-btn-text: #f3f4f6;
-      --warn: #fdba74;
-      --danger: #f87171;
       --text-main: #f9fafb;
       --text-secondary: #d1d5db;
       --text-weak: #9ca3af;
       --border-base: #374151;
-      --border-light: #1f2937;
       --bg-page: #0f172a;
       --bg-card: #1e293b;
       --bg-btn: #1f2937;
-      --bg-footer: #111827;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
       --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
-      --key-bg: #374151;
-      --key-text: #f9fafb;
-      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
     }
 *{
   margin:0;
@@ -94,7 +70,6 @@ body{
   padding:20px;
   position: relative;
 }
-/* 顶部导航 */
 .top-header-bar{
   position: fixed;
   top: 14px;
@@ -103,7 +78,7 @@ body{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 calc(var(--space-lg));
+  padding: 0 16px;
   z-index: 999;
 }
 .header-btn-back {
@@ -111,16 +86,12 @@ body{
   border: 1px solid var(--nav-btn-border);
   border-radius: var(--radius-lg);
   font-size: 12px;
-  line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 4px;
-  white-space: nowrap;
   background: var(--nav-btn-bg);
   color: var(--nav-btn-text);
-  flex-shrink: 0;
-  min-width: fit-content;
   height: var(--nav-line-height);
 }
 .header-btn-back:hover {
@@ -131,16 +102,14 @@ body{
 .header-btn-theme {
   width: 40px;
   height: 40px;
-  padding: 0;
   border: 1px solid var(--nav-btn-border);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   font-size: 16px;
   cursor: pointer;
   display: grid;
   place-items: center;
   background: var(--nav-btn-bg);
   color: var(--nav-btn-text);
-  flex-shrink: 0;
 }
 .header-btn-theme:hover {
   border-color: var(--primary);
@@ -149,7 +118,7 @@ body{
 }
 .box{
   width:100%;
-  max-width:540px;
+  max-width:var(--single-card-max-width);
   background:var(--bg-card);
   padding:32px;
   border-radius:var(--radius-lg);
@@ -173,7 +142,6 @@ h2{
   font-weight:600;
   margin:24px 0 12px;
 }
-/* 上传拖拽区域 */
 .upload-area{
   border:2px dashed var(--border-base);
   border-radius:var(--radius-md);
@@ -214,31 +182,10 @@ textarea{
   background:transparent;
   color:inherit;
 }
-/* 暗黑表单统一修复 */
-select,
-input[type="number"],
-textarea {
-  width:100%;
-  padding:13px 16px;
-  border:1px solid var(--border-base);
-  border-radius:var(--radius-md);
-  font-size:16px;
-  color:inherit;
-  background: transparent;
+html[data-theme="dark"] textarea {
+  background: #273449;
 }
-html[data-theme="dark"] {
-  select,
-  input[type="number"],
-  textarea {
-    background: #273449;
-    color: #f3f4f6;
-  }
-  select option {
-    background: #1e293b;
-    color: #f3f4f6;
-  }
-}
-input:focus,textarea:focus,select:focus{
+textarea:focus{
   outline:none;
   border-color:var(--primary);
 }
@@ -260,7 +207,7 @@ input:focus,textarea:focus,select:focus{
   color:#fff;
 }
 .btn-secondary{
-  background:var(--nav-btn-bg);
+  background:var(--bg-btn);
   color:var(--text-main);
   border:1px solid var(--border-base);
 }
@@ -290,24 +237,74 @@ input:focus,textarea:focus,select:focus{
   color:var(--text-secondary);
   margin-top:24px;
 }
-/* 手机竖屏适配 */
+/* 统一弹窗样式 */
+.toast-copy {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 999999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    min-height: 72px;
+}
+.toast-success {
+    background: var(--success-light);
+    border: 1px solid #bbf7d0;
+}
+.toast-fail {
+    background: var(--danger-light);
+    border: 1px solid #fecdd3;
+}
+.toast-copy.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: bold;
+}
+.icon-success {
+    background: var(--success);
+    color: #fff;
+}
+.icon-fail {
+    background: var(--danger);
+    color: #fff;
+}
+.toast-text {
+    font-size: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.text-success {
+    color: #16a34a;
+}
+.text-fail {
+    color: var(--danger);
+}
+html[data-theme="dark"] .text-success {
+    color: #4ade80;
+}
+html[data-theme="dark"] .text-fail {
+    color: #f87171;
+}
 @media screen and (max-width:767px) and (orientation:portrait){
   body{
     padding:15px;
-  }
-  .top-header-bar{
-    padding: 0 var(--space-md);
-    top:12px;
-  }
-  .header-btn-back{
-    padding:6px 8px;
-    font-size:11px;
-    height: 34px;
-  }
-  .header-btn-theme{
-    width: 34px;
-    height: 34px;
-    font-size:14px;
   }
   .box{
     padding:24px 20px;
@@ -323,23 +320,19 @@ input:focus,textarea:focus,select:focus{
   .upload-area{
     padding:30px 12px;
   }
-  .tip{
-    font-size:13px;
-  }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
-  <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
+  <button class="header-btn-theme" id="themeToggle">🌙</button>
 </div>
 
 <div class="box">
   <h2>图片 Base64 互转</h2>
   <div class="sub-title">图片与 Base64 编码字符串之间的双向转换</div>
 
-  <!-- 图片转Base64 区域 -->
   <div class="section-title">📷 图片转Base64</div>
   <div class="upload-area" id="uploadBox">
     <div class="upload-icon">🖼️</div>
@@ -365,7 +358,6 @@ input:focus,textarea:focus,select:focus{
     <button class="btn btn-secondary" id="copyPure">仅复制Base64字符串</button>
   </div>
 
-  <!-- Base64转图片 区域 -->
   <div class="section-title">Base64 转图片</div>
   <label>Base64 输入</label>
   <textarea id="b64Input" placeholder="粘贴Data URI或纯Base64字符串..."></textarea>
@@ -387,38 +379,71 @@ input:focus,textarea:focus,select:focus{
   </div>
 </div>
 
+<div class="toast-copy" id="copyToast">
+    <div class="toast-icon" id="toastIcon"></div>
+    <span class="toast-text" id="toastText"></span>
+</div>
+
 <script>
+// 全局变量
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
+const copyToast = document.getElementById("copyToast");
+const toastIcon = document.getElementById("toastIcon");
+const toastText = document.getElementById("toastText");
+let toastTimer = null;
 const STORAGE_KEY = "site_theme_mode";
 
-// 主题初始化
-function initTheme() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved === "dark") {
-    htmlRoot.setAttribute("data-theme", "dark");
-    themeToggle.innerHTML = "☀️";
-  } else {
-    htmlRoot.removeAttribute("data-theme");
-    themeToggle.innerHTML = "🌙";
-  }
+// 弹窗工具
+function showToast(success, msg) {
+    clearTimeout(toastTimer);
+    copyToast.classList.remove("show", "toast-success", "toast-fail");
+    toastIcon.className = "toast-icon";
+    toastText.className = "toast-text";
+    if(success){
+        copyToast.classList.add("toast-success");
+        toastIcon.classList.add("icon-success");
+        toastIcon.textContent = "✓";
+        toastText.classList.add("text-success");
+    }else{
+        copyToast.classList.add("toast-fail");
+        toastIcon.classList.add("icon-fail");
+        toastIcon.textContent = "×";
+        toastText.classList.add("text-fail");
+    }
+    toastText.textContent = msg;
+    requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>copyToast.classList.add("show"));
+    });
+    toastTimer = setTimeout(()=>copyToast.classList.remove("show"),1800);
 }
-themeToggle.onclick = () => {
-  const dark = htmlRoot.hasAttribute("data-theme");
-  if (dark) {
-    htmlRoot.removeAttribute("data-theme");
-    localStorage.setItem(STORAGE_KEY, "light");
-    themeToggle.textContent = "🌙";
-  } else {
-    htmlRoot.setAttribute("data-theme", "dark");
-    localStorage.setItem(STORAGE_KEY, "dark");
-    themeToggle.textContent = "☀️";
-  }
-};
-// 返回首页
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
-// DOM元素
+// 主题
+function initTheme(){
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if(saved === "dark"){
+        htmlRoot.setAttribute("data-theme","dark");
+        themeToggle.textContent = "☀️";
+    }else{
+        htmlRoot.removeAttribute("data-theme");
+        themeToggle.textContent = "🌙";
+    }
+}
+themeToggle.onclick = function(){
+    const isDark = htmlRoot.hasAttribute("data-theme");
+    if(isDark){
+        htmlRoot.removeAttribute("data-theme");
+        localStorage.setItem(STORAGE_KEY,"light");
+        this.textContent = "🌙";
+    }else{
+        htmlRoot.setAttribute("data-theme","dark");
+        localStorage.setItem(STORAGE_KEY,"dark");
+        this.textContent = "☀️";
+    }
+};
+document.getElementById("backHome").onclick = ()=>history.back();
+
+// DOM
 const uploadBox = document.getElementById("uploadBox");
 const fileInput = document.getElementById("fileInput");
 const metaWrap = document.getElementById("metaWrap");
@@ -447,137 +472,138 @@ let currentBlob = null;
 let blobMime = "";
 
 // 字节格式化
-function formatByte(b) {
-  if (b < 1024) return b + " B";
-  if (b < 1024 * 1024) return (b / 1024).toFixed(2) + " KB";
-  return (b / 1024 / 1024).toFixed(2) + " MB";
+function formatByte(size){
+    if(size < 1024) return size + " B";
+    if(size < 1048576) return (size / 1024).toFixed(2) + " KB";
+    return (size / 1048576).toFixed(2) + " MB";
 }
 
-// 获取UTF-8字符串字节长度
-function getUtf8ByteLength(str) {
-  return new Blob([str]).size;
+// 复制函数（空值校验）
+async function copyText(text){
+    const val = text.trim();
+    if(!val){
+        showToast(false,"暂无可复制内容");
+        return;
+    }
+    try{
+        await navigator.clipboard.writeText(val);
+        showToast(true,"复制成功");
+    }catch(e){
+        const t = document.createElement("textarea");
+        t.value = val;
+        document.body.appendChild(t);
+        t.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(t);
+        if(ok) showToast(true,"复制成功");
+        else showToast(false,"复制失败，请手动复制文本");
+    }
 }
+copyDataUri.onclick = ()=>copyText(dataUriOut.value);
+copyPure.onclick = ()=>copyText(pureB64Str);
 
-// 通用复制
-async function copyText(txt) {
-  try {
-    await navigator.clipboard.writeText(txt);
-    alert("复制成功");
-  } catch {
-    const t = document.createElement("textarea");
-    t.value = txt;
-    document.body.appendChild(t);
-    t.select();
-    document.execCommand("copy");
-    document.body.removeChild(t);
-    alert("已复制");
-  }
-}
-copyDataUri.onclick = () => copyText(dataUriOut.value);
-copyPure.onclick = () => copyText(pureB64Str);
-
-// 拖拽高亮
-uploadBox.addEventListener("dragover", e => {
-  e.preventDefault();
-  uploadBox.classList.add("active");
-});
-uploadBox.addEventListener("dragleave", () => uploadBox.classList.remove("active"));
-uploadBox.addEventListener("drop", e => {
-  e.preventDefault();
-  uploadBox.classList.remove("active");
-  const f = e.dataTransfer.files[0];
-  if (f) handleFile(f);
-});
-uploadBox.onclick = () => fileInput.click();
-fileInput.onchange = () => {
-  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+// 上传拖拽
+uploadBox.ondragover = e=>{e.preventDefault();uploadBox.classList.add("active");};
+uploadBox.ondragleave = ()=>uploadBox.classList.remove("active");
+uploadBox.ondrop = e=>{
+    e.preventDefault();
+    uploadBox.classList.remove("active");
+    if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+};
+uploadBox.onclick = ()=>fileInput.click();
+fileInput.onchange = ()=>{
+    if(fileInput.files[0]) handleFile(fileInput.files[0]);
 };
 
-// 图片文件转base64
-function handleFile(file) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    const dataUrl = e.target.result;
-    currentDataUri = dataUrl;
-    const arr = dataUrl.split(",");
-    pureB64Str = arr[1];
-    // 预览图
-    previewImg.src = dataUrl;
-    previewWrap.style.display = "block";
-    dataUriOut.value = dataUrl;
-    // 尺寸
-    const img = new Image();
-    img.onload = () => {
-      metaSize.innerText = img.width + " × " + img.height;
+// 文件转Base64
+function handleFile(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+        const dataUrl = e.target.result;
+        currentDataUri = dataUrl;
+        const parts = dataUrl.split(",");
+        pureB64Str = parts[1];
+        dataUriOut.value = dataUrl;
+        previewImg.src = dataUrl;
+        previewWrap.style.display = "block";
+        // 获取尺寸
+        const tempImg = new Image();
+        tempImg.onload = ()=>{
+            metaSize.textContent = tempImg.width + " × " + tempImg.height;
+        };
+        tempImg.src = dataUrl;
+        // 元数据
+        metaName.textContent = file.name;
+        fileByte.textContent = formatByte(file.size);
+        const b64TextSize = new Blob([pureB64Str]).size;
+        b64Byte.textContent = formatByte(b64TextSize);
+        metaWrap.style.display = "block";
     };
-    img.src = dataUrl;
-    // 元数据
-    metaName.innerText = file.name;
-    fileByte.innerText = formatByte(file.size);
-    // 【修复】纯Base64字符串文本UTF-8字节大小（不含data URI前缀）
-    const textByteSize = getUtf8ByteLength(pureB64Str);
-    b64Byte.innerText = formatByte(textByteSize);
-    metaWrap.style.display = "block";
-  };
-  reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
 }
 
-// Base64转图片预览
-genImg.onclick = () => {
-  let src = b64Input.value.trim();
-  if (!src) return alert("请输入Base64字符串");
-  // 拆分前缀
-  let mime = "image/png";
-  if (src.includes(";base64,")) {
-    const parts = src.split(",");
-    mime = parts[0].match(/data:(.*?);/)[1];
-  } else {
-    src = `data:${mime};base64,${src}`;
-  }
-  // 转blob用于计算大小
-  function b64ToBlob(b64, mimeType) {
-    const chars = atob(b64);
-    const u8 = new Uint8Array([...chars].map(c => c.charCodeAt(0)));
-    return new Blob([u8], { type: mimeType });
-  }
-  const raw = src.split(",")[1];
-  const blob = b64ToBlob(raw, mime);
-  currentBlob = blob;
-  blobMime = mime;
-  // 渲染预览
-  b64Preview.src = src;
-  b64Preview.onload = () => {
-    imgType.innerText = mime;
-    imgWH.innerText = b64Preview.width + " × " + b64Preview.height;
-    imgBlobSize.innerText = formatByte(blob.size);
-  };
-  b64PreviewWrap.style.display = "block";
+// Base64生成图片
+genImg.onclick = function(){
+    const raw = b64Input.value.trim();
+    if(!raw){
+        showToast(false,"请输入Base64字符串");
+        return;
+    }
+    let mime = "image/png";
+    let src = raw;
+    if(raw.includes(";base64,")){
+        const arr = raw.split(",");
+        mime = arr[0].match(/data:(.*?);/)[1];
+    }else{
+        src = `data:${mime};base64,${raw}`;
+    }
+    // b64转blob
+    function b64ToBlob(b64, mimeType){
+        const byteStr = atob(b64);
+        const arr = new Uint8Array([...byteStr].map(c=>c.charCodeAt(0)));
+        return new Blob([arr],{type:mimeType});
+    }
+    const b64Code = src.split(",")[1];
+    const blob = b64ToBlob(b64Code, mime);
+    currentBlob = blob;
+    blobMime = mime;
+    b64Preview.src = src;
+    b64Preview.onload = function(){
+        imgType.textContent = mime;
+        imgWH.textContent = b64Preview.width + " × " + b64Preview.height;
+        imgBlobSize.textContent = formatByte(blob.size);
+    };
+    b64PreviewWrap.style.display = "block";
 };
 
-// 下载Base64图片
-downloadImg.onclick = () => {
-  if (!currentBlob) return alert("先生成预览图");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(currentBlob);
-  const ext = blobMime.split("/")[1];
-  a.download = "image." + ext;
-  a.click();
-  URL.revokeObjectURL(a.href);
+// 下载图片
+downloadImg.onclick = function(){
+    if(!currentBlob){
+        showToast(false,"先生成预览图");
+        return;
+    }
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(currentBlob);
+    const ext = blobMime.split("/")[1];
+    a.download = "image." + ext;
+    a.click();
+    URL.revokeObjectURL(a.href);
 };
 
-// 全部清空
-clearAll.onclick = () => {
-  fileInput.value = "";
-  metaWrap.style.display = "none";
-  previewWrap.style.display = "none";
-  b64PreviewWrap.style.display = "none";
-  dataUriOut.value = "";
-  b64Input.value = "";
-  currentDataUri = "";
-  pureB64Str = "";
-  currentBlob = null;
+// 清空全部
+clearAll.onclick = function(){
+    fileInput.value = "";
+    metaWrap.style.display = "none";
+    previewWrap.style.display = "none";
+    b64PreviewWrap.style.display = "none";
+    dataUriOut.value = "";
+    b64Input.value = "";
+    currentDataUri = "";
+    pureB64Str = "";
+    currentBlob = null;
 };
 
+// 初始化
 initTheme();
 </script>
 </body>

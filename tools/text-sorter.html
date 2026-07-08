@@ -23,7 +23,9 @@
   --radius-md: 8px;
   --space-md: 0.875rem;
   --space-lg: 1.2rem;
-  --max-width: 1400px;
+  --max-width: 900px;
+  --radius-full: 999px;
+  --card-label-offset: 2.25rem;
   --transition: all 0.22s ease;
 }
 html[data-theme="dark"] {
@@ -49,7 +51,7 @@ html[data-theme="dark"] {
 body{
   background: var(--page-bg);
   color: var(--text-main);
-  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+  padding: calc(var(--card-label-offset) + 16px) 3vw 3rem;
 }
 .top-header-bar{
   position: fixed;
@@ -79,7 +81,7 @@ body{
   height: 40px;
   padding: 0;
   border:1px solid var(--nav-border);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--nav-bg);
   color: var(--nav-text);
   cursor:pointer;
@@ -154,7 +156,7 @@ h2{
   display:flex;
   flex-wrap:wrap;
   gap:0.6rem;
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
 }
 .btn-row button{
   flex:1;
@@ -237,7 +239,7 @@ h2{
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="back-btn" id="backBtn">← 返回首页</button>
+  <button class="back-btn" id="backBtn">← 返回</button>
   <button class="theme-btn" id="themeBtn">🌙</button>
 </div>
 
@@ -409,7 +411,7 @@ themeBtn.onclick = ()=>{
     themeBtn.innerText = "☀️";
   }
 };
-backBtn.onclick = ()=>window.location.href="./index.html";
+backBtn.onclick = ()=>history.back();
 
 initTheme();
 loadDemo();

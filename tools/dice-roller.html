@@ -25,7 +25,7 @@
       --bg-btn: #ffffff;
       --bg-footer: #f0fdf4;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
       --radius-xs: 4px;
       --radius-sm: 6px;
       --radius-md: 8px;
@@ -216,6 +216,7 @@ input:focus,select:focus{
   background:var(--primary-light);
   margin-bottom:20px;
   min-height:100px;
+  position: relative;
 }
 .dice-list{
   font-size:20px;
@@ -255,6 +256,41 @@ input:focus,select:focus{
   opacity:0.65;
   line-height:1.6;
   color:var(--text-secondary);
+}
+/* 复制按钮样式 */
+.copy-btn{
+  position: absolute;
+  top:12px;
+  right:12px;
+  padding:6px 10px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--primary);
+  background:transparent;
+  color:var(--primary);
+  cursor:pointer;
+  font-size:13px;
+}
+.copy-btn:hover{
+  background:var(--primary);
+  color:#fff;
+}
+/* 复制成功悬浮提示 */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+}
+.copy-toast.show{
+  opacity:1;
 }
 /* 骰子摇晃动画 */
 @keyframes diceShake {
@@ -304,12 +340,16 @@ input:focus,select:focus{
   .tip{
     font-size:13px;
   }
+  .copy-btn{
+    padding:4px 8px;
+    font-size:12px;
+  }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -337,6 +377,7 @@ input:focus,select:focus{
   </div>
 
   <div class="dice-display" id="displayBox">
+    <button class="copy-btn" id="copyResBtn">复制结果</button>
     <div class="dice-list" id="diceResult">等待掷骰...</div>
     <div class="total-text">总点数: <span id="totalNum">0</span></div>
   </div>
@@ -350,11 +391,18 @@ input:focus,select:focus{
     使用说明：设置骰子数量与面数类型，点击掷骰按钮播放摇晃动画，自动生成每颗点数并计算总点数；点击重置清空结果重新投掷。
   </div>
 </div>
+<!-- 复制提示弹窗 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+const backBtn = document.getElementById("backBtn");
+const copyResBtn = document.getElementById("copyResBtn");
+const copyToast = document.getElementById("copyToast");
+const diceResult = document.getElementById("diceResult");
+const totalNum = document.getElementById("totalNum");
 
 // 主题初始化
 function initTheme() {
@@ -379,8 +427,25 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-// 返回首页
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+// 返回逻辑：history.back()
+backBtn.onclick = () => history.back();
+
+// 复制结果函数
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
+copyResBtn.onclick = async ()=>{
+  const resText = diceResult.innerText;
+  const totalText = totalNum.innerText;
+  const copyText = `骰子点数：${resText}\n总点数：${totalText}`;
+  try{
+    await navigator.clipboard.writeText(copyText);
+    showToast();
+  }catch(err){
+    alert("复制失败，请手动复制");
+  }
+};
 
 // DOM元素
 const diceCount = document.getElementById("diceCount");
@@ -388,8 +453,6 @@ const diceType = document.getElementById("diceType");
 const rollBtn = document.getElementById("rollBtn");
 const resetBtn = document.getElementById("resetBtn");
 const displayBox = document.getElementById("displayBox");
-const diceResult = document.getElementById("diceResult");
-const totalNum = document.getElementById("totalNum");
 
 let isRolling = false;
 

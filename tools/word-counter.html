@@ -40,7 +40,7 @@
       --body-line-height: 1.6;
       --title-line-height: 1.2;
       --sub-title-line-height: 1.25;
-      --content-max-width: 620px;
+      --content-max-width: 900px;
       --card-label-offset: 2.25rem;
       --nav-line-height: 2.375rem;
       --theme-btn-width: 2.25rem;
@@ -141,6 +141,7 @@ body{
   padding: clamp(1.5rem, 5vw, 2rem);
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
+  margin:0 auto;
   margin-top: var(--card-label-offset);
 }
 h2{
@@ -162,7 +163,7 @@ h2{
 }
 textarea{
   width:100%;
-  min-height: 160;
+  min-height: 160px;
   padding:0.8rem;
   border:1px solid var(--border-base);
   border-radius:var(--radius-md);
@@ -234,40 +235,25 @@ html[data-theme="dark"] textarea{
   line-height:1.6;
   opacity:0.7;
 }
-/* 无阻塞底部悬浮Toast */
-.toast-box{
+/* 全局统一底部复制悬浮提示 固定样式 */
+.copy-toast{
   position:fixed;
+  bottom:30px;
   left:50%;
-  bottom:40px;
-  transform: translateX(-50%) translateY(20px);
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  color:#fff;
+  font-size:14px;
   opacity:0;
-  padding:0.7rem 1.4rem;
-  border-radius:var(--radius-md);
-  box-shadow:var(--shadow-lg);
-  font-size:0.95rem;
-  z-index:9999;
   pointer-events:none;
-  transition: all 0.2s ease;
+  z-index:9999;
+  transition:opacity 0.2s ease;
 }
-.toast-box.show{
-  opacity:1;
-  transform: translateX(-50%) translateY(0);
-}
-html[data-theme="dark"] .toast-box{
-  background:#1e293b;
-}
-html:not([data-theme="dark"]) .toast-box{
-  background:#ffffff;
-}
-.toast-success{
-  color:var(--primary);
-}
-.toast-error{
-  color:var(--danger);
-}
+.copy-toast.show{opacity:1;}
 @media screen and (min-width: 768px) {
   :root {
-    --content-max-width: 680px;
+    --content-max-width: 900px;
   }
   .box {
     padding: 2.25rem;
@@ -298,7 +284,7 @@ html:not([data-theme="dark"]) .toast-box{
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle">🌙</button>
 </div>
 
@@ -338,7 +324,8 @@ html:not([data-theme="dark"]) .toast-box{
   </div>
 </div>
 
-<div class="toast-box" id="toastText"></div>
+<!-- 全局统一复制悬浮提示 -->
+<div class="copy-toast" id="copyToast"></div>
 
 <script>
 const inputTxt = document.getElementById('inputTxt');
@@ -357,18 +344,41 @@ const calcBtn = document.getElementById('calcBtn');
 const demoBtn = document.getElementById('demoBtn');
 const clearBtn = document.getElementById('clearBtn');
 const copyBtn = document.getElementById('copyBtn');
-const toastText = document.getElementById('toastText');
+const copyToast = document.getElementById('copyToast');
 const themeToggle = document.getElementById('themeToggle');
 const backHome = document.getElementById('backHome');
 const htmlRoot = document.documentElement;
 const STORAGE_KEY = 'site_theme_mode';
 
-// 悬浮提示
-function showToast(msg, success = true) {
-  toastText.className = 'toast-box ' + (success ? 'toast-success' : 'toast-error');
-  toastText.innerText = msg;
-  toastText.classList.add('show');
-  setTimeout(()=>toastText.classList.remove('show'),2000);
+// 统一复制提示函数 固定样式逻辑
+function showToast(msg, success = true){
+  copyToast.style.background = success ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.85)";
+  copyToast.innerText = msg;
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
+
+// 复制文本
+async function copyText(){
+  const val = inputTxt.value.trim();
+  if(!val){
+    showToast("暂无文本可复制", false);
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(inputTxt.value);
+    showToast("复制成功");
+  }catch(e){
+    const temp = document.createElement('textarea');
+    temp.value = inputTxt.value;
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showToast("复制成功");
+  }
 }
 
 // 演示文本
@@ -377,27 +387,16 @@ const demoText = "人生如行路，一路艰辛，一路风景。\n\n如果你�
 // 核心统计计算
 function calcStats() {
   const str = inputTxt.value;
-  // 总字符
   const total = str.length;
-  // 不含空格
   const noSpace = str.replace(/\s/g,'').length;
-  // 空格数量
   const spaces = (str.match(/\s/g) || []).length;
-  // 行数
   const lines = str.split('\n').length;
-  // 段落（连续换行分割）
   const paras = str.split(/\n\s*\n/).filter(p=>p.trim()).length || 0;
-  // 中文
   const cnArr = str.match(/[\u4e00-\u9fa5]/g) || [];
-  // 英文
   const enArr = str.match(/[a-zA-Z]/g) || [];
-  // 数字
   const digArr = str.match(/[0-9]/g) || [];
-  // 标点
   const puncArr = str.match(/[^\u4e00-\u9fa5a-zA-Z0-9\s]/g) || [];
-  // 英文单词
   const words = str.replace(/[^\sa-zA-Z]/g,' ').trim().split(/\s+/).filter(w=>w).length || 0;
-  // 阅读时间（200字/分钟）
   const readTime = Math.ceil(cnArr.length / 200);
 
   allChar.innerText = total;
@@ -413,51 +412,23 @@ function calcStats() {
   readMin.innerText = readTime;
 }
 
-// 加载演示
 demoBtn.onclick = function(){
   inputTxt.value = demoText;
   calcStats();
   showToast("已加载演示文本");
 };
-
-// 清空
 clearBtn.onclick = function(){
   inputTxt.value = "";
   calcStats();
   showToast("已清空全部内容");
 };
-
-// 手动计算
 calcBtn.onclick = calcStats;
+copyBtn.onclick = copyText;
 
-// 复制原文
-copyBtn.onclick = async function(){
-  const val = inputTxt.value;
-  if(!val){
-    showToast("暂无文本可复制", false);
-    return;
-  }
-  try{
-    await navigator.clipboard.writeText(val);
-    showToast("✅ 复制成功");
-  }catch(e){
-    const temp = document.createElement('textarea');
-    temp.value = val;
-    temp.style.position = 'fixed';
-    temp.style.left = '-9999px';
-    document.body.appendChild(temp);
-    temp.select();
-    const ok = document.execCommand('copy');
-    document.body.removeChild(temp);
-    ok ? showToast("✅ 复制成功") : showToast("❌ 复制失败，请手动复制", false);
-  }
-};
-
-// 输入实时统计
 inputTxt.oninput = calcStats;
 
-// 返回首页
-backHome.onclick = ()=>window.location.href="./index.html";
+// 返回标准化
+backHome.onclick = ()=>history.back();
 
 // 主题切换
 function initTheme(){

@@ -23,7 +23,7 @@
   --radius-md: 8px;
   --space-md: 0.875rem;
   --space-lg: 1.2rem;
-  --max-width: 1400px;
+  --max-width: 900px;
   --transition: all 0.22s ease;
 }
 html[data-theme="dark"] {
@@ -116,9 +116,28 @@ h2{
 .input-wrap{
   margin-bottom: var(--space-lg);
 }
-.input-label{
-  display:block;
+.label-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   margin-bottom: var(--space-xs);
+}
+.input-label{
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
+}
+.copy-mini{
+  padding:0.3rem 0.7rem;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+  font-size:0.8rem;
+  cursor:pointer;
+}
+.copy-mini:hover{
+  border-color:var(--primary);
+  color:var(--primary);
+  background:var(--primary-light);
 }
 #sourceText{
   width:100%;
@@ -184,61 +203,36 @@ h2{
   word-break:break-all;
   min-height:24px;
 }
-.copy-mini{
-  margin-top:0.6rem;
-  padding:0.4rem 0.8rem;
-  border:1px solid var(--border-base);
-  border-radius:var(--radius-md);
-  background:transparent;
-  color:var(--text-main);
-  cursor:pointer;
-}
-.copy-mini:hover{
-  background:var(--primary-light);
-  border-color:var(--primary);
-  color:var(--primary);
-}
 .tip-desc{
   margin-top: var(--space-xl);
   font-size: clamp(0.75rem, 2vw, 0.875rem);
   color:var(--text-sub);
   line-height:1.6;
 }
-.toast-box{
+/* 全站统一底部悬浮复制提示 */
+.copy-toast{
   position:fixed;
+  bottom:30px;
   left:50%;
-  bottom:40px;
-  transform:translateX(-50%) translateY(20px);
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
   opacity:0;
-  padding:0.7rem 1.4rem;
-  border-radius:var(--radius-md);
-  box-shadow:var(--shadow-lg);
-  font-size:0.95rem;
-  z-index:9999;
   pointer-events:none;
-  transition: all 0.2s ease;
+  z-index:9999;
+  transition:opacity 0.2s ease;
 }
-.toast-box.show{
+.copy-toast.show{
   opacity:1;
-  transform: translateX(-50%) translateY(0);
-}
-html[data-theme="dark"] .toast-box{
-  background:#1e293b;
-}
-html:not([data-theme="dark"]) .toast-box{
-  background:#ffffff;
-}
-.toast-success{
-  color:var(--primary);
-}
-.toast-error{
-  color:var(--danger);
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="back-btn" id="backBtn">← 返回首页</button>
+  <button class="back-btn" id="backBtn">← 返回</button>
   <button class="theme-btn" id="themeBtn">🌙</button>
 </div>
 
@@ -247,7 +241,10 @@ html:not([data-theme="dark"]) .toast-box{
   <div class="sub-title">将标题或文本转换为 URL 友好的 slug</div>
 
   <div class="input-wrap">
-    <label class="input-label">输入标题或文本</label>
+    <div class="label-row">
+      <label class="input-label">输入标题或文本</label>
+      <button class="copy-mini" id="copyInputBtn">复制输入</button>
+    </div>
     <textarea id="sourceText" placeholder="输入文章标题，例如 Hello World 2025"></textarea>
   </div>
 
@@ -293,7 +290,8 @@ html:not([data-theme="dark"]) .toast-box{
   </div>
 </div>
 
-<div class="toast-box" id="toastBox"></div>
+<!-- 全局统一复制悬浮提示 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const sourceText = document.getElementById('sourceText');
@@ -306,20 +304,40 @@ const sepUnderscore = document.getElementById('sepUnderscore');
 const clearBtn = document.getElementById('clearBtn');
 const demoBtn = document.getElementById('demoBtn');
 const copySlugBtn = document.getElementById('copySlugBtn');
-const toastBox = document.getElementById('toastBox');
+const copyInputBtn = document.getElementById('copyInputBtn');
+const copyToast = document.getElementById('copyToast');
 const themeBtn = document.getElementById('themeBtn');
 const backBtn = document.getElementById('backBtn');
 const STORAGE_KEY = "site_theme_mode";
 
+// 统一复制提示函数
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
+
+// 复制输入文本
+async function copyInput(){
+  const text = sourceText.value;
+  if(!text) return alert("暂无输入内容");
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast();
+  }catch(e){
+    const t = document.createElement('textarea');
+    t.value = text;
+    t.style.position = 'fixed';
+    t.style.left = '-9999px';
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand('copy');
+    document.body.removeChild(t);
+    showToast();
+  }
+}
+
 // 英文停用词列表
 const stopWords = ["a","an","the","and","or","but","is","are","in","on","at","to","for","of","with","by","i","you","he","she","it","we","they","my","your"];
-
-function showToast(msg, success = true) {
-  toastBox.className = "toast-box " + (success ? "toast-success" : "toast-error");
-  toastBox.innerText = msg;
-  toastBox.classList.add("show");
-  setTimeout(() => toastBox.classList.remove("show"), 2000);
-}
 
 function getSep(){
   return sepDash.checked ? '-' : '_';
@@ -329,6 +347,7 @@ function generateSlug(){
   let raw = sourceText.value.trim();
   if(!raw){
     slugResult.innerText = "等待输入...";
+    window.lastSlug = "";
     return;
   }
   // 小写
@@ -354,20 +373,20 @@ function generateSlug(){
 function clearAll(){
   sourceText.value = "";
   generateSlug();
-  showToast("已清空");
+  showToast();
 }
 
 function loadDemo(){
   sourceText.value = "Hello World 2025 — How To Make A Website";
   generateSlug();
-  showToast("已加载示例");
+  showToast();
 }
 
 async function copySlug(){
-  if(!window.lastSlug) return showToast("暂无Slug", false);
+  if(!window.lastSlug) return alert("暂无Slug");
   try{
     await navigator.clipboard.writeText(window.lastSlug);
-    showToast("复制成功");
+    showToast();
   }catch(e){
     const t = document.createElement('textarea');
     t.value = window.lastSlug;
@@ -377,7 +396,7 @@ async function copySlug(){
     t.select();
     document.execCommand('copy');
     document.body.removeChild(t);
-    showToast("复制成功");
+    showToast();
   }
 }
 
@@ -391,6 +410,10 @@ sepUnderscore.onchange = generateSlug;
 clearBtn.onclick = clearAll;
 demoBtn.onclick = loadDemo;
 copySlugBtn.onclick = copySlug;
+copyInputBtn.onclick = copyInput;
+
+// 返回上一页标准化
+backBtn.onclick = ()=>history.back();
 
 // 主题切换
 function initTheme() {
@@ -415,7 +438,6 @@ themeBtn.onclick = () => {
     themeBtn.textContent = "☀️";
   }
 };
-backBtn.onclick = () => window.location.href = "./index.html";
 
 initTheme();
 generateSlug();

@@ -23,7 +23,7 @@
   --radius-md: 8px;
   --space-md: 0.875rem;
   --space-lg: 1.2rem;
-  --max-width: 1400px;
+  --max-width: 900px;
   --transition: all 0.22s ease;
 }
 html[data-theme="dark"] {
@@ -124,10 +124,27 @@ h2{
 .input-wrap{
   margin-bottom: 24px;
 }
-.label{
-  display:block;
+.label-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   margin-bottom: 8px;
+}
+.label{
   font-weight:500;
+}
+.copy-mini{
+  padding:0.4rem 0.6rem;
+  font-size:0.8rem;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:transparent;
+  cursor:pointer;
+}
+.copy-mini:hover{
+  background:var(--primary-light);
+  border-color:var(--primary);
+  color:var(--primary);
 }
 textarea{
   width:100%;
@@ -191,48 +208,35 @@ textarea{
   font-family:monospace;
   white-space:pre-wrap;
 }
-.copy-mini{
-  padding:0.4rem 0.6rem;
-  font-size:0.8rem;
-  border:1px solid var(--border-base);
-  border-radius:var(--radius-md);
-  background:transparent;
-  cursor:pointer;
-  margin-top:10px;
-}
-.copy-mini:hover{
-  background:var(--primary-light);
-  border-color:var(--primary);
-  color:var(--primary);
-}
 .tip-desc{
   color:var(--text-sub);
   font-size:0.875rem;
   line-height:1.6;
 }
-.toast-box{
+/* 全站统一底部悬浮复制提示 */
+.copy-toast{
   position:fixed;
+  bottom:30px;
   left:50%;
-  bottom:40px;
-  transform:translateX(-50%) translateY(20px);
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:999px;
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
   opacity:0;
-  padding:0.7rem 1.4rem;
-  border-radius:var(--radius-md);
-  background:var(--card-bg);
-  box-shadow:var(--shadow-lg);
-  z-index:9999;
   pointer-events:none;
-  transition:all 0.2s ease;
+  z-index:9999;
+  transition:opacity 0.2s ease;
 }
-.toast-box.show{
+.copy-toast.show{
   opacity:1;
-  transform:translateX(-50%) translateY(0);
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="back-btn" id="backBtn">← 返回首页</button>
+  <button class="back-btn" id="backBtn">← 返回</button>
   <button class="theme-btn" id="themeBtn">🌙</button>
 </div>
 
@@ -256,7 +260,10 @@ textarea{
   </div>
 
   <div class="input-wrap">
-    <label class="label">原始文本</label>
+    <div class="label-row">
+      <label class="label">原始文本</label>
+      <button class="copy-mini" id="copySourceBtn">复制输入</button>
+    </div>
     <textarea id="sourceText" placeholder="每行一条数据，粘贴待处理内容"></textarea>
   </div>
 
@@ -281,7 +288,8 @@ textarea{
   </div>
 </div>
 
-<div class="toast-box" id="toastBox"></div>
+<!-- 统一复制悬浮提示 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const sourceText = document.getElementById('sourceText');
@@ -296,15 +304,55 @@ const clearBtn = document.getElementById('clearBtn');
 const demoBtn = document.getElementById('demoBtn');
 const processBtn = document.getElementById('processBtn');
 const copyResultBtn = document.getElementById('copyResultBtn');
-const toastBox = document.getElementById('toastBox');
+const copySourceBtn = document.getElementById('copySourceBtn');
+const copyToast = document.getElementById('copyToast');
 const themeBtn = document.getElementById('themeBtn');
 const backBtn = document.getElementById('backBtn');
 const STORAGE_KEY = "site_theme_mode";
 
-function showToast(msg){
-  toastBox.innerText = msg;
-  toastBox.classList.add("show");
-  setTimeout(()=>toastBox.classList.remove("show"),2000);
+// 统一复制弹窗函数
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
+
+// 复制输入文本
+async function copySource(){
+  const text = sourceText.value;
+  if(!text) return alert("暂无输入内容");
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast();
+  }catch(e){
+    const temp = document.createElement('textarea');
+    temp.value = text;
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showToast();
+  }
+}
+
+// 复制结果
+async function copyResult(){
+  if(!window.lastResult) return alert("暂无处理结果");
+  try{
+    await navigator.clipboard.writeText(window.lastResult);
+    showToast();
+  }catch(e){
+    const temp = document.createElement('textarea');
+    temp.value = window.lastResult;
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showToast();
+  }
 }
 
 // 核心去重处理
@@ -342,7 +390,6 @@ function doProcess(){
   delLine.innerText = delCount;
   resultText.innerText = out.join('\n');
   window.lastResult = out.join('\n');
-  showToast("处理完成");
 }
 
 function clearAll(){
@@ -366,27 +413,12 @@ demo test demo test`;
   doProcess();
 }
 
-async function copyResult(){
-  if(!window.lastResult) return showToast("暂无处理结果");
-  try{
-    await navigator.clipboard.writeText(window.lastResult);
-    showToast("复制成功");
-  }catch(e){
-    const temp = document.createElement('textarea');
-    temp.value = window.lastResult;
-    document.body.appendChild(temp);
-    temp.select();
-    document.execCommand('copy');
-    document.body.removeChild(temp);
-    showToast("复制成功");
-  }
-}
-
 // 绑定事件
 processBtn.onclick = doProcess;
 clearBtn.onclick = clearAll;
 demoBtn.onclick = loadDemo;
 copyResultBtn.onclick = copyResult;
+copySourceBtn.onclick = copySource;
 
 // 主题
 function initTheme(){
@@ -411,7 +443,7 @@ themeBtn.onclick = ()=>{
     themeBtn.innerText = "☀️";
   }
 };
-backBtn.onclick = ()=>window.location.href="./index.html";
+backBtn.onclick = ()=>history.back();
 
 initTheme();
 loadDemo();

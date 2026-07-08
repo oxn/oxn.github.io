@@ -53,6 +53,7 @@
             --header-safe-gap: 16px;
             --nav-line-height: 38px;
             --theme-btn-width: 36px;
+            --single-card-max-width: 600px;
         }
         html[data-theme="dark"] {
             --primary: #3b82f6;
@@ -134,7 +135,6 @@
             align-items: center;
             gap: 6px;
             color: var(--nav-btn-text);
-            text-decoration: none;
             font-size: 12px;
             font-weight: 500;
             padding: 7px 10px;
@@ -143,6 +143,7 @@
             border: 1px solid var(--nav-btn-border);
             height: var(--nav-line-height);
             flex-shrink: 0;
+            cursor: pointer;
         }
         .back-btn:hover {
             border-color: var(--primary);
@@ -203,7 +204,7 @@
             color: var(--text-weak);
             font-size: calc(15px * var(--desktop-font-ratio));
         }
-        /* 顶部输入栏区域 */
+        /* 顶部输入栏区域 统一600px居中 */
         .top-input-wrap {
             display: flex;
             gap: 12px;
@@ -212,7 +213,8 @@
             border-radius: var(--radius-lg);
             padding: 16px;
             background: var(--bg-card);
-            margin-bottom: 20px;
+            margin: 0 auto 20px auto;
+            max-width: var(--single-card-max-width);
         }
         #topInput {
             flex: 1;
@@ -251,12 +253,14 @@
         .btn-gray:hover {
             background: var(--border-light);
         }
-        /* 结果卡片容器 */
+        /* 结果卡片容器 600px居中 */
         .result-card {
             border: 1px solid var(--border-base);
             border-radius: var(--radius-lg);
             padding: 20px;
             background: var(--bg-card);
+            margin: 0 auto 40px auto;
+            max-width: var(--single-card-max-width);
         }
         .origin-tip-bar {
             width: 100%;
@@ -304,12 +308,13 @@
         .copy-green:hover {
             background: #16a34a;
         }
-        /* 底部说明卡片 */
+        /* 底部说明卡片 宽度统一600px居中 */
         .info-card-section {
+            max-width: var(--single-card-max-width);
+            margin: 0 auto 40px auto;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: 1fr;
             gap: 18px;
-            margin-top: 40px;
         }
         .info-card {
             background: var(--bg-card);
@@ -319,18 +324,18 @@
             box-shadow: var(--shadow-sm);
         }
         .info-card h3 {
-            font-size: calc(32px * var(--desktop-font-ratio));
+            font-size: calc(20px * var(--desktop-font-ratio));
             font-weight: bold;
             color: var(--text-main);
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             line-height: 1.3;
         }
         .info-card p {
-            font-size: calc(17px * var(--desktop-font-ratio));
+            font-size: calc(15px * var(--desktop-font-ratio));
             line-height: 1.8;
             color: var(--text-secondary);
         }
-        /* 复制弹窗 */
+        /* 统一复制弹窗（全站标准） */
         .toast-copy {
             position: fixed;
             top: 80px;
@@ -344,7 +349,7 @@
             border: 1px solid #bbf7d0;
             border-radius: 16px;
             box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
-            z-index: 99999;
+            z-index: 999999;
             opacity: 0;
             pointer-events: none;
             transition: all 0.3s ease;
@@ -353,6 +358,7 @@
         .toast-copy.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
         }
         .toast-icon {
             width: 40px;
@@ -367,7 +373,7 @@
             flex-shrink: 0;
         }
         .toast-text {
-            font-size: 28px;
+            font-size: 16px;
             color: #16a34a;
             font-weight: 500;
             white-space: nowrap;
@@ -404,8 +410,8 @@
             .page-head h1 {
                 font-size: 28px;
             }
-            .info-card-section {
-                grid-template-columns: 1fr;
+            .toast-text {
+                font-size: 16px;
             }
         }
         @media screen and (max-width:767px) and (orientation:portrait){
@@ -420,7 +426,8 @@
 <body>
 <header id="headerDom">
     <div class="container header-inner">
-        <a href="index.html" class="back-btn">← 返回首页</a>
+        <!-- 修改：移除a跳转链接，改为div按钮，文字统一← 返回 -->
+        <div class="back-btn" id="backHome">← 返回</div>
         <div class="theme-switch-wrap">
             <button id="themeToggle" class="header-btn-circle">🌙</button>
         </div>
@@ -435,14 +442,14 @@
         <div class="desc-text">自动识别原始格式，本地安全处理文本</div>
     </div>
 
-    <!-- 顶部输入栏 完全对齐截图 -->
+    <!-- 顶部输入栏 600px居中 -->
     <div class="top-input-wrap">
         <input id="topInput" placeholder="输入需要转换的标识符，例如 ToolsJoinYou / tools_join_you">
         <button class="btn-blue" id="convertBtn">转换</button>
         <button class="btn-gray" id="exampleBtn">举个例子</button>
     </div>
 
-    <!-- 结果卡片 -->
+    <!-- 结果卡片 600px居中 -->
     <div class="result-card" id="resultWrap">
         <div class="origin-tip-bar" id="originTip">原始格式：未知</div>
 
@@ -479,6 +486,7 @@
         </div>
     </div>
 
+    <!-- 底部说明卡片 单栏600px居中，与上方宽度统一 -->
     <div class="info-card-section">
         <div class="info-card">
             <h3>工具用途</h3>
@@ -494,13 +502,14 @@
         </div>
     </main>
 
+<!-- 复制成功弹窗 -->
 <div class="toast-copy" id="copyToast">
     <div class="toast-icon">✓</div>
     <span class="toast-text">复制成功</span>
 </div>
 
 <script>
-    // 主题统一逻辑
+    // ====================== 全局统一明暗主题逻辑（复用cytools通用代码） ======================
     const htmlRoot = document.documentElement;
     const themeBtn = document.getElementById("themeToggle");
     const mediaDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -531,7 +540,7 @@
     initTheme();
     themeBtn.onclick = toggleTheme;
 
-    // 头部自适应
+    // 头部高度自适应
     const headerDom = document.getElementById('headerDom');
     const headerSpacer = document.getElementById('headerSpacer');
     function syncHeaderHeight() {
@@ -540,26 +549,43 @@
     window.addEventListener('resize', syncHeaderHeight);
     syncHeaderHeight();
 
-    // 复制弹窗
+    // ====================== 统一复制弹窗+全兼容复制函数（全站标准） ======================
     const copyToast = document.getElementById('copyToast');
-    function showToast() {
+    let toastTimer = null;
+    // 双层requestAnimationFrame稳定弹窗动画
+    function showCopyToast() {
+        clearTimeout(toastTimer);
         copyToast.classList.remove('show');
-        setTimeout(() => copyToast.classList.add('show'), 10);
-        setTimeout(() => copyToast.classList.remove('show'), 1800);
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                copyToast.classList.add('show');
+            });
+        });
+        toastTimer = setTimeout(() => copyToast.classList.remove('show'), 1800);
     }
-    function copyStr(text) {
-        const temp = document.createElement('textarea');
-        temp.style.position = 'fixed';
-        temp.style.left = '-9999px';
-        temp.style.top = '-9999px';
-        temp.value = text;
-        document.body.appendChild(temp);
-        temp.select();
+    // 异步Promise封装复制函数，优先Clipboard，本地file兜底
+    function copyTextToClipboard(text) {
+        return new Promise((resolve) => {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => resolve(true)).catch(() => fallbackCopy(text, resolve));
+            } else {
+                fallbackCopy(text, resolve);
+            }
+        });
+    }
+    function fallbackCopy(text, resolve) {
+        const tempTextarea = document.createElement('textarea');
+        tempTextarea.style.position = 'fixed';
+        tempTextarea.style.left = '-9999px';
+        tempTextarea.value = text;
+        document.body.appendChild(tempTextarea);
+        tempTextarea.select();
         document.execCommand('copy');
-        document.body.removeChild(temp);
+        document.body.removeChild(tempTextarea);
+        resolve(true);
     }
 
-    // DOM元素
+    // ====================== DOM 元素绑定 ======================
     const topInput = document.getElementById('topInput');
     const convertBtn = document.getElementById('convertBtn');
     const exampleBtn = document.getElementById('exampleBtn');
@@ -568,6 +594,12 @@
     const spaceVal = document.getElementById('spaceVal');
     const kebabVal = document.getElementById('kebabVal');
     const snakeVal = document.getElementById('snakeVal');
+    const backHome = document.getElementById('backHome');
+
+    // 返回按钮浏览器原生后退逻辑
+    backHome.onclick = () => {
+        history.back();
+    };
 
     // 单词拆分核心函数
     function getWordList(str) {
@@ -621,13 +653,13 @@
         topInput.value = "ToolsJoinYou";
         convertBtn.click();
     }
-    // 复制按钮绑定
+    // 复制按钮绑定（异步调用统一复制函数）
     document.querySelectorAll('.copy-green').forEach(btn=>{
-        btn.onclick = ()=>{
+        btn.onclick = async ()=>{
             const targetId = btn.dataset.target;
             const inputEl = document.getElementById(targetId);
-            copyStr(inputEl.value);
-            showToast();
+            await copyTextToClipboard(inputEl.value);
+            showCopyToast();
         }
     })
     // 回车触发转换

@@ -72,7 +72,7 @@
       --bg-btn: #1f2937;
       --bg-footer: #111827;
       --shadow-sm: 0 1px 3px rgba(0,0,0.25);
-      --shadow-lg: 0 6px 16 rgba(0,0,0.45);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.45);
       --key-bg: #374151;
       --key-text: #f9fafb;
       --key-shadow: 0 1px 2px rgba(0,0,0.35);
@@ -274,6 +274,41 @@ html[data-theme="dark"] .preview-box canvas{
   color:var(--text-secondary);
   margin-top: var(--space-xl);
 }
+/* 原版复制按钮样式，无修改 */
+.copy-btn{
+  position: absolute;
+  top:12px;
+  right:12px;
+  padding:6px 10px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--primary);
+  background:transparent;
+  color:var(--primary);
+  cursor:pointer;
+  font-size:13px;
+}
+.copy-btn:hover{
+  background:var(--primary);
+  color:#fff;
+}
+/* 原版复制悬浮提示，特效完全不变 */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+}
+.copy-toast.show{
+  opacity:1;
+}
 /* 平板横屏 */
 @media screen and (min-width: 768px) {
   :root {
@@ -307,12 +342,16 @@ html[data-theme="dark"] .preview-box canvas{
   .row-flex{
     flex-direction:column;
   }
+  .copy-btn{
+    padding:4px 8px;
+    font-size:12px;
+  }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -379,11 +418,23 @@ html[data-theme="dark"] .preview-box canvas{
     使用说明：本地浏览器离线处理图片不上传服务器；自定义水印文字、字号、透明、颜色、摆放位置，支持PNG/JPG/WebP导出，实时预览水印效果。
   </div>
 </div>
+<!-- 原版复制提示弹窗 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+
+// 返回DOM
+const backBtn = document.getElementById("backBtn");
+backBtn.onclick = () => history.back();
+
+// 原版复制提示函数，无改动
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
 
 // 主题切换
 function initTheme() {
@@ -408,7 +459,6 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
 // DOM
 const uploadBox = document.getElementById("uploadBox");
@@ -420,7 +470,7 @@ const colorInput = document.getElementById("colorInput");
 const opacitySlider = document.getElementById("opacitySlider");
 const opacityVal = document.getElementById("opacityVal");
 const posSel = document.getElementById("posSel");
-const formatSel = document.getElementById("previewCanvas");
+const formatSel = document.getElementById("formatSel");
 const previewCanvas = document.getElementById("previewCanvas");
 const ctx = previewCanvas.getContext("2d");
 const genBtn = document.getElementById("genBtn");

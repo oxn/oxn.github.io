@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>&lt;/&gt;</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>HTML转Markdown工具</title>
 <style>
@@ -71,7 +72,7 @@
       --bg-btn: #1f2937;
       --bg-footer: #111827;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
-      --shadow-lg: 0 6px 16px rgba(0,0,0.45);
+      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
       --key-bg: #374151;
       --key-text: #f9fafb;
       --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
@@ -90,7 +91,7 @@ body{
   justify-content:center;
   background:var(--bg-page);
   color:var(--text-main);
-  padding:20px;
+  padding:calc(var(--card-label-offset) + 16px) 3vw 3rem;
   position: relative;
 }
 .top-header-bar{
@@ -131,7 +132,7 @@ body{
   height: 40px;
   padding: 0;
   border: 1px solid var(--nav-btn-border);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   font-size: 16px;
   cursor: pointer;
   display: grid;
@@ -152,7 +153,6 @@ body{
   padding:32px;
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
-  margin-top: 70px;
 }
 h2{
   text-align:center;
@@ -184,7 +184,7 @@ textarea{
 .btn-group{
   display:flex;
   gap:10px;
-  margin-bottom:16px;
+  margin-bottom:var(--space-lg);
 }
 .btn{
   padding:12px 20px;
@@ -214,19 +214,27 @@ textarea{
   position: fixed;
   bottom: 40px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(20px);
   padding: 10px 20px;
-  background: rgba(0,0,0,0.65);
-  color: #fff;
+  background: var(--bg-card);
+  color: var(--text-main);
   border-radius: var(--radius-md);
   font-size: 14px;
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   pointer-events: none;
   z-index: 9999;
-  transition: opacity 0.25s ease;
+  transition: all 0.25s ease;
 }
 .toast-copy.show {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast-success {
+  color: var(--primary);
+}
+.toast-error {
+  color: var(--danger);
 }
 @media screen and (max-width:767px) and (orientation:portrait){
   body{
@@ -248,7 +256,6 @@ textarea{
   }
   .box{
     padding:24px 20px;
-    margin-top: 60px;
   }
   h2{
     font-size:22px;
@@ -276,7 +283,7 @@ textarea{
 <div class="toast-copy" id="toastTip"></div>
 
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -315,11 +322,12 @@ textarea{
 document.addEventListener('DOMContentLoaded', function(){
   const htmlRoot = document.documentElement;
   const themeToggle = document.getElementById("themeToggle");
+  const backHome = document.getElementById("backHome");
   const toastTip = document.getElementById('toastTip');
   const STORAGE_KEY = "site_theme_mode";
 
-  // 悬浮提示函数（无变量错误）
-  function showToast(msg) {
+  function showToast(msg, success = true) {
+    toastTip.className = "toast-copy " + (success ? "toast-success" : "toast-error");
     toastTip.textContent = msg;
     toastTip.classList.add('show');
     setTimeout(function(){
@@ -327,7 +335,6 @@ document.addEventListener('DOMContentLoaded', function(){
     }, 1800);
   }
 
-  // 初始化明暗主题
   function initTheme() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "dark") {
@@ -340,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   initTheme();
 
-  // 明暗切换（修复变量错误）
   themeToggle.addEventListener('click', function(){
     const dark = htmlRoot.hasAttribute('data-theme');
     if (dark) {
@@ -354,12 +360,10 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  // 返回首页
-  document.getElementById("backHome").addEventListener('click', function(){
-    window.location.href = "./index.html";
+  backHome.addEventListener('click', function(){
+    history.back();
   });
 
-  // 获取所有DOM元素
   const inputText = document.getElementById('inputText');
   const outputText = document.getElementById('outputText');
   const convertStatus = document.getElementById('convertStatus');
@@ -368,7 +372,6 @@ document.addEventListener('DOMContentLoaded', function(){
   const clearBtn = document.getElementById('clearBtn');
   const copyBtn = document.getElementById('copyBtn');
 
-  // 演示HTML内容
   const demoHtml = `
 <h1>一级标题</h1>
 <h2>二级标题</h2>
@@ -388,19 +391,16 @@ document.addEventListener('DOMContentLoaded', function(){
 <hr>
 `;
 
-  // 填充演示
   demoBtn.addEventListener('click', function(){
     inputText.value = demoHtml.trim();
     outputText.value = '';
     convertStatus.textContent = '已完成转换：无';
   });
 
-  // 重写稳定HTML转MD函数（修复之前del变量未定义、正则匹配残缺、标签残留问题）
   function htmlToMd(htmlStr) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = htmlStr;
 
-    // 移除危险标签
     const removeTags = tempDiv.querySelectorAll('script,style,noscript,iframe');
     for (let i = 0; i < removeTags.length; i++) {
       removeTags[i].remove();
@@ -408,7 +408,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
     let md = tempDiv.innerHTML;
 
-    // 标题
     md = md.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, '\n# $1\n');
     md = md.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, '\n## $1\n');
     md = md.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, '\n### $1\n');
@@ -416,26 +415,21 @@ document.addEventListener('DOMContentLoaded', function(){
     md = md.replace(/<h5[^>]*>([\s\S]*?)<\/h5>/gi, '\n##### $1\n');
     md = md.replace(/<h6[^>]*>([\s\S]*?)<\/h6>/gi, '\n###### $1\n');
 
-    // 文本样式
     md = md.replace(/<(b|strong)[^>]*>([\s\S]*?)<\/\1>/gi, '**$2**');
     md = md.replace(/<(i|em)[^>]*>([\s\S]*?)<\/\1>/gi, '*$2*');
     md = md.replace(/<del[^>]*>([\s\S]*?)<\/del>/gi, '~~$1~~');
     md = md.replace(/<code[^>]*>([\s\S]*?)<\/code>/gi, '`$1`');
 
-    // 分割线、换行、段落
     md = md.replace(/<hr[^>]*\/?>/gi, '\n---\n');
     md = md.replace(/<br[^>]*\/?>/gi, '\n');
     md = md.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, '\n$1\n');
 
-    // 引用块
     md = md.replace(/<blockquote[^>]*>([\s\S]*?)<\/blockquote>/gi, function(match, content) {
       return '\n' + content.replace(/^/gm, '> ') + '\n';
     });
 
-    // 无序列表
     md = md.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '- $1\n');
 
-    // 有序列表
     md = md.replace(/<ol[\s\S]*?<\/ol>/gi, function(listHtml) {
       let num = 1;
       return listHtml.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, function(m, text) {
@@ -443,41 +437,37 @@ document.addEventListener('DOMContentLoaded', function(){
       });
     });
 
-    // 链接、图片
     md = md.replace(/<a\s+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, '[$2]($1)');
     md = md.replace(/<img\s+alt="([^"]+)"\s+src="([^"]+)"[^>]*\/?>/gi, '![$1]($2)');
 
-    // 清除剩余所有标签
     md = md.replace(/<[^\/!][\s\S]*?>/g, '');
     md = md.replace(/<\/[a-zA-Z0-9]+>/g, '');
 
-    // 清理多余空行与空格
     md = md.replace(/\n\s*\n+/g, '\n\n').replace(/[ \t]+/g, ' ').trim();
     return md;
   }
 
-  // 转换按钮
   convertBtn.addEventListener('click', function(){
     const val = inputText.value.trim();
     if (!val) {
-      showToast('请输入HTML代码');
+      showToast('请输入HTML代码', false);
       return;
     }
     outputText.value = htmlToMd(val);
     convertStatus.textContent = '已完成转换：HTML转Markdown';
+    showToast('转换完成');
   });
 
-  // 清空按钮
   clearBtn.addEventListener('click', function(){
     inputText.value = '';
     outputText.value = '';
     convertStatus.textContent = '已完成转换：无';
+    showToast('已清空');
   });
 
-  // 复制函数（双浏览器兼容，提示正常）
   async function copyContent(text) {
     if (!text.trim()) {
-      showToast('无内容可复制');
+      showToast('无内容可复制', false);
       return;
     }
     if (navigator.clipboard && window.isSecureContext) {

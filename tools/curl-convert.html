@@ -130,7 +130,6 @@ header {
     align-items: center;
     gap: 6px;
     color: var(--nav-btn-text);
-    text-decoration: none;
     font-size: 14px;
     font-weight: 500;
     padding: 7px 12px;
@@ -139,6 +138,7 @@ header {
     border: 1px solid var(--nav-btn-border);
     height: var(--nav-line-height);
     flex-shrink: 0;
+    cursor: pointer;
 }
 .back-btn:hover {
     border-color: var(--primary);
@@ -355,7 +355,7 @@ textarea:focus {
     line-height: 1.7;
     font-size: 15px;
 }
-/* 复制成功弹窗（统一toast样式） */
+/* 复制成功弹窗（全站统一标准动画、字号、层级） */
 .toast-copy {
     position: fixed;
     top: 80px;
@@ -369,7 +369,7 @@ textarea:focus {
     border: 1px solid #bbf7d0;
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
-    z-index: 99999;
+    z-index: 999999;
     opacity: 0;
     pointer-events: none;
     transition: all 0.3s ease;
@@ -378,6 +378,7 @@ textarea:focus {
 .toast-copy.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
 }
 .toast-icon {
     width: 40px;
@@ -392,7 +393,7 @@ textarea:focus {
     flex-shrink: 0;
 }
 .toast-text {
-    font-size: 18px;
+    font-size: 16px;
     color: #16a34a;
     font-weight: 500;
 }
@@ -430,13 +431,17 @@ html[data-theme="dark"] .toast-text {
     .lang-tab-group {
         flex-wrap: wrap;
     }
+    .toast-text {
+        font-size: 16px;
+    }
 }
 </style>
 </head>
 <body>
 <header id="headerDom">
     <div class="container header-inner">
-        <a href="index.html" class="back-btn">← 返回首页</a>
+        <!-- 修改：移除a跳转链接，改为div按钮，文字统一← 返回 -->
+        <div class="back-btn" id="backHome">← 返回</div>
         <div class="theme-switch-wrap">
             <button id="themeToggle" class="header-btn-circle">🌙</button>
         </div>
@@ -527,8 +532,7 @@ curl 'https://httpbin.org/post?status=open' \
             <h3>安全说明</h3>
             <p>所有解析转换在浏览器本地运行，含Token、Cookie敏感curl不会上传服务器。</p>
         </div>
-    </div>
-</main>
+    </main>
 
 <!-- 复制成功弹窗 -->
 <div class="toast-copy" id="copyToast">
@@ -577,14 +581,31 @@ function syncHeaderHeight() {
 window.addEventListener('resize', syncHeaderHeight);
 syncHeaderHeight();
 
-// 复制弹窗工具函数
+// ====================== 统一复制弹窗+全兼容复制函数（全站标准） ======================
 const copyToast = document.getElementById('copyToast');
+let toastTimer = null;
+// 双层requestAnimationFrame稳定弹窗动画
 function showCopyToast() {
+    clearTimeout(toastTimer);
     copyToast.classList.remove('show');
-    setTimeout(() => copyToast.classList.add('show'), 10);
-    setTimeout(() => copyToast.classList.remove('show'), 1800);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            copyToast.classList.add('show');
+        });
+    });
+    toastTimer = setTimeout(() => copyToast.classList.remove('show'), 1800);
 }
+// 异步Promise封装复制函数，优先Clipboard，本地file兜底
 function copyTextToClipboard(text) {
+    return new Promise((resolve) => {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => resolve(true)).catch(() => fallbackCopy(text, resolve));
+        } else {
+            fallbackCopy(text, resolve);
+        }
+    });
+}
+function fallbackCopy(text, resolve) {
     const tempTextarea = document.createElement('textarea');
     tempTextarea.style.position = 'fixed';
     tempTextarea.style.left = '-9999px';
@@ -593,6 +614,7 @@ function copyTextToClipboard(text) {
     tempTextarea.select();
     document.execCommand('copy');
     document.body.removeChild(tempTextarea);
+    resolve(true);
 }
 
 // ====================== DOM 元素绑定 ======================
@@ -604,11 +626,17 @@ const demoBtn = document.getElementById('demoBtn');
 const clearAllBtn = document.getElementById('clearAllBtn');
 const copyCodeBtn = document.getElementById('copyCodeBtn');
 const langTabs = document.querySelectorAll('.lang-tab');
+const backHome = document.getElementById('backHome');
 // 底部解析面板
 const reqMethod = document.getElementById('reqMethod');
 const reqUrl = document.getElementById('reqUrl');
 const headerCount = document.getElementById('headerCount');
 const bodyType = document.getElementById('bodyType');
+
+// 返回按钮浏览器原生后退逻辑
+backHome.onclick = () => {
+    history.back();
+};
 
 // 全局变量
 let currentLang = "js";
@@ -639,10 +667,10 @@ clearAllBtn.onclick = () => {
     codeOutput.value = "";
     resetInfoPanel();
 }
-// 复制输出代码
-copyCodeBtn.onclick = () => {
+// 复制输出代码（异步调用统一复制函数+弹窗）
+copyCodeBtn.onclick = async () => {
     if (codeOutput.value.trim()) {
-        copyTextToClipboard(codeOutput.value);
+        await copyTextToClipboard(codeOutput.value);
         showCopyToast();
     }
 }

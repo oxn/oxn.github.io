@@ -43,7 +43,7 @@
       --body-line-height: 1.6;
       --title-line-height: 1.2;
       --sub-title-line-height: 1.25;
-      --content-max-width: 620px;
+      --content-max-width: 900px;
       --card-label-offset: 2.25rem;
       --nav-line-height: 2.375rem;
       --theme-btn-width: 2.25rem;
@@ -146,6 +146,7 @@ body{
   padding: clamp(1.5rem, 5vw, 2rem);
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
+  margin:0 auto;
   margin-top: var(--card-label-offset);
 }
 h2{
@@ -160,7 +161,6 @@ h2{
   color:var(--text-secondary);
   margin-bottom: var(--space-xl);
 }
-/* 显示模式单选行 */
 .mode-row{
   display:flex;
   flex-wrap:wrap;
@@ -252,7 +252,6 @@ html[data-theme="dark"] textarea{
   background:transparent;
   color:var(--text-main);
 }
-/* 逐行统一视图 */
 .result-inline{
   width:100%;
   min-height: 160px;
@@ -266,7 +265,6 @@ html[data-theme="dark"] textarea{
   overflow:auto;
   margin-bottom: var(--space-xl);
 }
-/* 并行左右分栏视图 */
 .result-side{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -308,40 +306,25 @@ html[data-theme="dark"] textarea{
   line-height:1.6;
   opacity:0.7;
 }
-/* 无阻塞底部悬浮Toast */
-.toast-box{
+/* 全局统一底部复制悬浮提示 固定样式 */
+.copy-toast{
   position:fixed;
+  bottom:30px;
   left:50%;
-  bottom:40px;
-  transform: translateX(-50%) translateY(20px);
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  color:#fff;
+  font-size:14px;
   opacity:0;
-  padding:0.7rem 1.4rem;
-  border-radius:var(--radius-md);
-  box-shadow:var(--shadow-lg);
-  font-size:0.95rem;
-  z-index:9999;
   pointer-events:none;
-  transition: all 0.2s ease;
+  z-index:9999;
+  transition:opacity 0.2s ease;
 }
-.toast-box.show{
-  opacity:1;
-  transform: translateX(-50%) translateY(0);
-}
-html[data-theme="dark"] .toast-box{
-  background:#1e293b;
-}
-html:not([data-theme="dark"]) .toast-box{
-  background:#ffffff;
-}
-.toast-success{
-  color:var(--primary);
-}
-.toast-error{
-  color:var(--danger);
-}
+.copy-toast.show{opacity:1;}
 @media screen and (min-width: 768px) {
   :root {
-    --content-max-width: 680px;
+    --content-max-width: 900px;
   }
   .box {
     padding: 2.25rem;
@@ -376,7 +359,7 @@ html:not([data-theme="dark"]) .toast-box{
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle">🌙</button>
 </div>
 
@@ -384,7 +367,6 @@ html:not([data-theme="dark"]) .toast-box{
   <h2>文本对比工具</h2>
   <div class="sub-title">比较两段文本的差异，支持逐行/字符级对比、并行并排视图</div>
 
-  <!-- 新增：显示模式切换 逐行/并行 -->
   <div class="mode-row">
     <div class="mode-item">
       <input type="radio" name="viewMode" id="viewInline" value="inline" checked>
@@ -407,7 +389,6 @@ html:not([data-theme="dark"]) .toast-box{
     </div>
   </div>
 
-  <!-- 配置复选框 -->
   <div class="check-row">
     <div class="check-item">
       <input type="checkbox" id="ignoreSpace">
@@ -425,7 +406,6 @@ html:not([data-theme="dark"]) .toast-box{
     <span>- 删除行: <span class="count-num" id="delCount">0</span></span>
   </div>
 
-  <!-- 标准四按钮 -->
   <div class="btn-row">
     <button class="btn-main" id="diffBtn">开始对比</button>
     <button class="btn-outline" id="demoBtn">加载演示</button>
@@ -434,7 +414,6 @@ html:not([data-theme="dark"]) .toast-box{
   </div>
 
   <label class="input-label">对比结果</label>
-  <!-- 两种视图容器 -->
   <div id="resultWrap">
     <div class="result-inline" id="resultInline"></div>
     <div class="result-side" id="resultSide" style="display:none;">
@@ -448,11 +427,11 @@ html:not([data-theme="dark"]) .toast-box{
   </div>
 </div>
 
-<div class="toast-box" id="toastText"></div>
+<!-- 全局统一复制悬浮提示 -->
+<div class="copy-toast" id="copyToast"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
-  // DOM元素缓存
   const inputOld = document.getElementById('oldTxt');
   const inputNew = document.getElementById('newTxt');
   const resultInline = document.getElementById('resultInline');
@@ -469,21 +448,20 @@ document.addEventListener('DOMContentLoaded', function(){
   const charDiff = document.getElementById('charDiff');
   const viewInline = document.getElementById('viewInline');
   const viewSide = document.getElementById('viewSide');
-  const toastText = document.getElementById('toastText');
+  const copyToast = document.getElementById('copyToast');
   const themeToggle = document.getElementById('themeToggle');
   const backHome = document.getElementById('backHome');
   const htmlRoot = document.documentElement;
   const STORAGE_KEY = "site_theme_mode";
 
-  // 悬浮提示
-  function showToast(msg, success = true) {
-    toastText.className = "toast-box " + (success ? "toast-success" : "toast-error");
-    toastText.innerText = msg;
-    toastText.classList.add("show");
-    setTimeout(() => toastText.classList.remove("show"), 2000);
+  // 统一复制提示函数
+  function showToast(msg, success = true){
+    copyToast.style.background = success ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.85)";
+    copyToast.innerText = msg;
+    copyToast.classList.add("show");
+    setTimeout(()=>copyToast.classList.remove("show"),1200);
   }
 
-  // 切换视图显示/隐藏
   function switchViewMode(){
     if(viewInline.checked){
       resultInline.style.display = "block";
@@ -495,7 +473,6 @@ document.addEventListener('DOMContentLoaded', function(){
     runDiff();
   }
 
-  // 演示文本
   const demoOld = `第一行基础内容
 第二行不变内容
 第三行待删除文字
@@ -506,7 +483,6 @@ document.addEventListener('DOMContentLoaded', function(){
 第四行普通段落
 末尾追加文字`;
 
-  // 生成统一逐行HTML
   function buildInlineHtml(diffList){
     let html = "";
     diffList.forEach(item => {
@@ -525,7 +501,6 @@ document.addEventListener('DOMContentLoaded', function(){
     return html;
   }
 
-  // 生成左右并行分栏HTML
   function buildSideHtml(diffList){
     let leftHtml = "";
     let rightHtml = "";
@@ -548,7 +523,6 @@ document.addEventListener('DOMContentLoaded', function(){
     return {left:leftHtml, right:rightHtml};
   }
 
-  // 核心对比计算
   function runDiff() {
     if(typeof Diff === "undefined"){
       resultInline.innerHTML = "<div style='color:var(--danger)'>对比库加载失败，请刷新页面重试</div>";
@@ -569,7 +543,6 @@ document.addEventListener('DOMContentLoaded', function(){
       delCount.innerText = "0";
       return;
     }
-    // 对比配置
     const opt = {
       ignoreWhitespace: ignoreSpace.checked,
       stripTrailingCr: true
@@ -580,7 +553,6 @@ document.addEventListener('DOMContentLoaded', function(){
     }else{
       diffList = Diff.diffLines(oldStr, newStr, opt);
     }
-    // 统计新增删除数量
     let addNum = 0;
     let delNum = 0;
     diffList.forEach(item=>{
@@ -589,7 +561,6 @@ document.addEventListener('DOMContentLoaded', function(){
     });
     addCount.innerText = addNum;
     delCount.innerText = delNum;
-    // 根据视图模式渲染
     if(viewInline.checked){
       resultInline.innerHTML = buildInlineHtml(diffList);
     }else{
@@ -599,7 +570,6 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   }
 
-  // 按钮绑定
   demoBtn.onclick = function() {
     inputOld.value = demoOld;
     inputNew.value = demoNew;
@@ -630,7 +600,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
     try {
       await navigator.clipboard.writeText(copyText);
-      showToast("✅ 复制成功");
+      showToast("复制成功");
     } catch (err) {
       const temp = document.createElement('textarea');
       temp.value = copyText;
@@ -640,11 +610,10 @@ document.addEventListener('DOMContentLoaded', function(){
       temp.select();
       const ok = document.execCommand('copy');
       document.body.removeChild(temp);
-      ok ? showToast("✅ 复制成功") : showToast("❌ 复制失败，请手动复制", false);
+      ok ? showToast("复制成功") : showToast("复制失败，请手动复制", false);
     }
   };
 
-  // 切换监听自动重绘
   viewInline.onchange = switchViewMode;
   viewSide.onchange = switchViewMode;
   ignoreSpace.onchange = runDiff;
@@ -652,12 +621,8 @@ document.addEventListener('DOMContentLoaded', function(){
   inputOld.oninput = runDiff;
   inputNew.oninput = runDiff;
 
-  // 返回首页
-  backHome.onclick = function() {
-    window.location.href = "./index.html";
-  };
+  backHome.onclick = ()=>history.back();
 
-  // 明暗主题
   function initTheme() {
     const save = localStorage.getItem(STORAGE_KEY);
     if (save === "dark") {

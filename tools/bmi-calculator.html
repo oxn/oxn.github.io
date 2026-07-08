@@ -9,6 +9,10 @@
     :root {
       --primary: #10b981;
       --primary-light: #dcfce7;
+      --success: #22c55e;
+      --success-light: #dcfce7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
       --header-bg: #f0fdf4;
       --warn: #f97316;
       --nav-btn-bg: #ffffff;
@@ -55,6 +59,10 @@
     html[data-theme="dark"] {
       --primary: #34d399;
       --primary-light: rgba(52, 211, 153, 0.18);
+      --success: #34d399;
+      --success-light: rgba(34, 197, 94, 0.12);
+      --danger: #f87171;
+      --danger-light: rgba(248, 113, 113, 0.12);
       --header-bg: #111827;
       --nav-btn-bg: #1f2937;
       --nav-btn-border: #374151;
@@ -191,9 +199,11 @@ input,select{
 }
 .btn-wrap{
   margin:24px 0;
+  display:flex;
+  gap:10px;
 }
 .btn{
-  width:100%;
+  flex:1;
   padding:14px 20px;
   border:none;
   border-radius:var(--radius-md);
@@ -202,6 +212,7 @@ input,select{
   font-weight:500;
 }
 .btn-primary{ background:var(--primary); color:#fff; }
+.btn-secondary{ background:var(--bg-btn); color:var(--text-main); border:1px solid var(--border-base); }
 .result-box{
   text-align:center;
   padding:20px;
@@ -218,6 +229,7 @@ input,select{
 .result-desc{
   font-size:18px;
   font-weight:500;
+  margin-bottom:12px;
 }
 .tip{
   text-align:left;
@@ -225,6 +237,80 @@ input,select{
   opacity:0.65;
   line-height:1.6;
   color:var(--text-secondary);
+}
+/* 统一双状态弹窗样式（成功/失败） */
+.toast-copy {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    min-height: 72px;
+}
+.toast-success {
+    background: var(--success-light);
+    border: 1px solid #bbf7d0;
+}
+.toast-fail {
+    background: var(--danger-light);
+    border: 1px solid #fecdd3;
+}
+.toast-copy.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.icon-success {
+    background: var(--success);
+    color: #fff;
+}
+.icon-fail {
+    background: var(--danger);
+    color: #fff;
+}
+.toast-text {
+    font-size: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.text-success {
+    color: #16a34a;
+}
+.text-fail {
+    color: var(--danger);
+}
+html[data-theme="dark"] .toast-success {
+    background: rgba(34,197,94,0.12);
+    border-color: rgba(34,197,94,0.3);
+}
+html[data-theme="dark"] .text-success {
+    color: #4ade80;
+}
+html[data-theme="dark"] .toast-fail {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.3);
+}
+html[data-theme="dark"] .text-fail {
+    color: #f87171;
 }
 /* ========== 仅手机竖屏才启用新布局：宽度≤767px + 竖屏 ========== */
 @media screen and (max-width:767px) and (orientation:portrait){
@@ -266,11 +352,27 @@ input,select{
     padding:12px 14px;
     font-size:16px;
   }
+  .btn-wrap{
+    flex-direction:column;
+  }
   .result-value{
     font-size:38px;
   }
   .tip{
     font-size:13px;
+  }
+  .toast-copy {
+    width: calc(100% - 40px);
+    padding: 12px 20px;
+    min-height: 64px;
+  }
+  .toast-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  .toast-text {
+    font-size: 16px;
   }
 }
 </style>
@@ -278,7 +380,7 @@ input,select{
 <body>
 <!-- 顶部按钮栏 -->
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <!-- 圆形纯图标明暗切换按钮 -->
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
@@ -299,6 +401,7 @@ input,select{
 
   <div class="btn-wrap">
     <button class="btn btn-primary" id="calcBtn">计算BMI</button>
+    <button class="btn btn-secondary" id="copyResultBtn">复制结果</button>
   </div>
 
   <div class="result-box" id="resultBox" style="display:none;">
@@ -312,10 +415,69 @@ input,select{
   </div>
 </div>
 
+<!-- 弹窗DOM -->
+<div class="toast-copy" id="copyToast">
+    <div class="toast-icon" id="toastIcon"></div>
+    <span class="toast-text" id="toastMsg"></span>
+</div>
+
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+const copyToast = document.getElementById("copyToast");
+const toastIcon = document.getElementById("toastIcon");
+const toastMsg = document.getElementById("toastMsg");
+let toastTimer = null;
+let lastBmiText = "";
+
+// 统一弹窗函数
+function showToast(isSuccess, msg) {
+    clearTimeout(toastTimer);
+    copyToast.classList.remove("show", "toast-success", "toast-fail");
+    toastIcon.className = "toast-icon";
+    toastMsg.className = "toast-text";
+    if(isSuccess) {
+        copyToast.classList.add("toast-success");
+        toastIcon.classList.add("icon-success");
+        toastIcon.textContent = "✓";
+        toastMsg.classList.add("text-success");
+    } else {
+        copyToast.classList.add("toast-fail");
+        toastIcon.classList.add("icon-fail");
+        toastIcon.textContent = "×";
+        toastMsg.classList.add("text-fail");
+    }
+    toastMsg.textContent = msg;
+    requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>copyToast.classList.add("show"));
+    });
+    toastTimer = setTimeout(()=>copyToast.classList.remove("show"),1800);
+}
+
+// 通用复制函数（空值校验+双方案）
+async function copyText(text) {
+    const target = text.trim();
+    if(!target) {
+        showToast(false,"暂无可复制内容");
+        return false;
+    }
+    try{
+        await navigator.clipboard.writeText(target);
+        return true;
+    }catch(err){
+        const temp = document.createElement('textarea');
+        temp.style.position = 'fixed';
+        temp.style.left = '-9999px';
+        temp.style.top = '-9999px';
+        temp.value = target;
+        document.body.appendChild(temp);
+        temp.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(temp);
+        return ok;
+    }
+}
 
 // 初始化主题
 function initTheme() {
@@ -341,23 +503,23 @@ themeToggle.onclick = () => {
     themeToggle.innerHTML = "☀️";
   }
 };
-// 返回首页
-document.getElementById("backHome").onclick = () => {
-  window.location.href = "./index.html";
-};
+// 返回按钮：history.back原生后退
+document.getElementById("backHome").onclick = () => history.back();
 
 // BMI计算逻辑
 const calcBtn = document.getElementById('calcBtn');
 const resultBox = document.getElementById('resultBox');
 const bmiNum = document.getElementById('bmiNum');
 const bmiText = document.getElementById('bmiText');
+const copyResultBtn = document.getElementById('copyResultBtn');
 
 calcBtn.onclick = function(){
   const h = parseFloat(document.getElementById('height').value);
   const w = parseFloat(document.getElementById('weight').value);
   if(isNaN(h) || isNaN(w) || h <= 0 || w <=0){
-    alert("请输入有效的身高和体重！");
+    showToast(false,"请输入有效的身高和体重！");
     resultBox.style.display = 'none';
+    lastBmiText = "";
     return;
   }
   const m = h / 100;
@@ -369,7 +531,16 @@ calcBtn.onclick = function(){
   else if(bmi < 28) desc = "体型：超重";
   else desc = "体型：肥胖";
   bmiText.innerText = desc;
+  lastBmiText = `BMI：${bmi.toFixed(2)}，${desc}`;
   resultBox.style.display = 'block';
+  showToast(true,"计算完成");
+};
+
+// 复制结果按钮
+copyResultBtn.onclick = async () => {
+    const ok = await copyText(lastBmiText);
+    if(ok) showToast(true,"BMI结果复制成功");
+    else showToast(false,"复制失败，请手动复制");
 };
 
 initTheme();

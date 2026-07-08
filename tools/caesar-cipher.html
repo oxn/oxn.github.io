@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>🔐</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>凯撒密码工具</title>
 <style>
@@ -91,7 +92,7 @@ body{
   justify-content:center;
   background:var(--bg-page);
   color:var(--text-main);
-  padding:20px;
+  padding:calc(var(--card-label-offset) + 16px) 3vw 3rem;
   position: relative;
 }
 /* 顶部按钮容器 */
@@ -133,7 +134,7 @@ body{
   height: 40px;
   padding: 0;
   border: 1px solid var(--nav-btn-border);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   font-size: 16px;
   cursor: pointer;
   display: grid;
@@ -154,7 +155,6 @@ body{
   padding:32px;
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
-  margin-top: 70px;
 }
 h2{
   text-align:center;
@@ -188,7 +188,7 @@ textarea{
 .btn-group{
   display:flex;
   gap:10px;
-  margin-bottom:16px;
+  margin-bottom:var(--space-lg);
 }
 .btn{
   padding:12px 20px;
@@ -214,24 +214,32 @@ textarea{
   line-height:1.6;
   color:var(--text-secondary);
 }
-/* 悬浮Toast提示 */
+/* 统一全局悬浮Toast提示 */
 .toast-copy {
   position: fixed;
   bottom: 40px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(20px);
   padding: 10px 20px;
-  background: rgba(0,0,0,0.65);
-  color: #fff;
+  background: var(--bg-card);
+  color: var(--text-main);
   border-radius: var(--radius-md);
   font-size: 14px;
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   pointer-events: none;
   z-index: 9999;
-  transition: opacity 0.25s ease;
+  transition: all 0.25s ease;
 }
 .toast-copy.show {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast-success {
+  color: var(--primary);
+}
+.toast-error {
+  color: var(--danger);
 }
 /* 手机竖屏适配 */
 @media screen and (max-width:767px) and (orientation:portrait){
@@ -254,7 +262,6 @@ textarea{
   }
   .box{
     padding:24px 20px;
-    margin-top: 60px;
   }
   h2{
     font-size:22px;
@@ -282,7 +289,7 @@ textarea{
 <div class="toast-copy" id="toastTip"></div>
 
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -328,11 +335,13 @@ textarea{
 document.addEventListener('DOMContentLoaded', function(){
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
+const backHome = document.getElementById("backHome");
 const toastTip = document.getElementById('toastTip');
 const STORAGE_KEY = "site_theme_mode";
 
-// 悬浮提示
-function showToast(msg) {
+// 统一Toast提示
+function showToast(msg, success = true) {
+  toastTip.className = "toast-copy " + (success ? "toast-success" : "toast-error");
   toastTip.textContent = msg;
   toastTip.classList.add('show');
   setTimeout(() => toastTip.classList.remove('show'), 1800);
@@ -365,9 +374,9 @@ themeToggle.addEventListener('click', function(){
   }
 });
 
-// 返回首页
-document.getElementById("backHome").addEventListener('click', function(){
-  window.location.href = "./index.html";
+// 返回：浏览器后退
+backHome.addEventListener('click', function(){
+  history.back();
 });
 
 const shiftNum = document.getElementById('shiftNum');
@@ -417,15 +426,16 @@ encryptBtn.addEventListener('click', ()=>{
   const val = inputText.value.trim();
   const shift = parseInt(shiftNum.value);
   if(!val){
-    showToast("请输入待加密文本");
+    showToast("请输入待加密文本", false);
     return;
   }
   if(isNaN(shift) || shift < 1 || shift > 25){
-    showToast("位移范围1-25");
+    showToast("位移范围1-25", false);
     return;
   }
   outputText.value = caesarShift(val, shift);
   convertStatus.textContent = "已完成转换：凯撒加密";
+  showToast("加密完成");
 });
 
 // 解密
@@ -433,15 +443,16 @@ decryptBtn.addEventListener('click', ()=>{
   const val = inputText.value.trim();
   const shift = parseInt(shiftNum.value);
   if(!val){
-    showToast("请输入待解密文本");
+    showToast("请输入待解密文本", false);
     return;
   }
   if(isNaN(shift) || shift < 1 || shift > 25){
-    showToast("位移范围1-25");
+    showToast("位移范围1-25", false);
     return;
   }
   outputText.value = caesarShift(val, 26 - shift);
   convertStatus.textContent = "已完成转换：凯撒解密";
+  showToast("解密完成");
 });
 
 // 清空
@@ -449,12 +460,13 @@ clearBtn.addEventListener('click', ()=>{
   inputText.value = "";
   outputText.value = "";
   convertStatus.textContent = "已完成转换：无";
+  showToast("已清空");
 });
 
-// 复制函数 双兼容无弹窗
+// 复制函数 双兼容无弹窗Toast
 async function copyText(text) {
   if (!text.trim()) {
-    showToast("无内容可复制");
+    showToast("无内容可复制", false);
     return;
   }
   if (navigator.clipboard && window.isSecureContext) {

@@ -169,10 +169,28 @@ h2{
   color:var(--text-secondary);
   margin-bottom: var(--space-xl);
 }
-.input-label{
-  display:block;
+/* 标签行 左右布局：文字+复制按钮 */
+.label-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
   margin-bottom: var(--space-xs);
+}
+.input-label{
   font-size: clamp(0.875rem, 2vw, 0.9375rem);
+}
+.copy-small-btn{
+  padding:0.3rem 0.7rem;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border-base);
+  background:transparent;
+  color:var(--text-main);
+  font-size:0.8rem;
+  cursor:pointer;
+}
+.copy-small-btn:hover{
+  border-color:var(--primary);
+  color:var(--primary);
 }
 textarea{
   width:100%;
@@ -258,6 +276,25 @@ html[data-theme="dark"] .custom-sep-input{
   line-height:1.6;
   opacity:0.7;
 }
+/* 全站统一底部悬浮复制提示 */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+  transition:opacity 0.2s;
+}
+.copy-toast.show{
+  opacity:1;
+}
 /* 平板横屏适配 */
 @media screen and (min-width: 768px) {
   :root {
@@ -294,7 +331,7 @@ html[data-theme="dark"] .custom-sep-input{
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -302,7 +339,10 @@ html[data-theme="dark"] .custom-sep-input{
   <h2>📜 文本拼接器</h2>
   <div class="sub-title">多行文本按分隔符合并为单行</div>
 
-  <label class="input-label">输入文本（每行一条）</label>
+  <div class="label-row">
+    <label class="input-label">输入文本（每行一条）</label>
+    <button class="copy-small-btn" id="copyInputBtn">复制输入</button>
+  </div>
   <textarea id="inputTxt" placeholder="每行输入一条内容，换行分隔"></textarea>
 
   <label class="input-label">拼接分隔符</label>
@@ -324,7 +364,10 @@ html[data-theme="dark"] .custom-sep-input{
 
   <button class="btn-main" id="joinBtn">执行拼接合并</button>
 
-  <label class="input-label">拼接结果</label>
+  <div class="label-row">
+    <label class="input-label">拼接结果</label>
+    <button class="copy-small-btn" id="copyOutputBtn">复制结果</button>
+  </div>
   <textarea id="outputRes" readonly placeholder="合并后的单行文本将展示在这里"></textarea>
 
   <div class="tip-desc">
@@ -332,10 +375,24 @@ html[data-theme="dark"] .custom-sep-input{
   </div>
 </div>
 
+<!-- 统一复制悬浮提示浮层 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
+
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+
+// 返回按钮标准化
+const backBtn = document.getElementById("backBtn");
+backBtn.onclick = () => history.back();
+
+// 全局统一复制弹窗函数
+const copyToast = document.getElementById("copyToast");
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
 
 // DOM元素
 const inputTxt = document.getElementById("inputTxt");
@@ -346,6 +403,9 @@ const skipBlank = document.getElementById("skipBlank");
 const totalCount = document.getElementById("totalCount");
 const joinBtn = document.getElementById("joinBtn");
 const outputRes = document.getElementById("outputRes");
+// 新增复制按钮
+const copyInputBtn = document.getElementById("copyInputBtn");
+const copyOutputBtn = document.getElementById("copyOutputBtn");
 
 // 默认分隔符映射
 const sepMap = {
@@ -395,6 +455,45 @@ function runJoin() {
   outputRes.value = arr.join(realSep);
 }
 
+// 复制输入文本
+copyInputBtn.onclick = async () => {
+  const text = inputTxt.value;
+  if (!text) return alert("暂无内容可复制");
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast();
+  } catch (err) {
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    showToast();
+  }
+};
+// 复制输出结果
+copyOutputBtn.onclick = async () => {
+  const text = outputRes.value;
+  if (!text) return alert("暂无拼接结果可复制");
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast();
+  } catch (err) {
+    const temp = document.createElement("textarea");
+    temp.value = text;
+    temp.style.position = "fixed";
+    temp.style.left = "-9999px";
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    showToast();
+  }
+};
+
 // 实时监听自动更新
 inputTxt.oninput = runJoin;
 customSep.oninput = runJoin;
@@ -425,7 +524,6 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
 initTheme();
 runJoin();

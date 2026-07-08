@@ -268,6 +268,41 @@ html[data-theme="dark"] .preview-box canvas{
   color:var(--text-secondary);
   margin-top: var(--space-xl);
 }
+/* 原版复制按钮样式，无修改 */
+.copy-btn{
+  position: absolute;
+  top:12px;
+  right:12px;
+  padding:6px 10px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--primary);
+  background:transparent;
+  color:var(--primary);
+  cursor:pointer;
+  font-size:13px;
+}
+.copy-btn:hover{
+  background:var(--primary);
+  color:#fff;
+}
+/* 原版复制悬浮提示，特效完全不变 */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+}
+.copy-toast.show{
+  opacity:1;
+}
 /* 平板横屏 */
 @media screen and (min-width: 768px) {
   :root {
@@ -301,12 +336,16 @@ html[data-theme="dark"] .preview-box canvas{
   .row-two{
     flex-direction:column;
   }
+  .copy-btn{
+    padding:4px 8px;
+    font-size:12px;
+  }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -369,11 +408,23 @@ html[data-theme="dark"] .preview-box canvas{
     使用说明：本地离线拼接两张图片，不上传服务器；水平左右排列、垂直上下排列，靠前/居中/靠后对齐，可自定义空白背景色，支持三种图片格式导出。
   </div>
 </div>
+<!-- 原版复制提示弹窗 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+
+// 返回DOM
+const backBtn = document.getElementById("backBtn");
+backBtn.onclick = () => history.back();
+
+// 原版复制提示函数，无改动
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
 
 // 主题切换
 function initTheme() {
@@ -394,11 +445,10 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "🌙";
   } else {
     htmlRoot.setAttribute("data-theme", "dark");
-    localStorage.setItem("dark");
+    localStorage.setItem(STORAGE_KEY, "dark");
     themeToggle.textContent = "☀️";
   }
 };
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
 // DOM
 const uploadA = document.getElementById("uploadA");
@@ -434,25 +484,30 @@ function bindDrop(box, input, cb) {
   };
 }
 
-// 加载图片
-function loadFile(file, targetImg, targetFile) {
+// 加载图片（修复异步赋值失效问题）
+function loadFile(file, target) {
   const reader = new FileReader();
   reader.onload = e=>{
     const im = new Image();
     im.onload = ()=>{
-      targetImg = im;
-      targetFile = file;
+      target.img = im;
+      target.file = file;
     };
     im.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
-bindDrop(uploadA, fileA, f=>loadFile(f, imgA, fileObjA));
-bindDrop(uploadB, fileB, f=>loadFile(f, imgB, fileObjB));
+// 封装对象避免变量赋值失效
+const storeA = { img: null, file: null };
+const storeB = { img: null, file: null };
+bindDrop(uploadA, fileA, f=>loadFile(f, storeA));
+bindDrop(uploadB, fileB, f=>loadFile(f, storeB));
 
-// 拼接生成
+// 拼接生成（修复宽高变量错误、增加加载完成校验）
 mergeBtn.onclick = async ()=>{
-  if(!imgA || !imgB) return alert("请分别上传图片A、图片B");
+  imgA = storeA.img;
+  imgB = storeB.img;
+  if(!imgA || !imgB) return alert("请等待两张图片加载完成再生成");
   const dir = dirSel.value;
   const align = alignSel.value;
   const bg = bgColor.value;
@@ -461,8 +516,8 @@ mergeBtn.onclick = async ()=>{
 
   let cw, ch;
   let ax = 0, ay = 0, bx = 0, by = 0;
-  const wA = imgA.width, hA = imgA.width;
-  const wB = imgB.width, hB = imgA;
+  const wA = imgA.width, hA = imgA.height;
+  const wB = imgB.width, hB = imgB.height;
 
   if(dir === "horizontal"){
     cw = wA + wB + gap;

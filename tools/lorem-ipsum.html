@@ -21,9 +21,13 @@
   --card-bg: #ffffff;
   --shadow-lg: 0 6px 16px rgba(0,0,0.1);
   --radius-md: 8px;
+  --radius-full: 999px;
   --space-md: 0.875rem;
   --space-lg: 1.2rem;
-  --max-width: 1400px;
+  --max-width: 900px;
+  --card-label-offset: 2.25rem;
+  --theme-btn-size: 36px;
+  --transition: all 0.22s ease;
 }
 html[data-theme="dark"] {
   --primary: #34d399;
@@ -43,11 +47,12 @@ html[data-theme="dark"] {
   padding:0;
   box-sizing:border-box;
   font-family: system-ui, sans-serif;
+  transition: var(--transition);
 }
 body {
   background: var(--page-bg);
   color: var(--text-main);
-  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+  padding: calc(var(--card-label-offset) + 16px) 3vw 3rem;
 }
 .top-header-bar{
   position: fixed;
@@ -58,8 +63,9 @@ body {
   justify-content: space-between;
   padding: 0 clamp(1rem, 4vw, 1.75rem);
   z-index: 999;
+  align-items: center;
 }
-.header-btn {
+#backBtn {
   padding: 0.4375rem 0.625rem;
   border: 1px solid var(--nav-border);
   border-radius: var(--radius-md);
@@ -67,7 +73,24 @@ body {
   color: var(--nav-text);
   cursor: pointer;
 }
-.header-btn:hover {
+#backBtn:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+#themeBtn {
+  width: var(--theme-btn-size);
+  height: var(--theme-btn-size);
+  padding: 0;
+  border: 1px solid var(--nav-border);
+  border-radius: var(--radius-full);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+#themeBtn:hover {
   border-color: var(--primary);
   background: var(--primary-light);
   color: var(--primary);
@@ -161,24 +184,21 @@ input[type="number"]{
   color:var(--text-sub);
   line-height:1.6;
 }
-.toast-box{
+.copy-toast{
   position:fixed;
+  bottom:30px;
   left:50%;
-  bottom:40px;
-  transform: translateX(-50%) translateY(20px);
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  color:#fff;
+  font-size:14px;
   opacity:0;
-  padding:0.7rem 1.4rem;
-  border-radius:var(--radius-md);
-  box-shadow:var(--shadow-lg);
-  z-index:9999;
   pointer-events:none;
-  transition:0.2s;
-  background:var(--card-bg);
+  z-index:9999;
+  transition:opacity 0.2s ease;
 }
-.toast-box.show{
-  opacity:1;
-  transform: translateX(-50%) translateY(0);
-}
+.copy-toast.show{opacity:1;}
 @media(max-width:640px){
   .radio-group{
     flex-direction:column;
@@ -188,8 +208,8 @@ input[type="number"]{
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn" id="backBtn">← 返回首页</button>
-  <button class="header-btn" id="themeBtn">🌙</button>
+  <button id="backBtn">← 返回</button>
+  <button id="themeBtn">🌙</button>
 </div>
 
 <div class="box">
@@ -233,10 +253,9 @@ input[type="number"]{
   </div>
 </div>
 
-<div class="toast-box" id="toastBox"></div>
+<div class="copy-toast" id="copyToast"></div>
 
 <script>
-// 基础Lorem语料库
 const wordList = [
 "lorem", "ipsum", "dolor", "sit", "amet", "consectetur", "adipisicing", "elit",
 "sed", "do", "eiusmod", "tempor", "incididunt", "ut", "labore", "et", "dolore",
@@ -248,26 +267,27 @@ const wordList = [
 "officia", "deserunt", "mollit", "anim", "id", "est", "laborum"
 ];
 
-const toastBox = document.getElementById('toastBox');
+const copyToast = document.getElementById('copyToast');
 const backBtn = document.getElementById('backBtn');
 const themeBtn = document.getElementById('themeBtn');
 const genBtn = document.getElementById('genBtn');
-const clearBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
 const copyBtn = document.getElementById('copyBtn');
 const resultBox = document.getElementById('resultBox');
 const countInput = document.getElementById('countInput');
 const tPara = document.getElementById('tPara');
 const tSent = document.getElementById('tSent');
 const tWord = document.getElementById('tWord');
+const htmlRoot = document.documentElement;
 const STORAGE_KEY = "site_theme_mode";
 
-function showToast(msg){
-  toastBox.innerText = msg;
-  toastBox.classList.add("show");
-  setTimeout(()=>toastBox.classList.remove("show"),2000);
+function showToast(msg, success = true){
+  copyToast.style.background = success ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.85)";
+  copyToast.innerText = msg;
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
 }
 
-// 随机取指定数量单词
 function getRandomWords(num){
   const res = [];
   for(let i=0;i<num;i++){
@@ -277,7 +297,6 @@ function getRandomWords(num){
   return res;
 }
 
-// 生成句子
 function makeSentence(){
   const wordNum = 4 + Math.floor(Math.random() * 10);
   const words = getRandomWords(wordNum);
@@ -286,7 +305,6 @@ function makeSentence(){
   return s;
 }
 
-// 生成段落
 function makeParagraph(){
   const sentNum = 3 + Math.floor(Math.random() * 5);
   const sents = [];
@@ -294,7 +312,6 @@ function makeParagraph(){
   return sents.join(' ');
 }
 
-// 主生成逻辑
 function generate(){
   const count = parseInt(countInput.value) || 1;
   let output = "";
@@ -314,22 +331,20 @@ function generate(){
   showToast("生成完成");
 }
 
-// 清空
 function clearAll(){
-  result.innerText = "";
+  resultBox.innerText = "";
   showToast("已清空");
 }
 
-// 复制结果
 async function copyResult(){
-  const text = resultBox.innerText;
-  if(!text.trim()) return showToast("暂无生成内容", false);
+  const text = resultBox.innerText.trim();
+  if(!text) return showToast("暂无生成内容", false);
   try{
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(resultBox.innerText);
     showToast("复制成功");
   }catch(e){
     const temp = document.createElement('textarea');
-    temp.value = text;
+    temp.value = resultBox.innerText;
     document.body.appendChild(temp);
     temp.select();
     document.execCommand('copy');
@@ -338,32 +353,33 @@ async function copyResult(){
   }
 }
 
-// 绑定事件
 genBtn.onclick = generate;
 clearBtn.onclick = clearAll;
 copyBtn.onclick = copyResult;
 
-// 主题
 function initTheme(){
   const save = localStorage.getItem(STORAGE_KEY);
   if(save === "dark"){
-    document.documentElement.setAttribute("data-theme","dark");
+    htmlRoot.setAttribute("data-theme","dark");
     themeBtn.innerText = "☀️";
+  }else{
+    htmlRoot.removeAttribute("data-theme");
+    themeBtn.innerText = "🌙";
   }
 }
 themeBtn.onclick = ()=>{
-  const dark = document.documentElement.hasAttribute("data-theme");
+  const dark = htmlRoot.hasAttribute("data-theme");
   if(dark){
     localStorage.setItem(STORAGE_KEY,"light");
-    document.documentElement.removeAttribute("data-theme");
+    htmlRoot.removeAttribute("data-theme");
     themeBtn.innerText = "🌙";
   }else{
     localStorage.setItem(STORAGE_KEY,"dark");
-    document.documentElement.setAttribute("data-theme","dark");
+    htmlRoot.setAttribute("data-theme","dark");
     themeBtn.innerText = "☀️";
   }
 };
-backBtn.onclick = ()=>window.location.href = "./index.html";
+backBtn.onclick = ()=>history.back();
 initTheme();
 generate();
 </script>

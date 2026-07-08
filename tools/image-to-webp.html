@@ -212,6 +212,7 @@ html[data-theme="dark"] input[type="range"]::-webkit-slider-thumb{
   border-radius:var(--radius-md);
   background:var(--primary-light);
   margin-bottom: var(--space-lg);
+  position:relative;
 }
 .info-line{
   font-size: clamp(0.8125rem, 2vw, 0.9375rem);
@@ -264,6 +265,42 @@ html[data-theme="dark"] input[type="range"]::-webkit-slider-thumb{
   text-align:center;
 }
 
+/* 原版复制按钮样式，无修改 */
+.copy-btn{
+  position: absolute;
+  top:12px;
+  right:12px;
+  padding:6px 10px;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--primary);
+  background:transparent;
+  color:var(--primary);
+  cursor:pointer;
+  font-size:13px;
+}
+.copy-btn:hover{
+  background:var(--primary);
+  color:#fff;
+}
+/* 原版复制悬浮提示，特效完全不变 */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+}
+.copy-toast.show{
+  opacity:1;
+}
+
 /* 横屏平板/桌面适配 */
 @media screen and (min-width: 768px) {
   :root {
@@ -298,12 +335,16 @@ html[data-theme="dark"] input[type="range"]::-webkit-slider-thumb{
   .box{
     padding: 1.5rem 1.25rem;
   }
+  .copy-btn{
+    padding:4px 8px;
+    font-size:12px;
+  }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -326,6 +367,7 @@ html[data-theme="dark"] input[type="range"]::-webkit-slider-thumb{
   <button class="btn-main" id="convertBtn" disabled>转换 WebP</button>
 
   <div class="info-box" id="infoWrap" style="display:none;">
+    <button class="copy-btn" id="copyInfoBtn">复制信息</button>
     <div class="info-line">原图大小: <span id="origSize">--</span></div>
     <div class="info-line">WebP大小: <span id="webpSize">--</span></div>
     <div class="info-line">压缩节省: <span id="saveRate">--</span></div>
@@ -341,12 +383,41 @@ html[data-theme="dark"] input[type="range"]::-webkit-slider-thumb{
     使用说明：本地浏览器离线转换，不上传图片；WebP相比JPG/PNG体积更小，适合网页使用；质量越低文件越小，透明图可正常保留Alpha通道。
   </div>
 </div>
+<!-- 原版复制提示弹窗 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
 const supportTip = document.getElementById("supportTip");
+
+// 返回、复制DOM
+const backBtn = document.getElementById("backBtn");
+const copyInfoBtn = document.getElementById("copyInfoBtn");
+const copyToast = document.getElementById("copyToast");
+const origSize = document.getElementById("origSize");
+const webpSize = document.getElementById("webpSize");
+const saveRate = document.getElementById("saveRate");
+
+// 返回逻辑 history.back()
+backBtn.onclick = () => history.back();
+
+// 原版复制提示函数，无任何改动
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
+// 复制尺寸信息
+copyInfoBtn.onclick = async ()=>{
+  const text = `原图大小：${origSize.innerText}\nWebP大小：${webpSize.innerText}\n压缩节省：${saveRate.innerText}`;
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast();
+  }catch(err){
+    alert("复制失败，请手动复制");
+  }
+};
 
 // 主题初始化
 function initTheme() {
@@ -371,7 +442,6 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
 // DOM
 const uploadBox = document.getElementById("uploadBox");
@@ -380,9 +450,6 @@ const qualitySlider = document.getElementById("qualitySlider");
 const qualityVal = document.getElementById("qualityVal");
 const convertBtn = document.getElementById("convertBtn");
 const infoWrap = document.getElementById("infoWrap");
-const origSize = document.getElementById("origSize");
-const webpSize = document.getElementById("webpSize");
-const saveRate = document.getElementById("saveRate");
 const previewWrap = document.getElementById("previewWrap");
 const previewImg = document.getElementById("previewImg");
 const downloadBtn = document.getElementById("downloadBtn");

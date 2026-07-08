@@ -260,38 +260,24 @@ html[data-theme="dark"] .quote-tag{
   color:var(--text-secondary);
   margin-top: var(--space-xl);
 }
-/* 复制弹窗浮层 */
-.toast-mask{
+/* 原版统一复制悬浮toast，和全站工具统一 */
+.copy-toast{
   position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.2);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:9999;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  background:rgba(16,185,129,0.85);
+  color:#fff;
+  font-size:14px;
   opacity:0;
   pointer-events:none;
+  z-index:9999;
   transition:opacity 0.2s;
 }
-.toast-mask.show{
+.copy-toast.show{
   opacity:1;
-  pointer-events:auto;
-}
-.toast-box{
-  padding:0.8rem 1.6rem;
-  background:#fff;
-  border-radius:var(--radius-md);
-  box-shadow:var(--shadow-lg);
-  font-size:0.95rem;
-}
-html[data-theme="dark"] .toast-box{
-  background:#1e293b;
-}
-.toast-success{
-  color:var(--primary);
-}
-.toast-error{
-  color:var(--danger);
 }
 /* 平板横屏 */
 @media screen and (min-width: 768px) {
@@ -328,7 +314,7 @@ html[data-theme="dark"] .toast-box{
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backBtn">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -365,15 +351,24 @@ html[data-theme="dark"] .toast-box{
   </div>
 </div>
 
-<!-- 复制弹窗容器 -->
-<div class="toast-mask" id="toastMask">
-  <div class="toast-box" id="toastText"></div>
-</div>
+<!-- 全站统一复制悬浮提示 -->
+<div class="copy-toast" id="copyToast">复制成功</div>
 
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+
+// 返回按钮标准化
+const backBtn = document.getElementById("backBtn");
+backBtn.onclick = () => history.back();
+
+// 统一复制弹窗函数（全站通用）
+const copyToast = document.getElementById("copyToast");
+function showToast(){
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
+}
 
 const tagWrap = document.getElementById("tagWrap");
 const tagItems = document.querySelectorAll(".tag-item");
@@ -384,9 +379,6 @@ const refreshBtn = document.getElementById("refreshBtn");
 const copyBtn = document.getElementById("copyBtn");
 const copyTip = document.getElementById("copyTip");
 const dateBox = document.getElementById("dateBox");
-// 弹窗DOM
-const toastMask = document.getElementById("toastMask");
-const toastText = document.getElementById("toastText");
 
 const quoteData = [
   { text:"人生如逆旅，我亦是行人。", author:"苏轼", cat:"人生感悟", type:"life" },
@@ -407,16 +399,6 @@ const quoteData = [
 ];
 
 let currentType = "all";
-
-// 弹窗提示函数
-function showToast(msg, isSuccess = true) {
-  toastText.className = "toast-box " + (isSuccess ? "toast-success" : "toast-error");
-  toastText.innerText = msg;
-  toastMask.classList.add("show");
-  setTimeout(() => {
-    toastMask.classList.remove("show");
-  }, 2000);
-}
 
 tagItems.forEach(item=>{
   item.onclick = ()=>{
@@ -446,20 +428,15 @@ function setDate(){
 
 refreshBtn.onclick = renderRandomQuote;
 
-// 修复后的复制逻辑（兼容所有浏览器+兜底选中）
+// 复制逻辑，使用统一toast
 copyBtn.onclick = async ()=>{
   copyTip.innerText = "";
-  // 纯净复制文本，去除多余符号干扰
   const pureText = quoteTxt.innerText.replace(/[“”]/g, "");
   const fullText = `${pureText} —— ${authorTxt.innerText}【${quoteCat.innerText}】`;
-
   try {
-    // 优先使用Clipboard API
     await navigator.clipboard.writeText(fullText);
-    showToast("✅ 复制成功，可直接粘贴", true);
+    showToast();
   } catch (err) {
-    console.log("剪贴板API失败，启用兜底复制", err);
-    // 兜底方案：动态创建文本框选中复制
     const tempInput = document.createElement("textarea");
     tempInput.value = fullText;
     tempInput.style.position = "fixed";
@@ -468,15 +445,12 @@ copyBtn.onclick = async ()=>{
     tempInput.select();
     const copyResult = document.execCommand("copy");
     document.body.removeChild(tempInput);
-
-    if (copyResult) {
-      showToast("✅ 复制成功", true);
-    } else {
-      showToast("❌ 复制失败，请手动复制文字", false);
-    }
+    if (copyResult) showToast();
+    else copyTip.innerText = "复制失败，请手动复制";
   }
 };
 
+// 主题切换
 function initTheme() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved === "dark") {
@@ -499,7 +473,6 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
 
 setDate();
 renderRandomQuote();

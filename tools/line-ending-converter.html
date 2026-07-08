@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>#</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>行尾符转换器</title>
 <style>
@@ -24,7 +25,7 @@
       --bg-btn: #ffffff;
       --bg-footer: #f0fdf4;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-      --shadow-lg: 0 6px 16px rgba(0,0,0,0.1);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.1);
       --radius-xs: 4px;
       --radius-sm: 6px;
       --radius-md: 8px;
@@ -39,12 +40,12 @@
       --key-bg: #e5e7eb;
       --key-text: #222;
       --key-radius: 6px;
-      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      --key-shadow: 0 1px 2px rgba(0,0,0.15);
       --body-font-size: 16px;
       --body-line-height: 1.6;
       --title-line-height: 1.2;
       --sub-title-line-height: 1.25;
-      --content-max-width: 1200px;
+      --content-max-width: 640px;
       --card-gap: 16px;
       --card-min-width: 300px;
       --header-safe-gap: 16px;
@@ -70,10 +71,10 @@
       --bg-btn: #1f2937;
       --bg-footer: #111827;
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
-      --shadow-lg: 0 6px 16px rgba(0,0,0,0.45);
+      --shadow-lg: 0 6px 16px rgba(0,0,0.45);
       --key-bg: #374151;
       --key-text: #f9fafb;
-      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
+      --key-shadow: 0 1px 2px rgba(0,0,0.35);
     }
 *{
   margin:0;
@@ -89,7 +90,7 @@ body{
   justify-content:center;
   background:var(--bg-page);
   color:var(--text-main);
-  padding:20px;
+  padding:calc(var(--card-label-offset) + 16px) 3vw 3rem;
   position: relative;
 }
 /* 顶部按钮容器 贴合主站头部布局 */
@@ -133,7 +134,7 @@ body{
   height: 40px;
   padding: 0;
   border: 1px solid var(--nav-btn-border);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   font-size: 16px;
   cursor: pointer;
   display: grid;
@@ -149,12 +150,11 @@ body{
 }
 .box{
   width:100%;
-  max-width:640px;
+  max-width:var(--content-max-width);
   background:var(--bg-card);
   padding:32px;
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
-  margin-top: 70px;
 }
 h2{
   text-align:center;
@@ -197,6 +197,7 @@ textarea{
 .btn-group{
   display:flex;
   gap:10px;
+  margin-bottom:16px;
 }
 .btn{
   padding:12px 20px;
@@ -221,6 +222,32 @@ textarea{
   line-height:1.6;
   color:var(--text-secondary);
 }
+/* 统一悬浮Toast提示框 */
+.toast-box{
+  position:fixed;
+  left:50%;
+  bottom:40px;
+  transform:translateX(-50%) translateY(20px);
+  opacity:0;
+  padding:0.7rem 1.4rem;
+  border-radius:var(--radius-md);
+  background:var(--bg-card);
+  box-shadow:var(--shadow-lg);
+  z-index:9999;
+  pointer-events:none;
+  transition:all 0.2s ease;
+  color:var(--text-main);
+}
+.toast-box.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+.toast-success{
+  color:var(--primary);
+}
+.toast-error{
+  color:var(--danger);
+}
 /* ========== 仅手机竖屏才启用新布局：宽度≤767px + 竖屏 ========== */
 @media screen and (max-width:767px) and (orientation:portrait){
   body{
@@ -242,7 +269,6 @@ textarea{
   }
   .box{
     padding:24px 20px;
-    margin-top: 60px;
   }
   h2{
     font-size:22px;
@@ -271,9 +297,12 @@ textarea{
 </style>
 </head>
 <body>
+<!-- 全局悬浮提示 -->
+<div class="toast-box" id="toastTip"></div>
+
 <!-- 顶部按钮栏 -->
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <!-- 圆形纯图标明暗切换按钮 -->
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
@@ -322,7 +351,17 @@ CRLF：回车+换行 \r\n，Windows 记事本默认换行格式；
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
+const backHome = document.getElementById("backHome");
+const toastTip = document.getElementById("toastTip");
 const STORAGE_KEY = "site_theme_mode";
+
+// 统一Toast提示
+function showToast(msg, success = true) {
+  toastTip.className = "toast-box " + (success ? "toast-success" : "toast-error");
+  toastTip.innerText = msg;
+  toastTip.classList.add("show");
+  setTimeout(() => toastTip.classList.remove("show"), 2000);
+}
 
 // 初始化主题
 function initTheme() {
@@ -348,9 +387,9 @@ themeToggle.onclick = () => {
     themeToggle.innerHTML = "☀️";
   }
 };
-// 返回首页
-document.getElementById("backHome").onclick = () => {
-  window.location.href = "./index.html";
+// 修改返回逻辑：history.back() 浏览器后退
+backHome.onclick = () => {
+  history.back();
 };
 
 const inputText = document.getElementById('inputText');
@@ -381,6 +420,7 @@ function convertLineEnd() {
   } else {
     outputText.value = lfText;
   }
+  showToast("转换完成");
 }
 
 // 事件绑定
@@ -391,13 +431,28 @@ clearBtn.onclick = () => {
   inputText.value = '';
   outputText.value = '';
   updateLineCount();
+  showToast("已清空");
 };
 
+// 修复复制：兼容剪贴板 + 无alert，统一toast
 copyOutput.onclick = async () => {
   const content = outputText.value;
-  if (!content) return alert("暂无可复制内容");
-  await navigator.clipboard.writeText(content);
-  alert("已复制转换结果");
+  if (!content) return showToast("暂无可复制内容", false);
+  try {
+    await navigator.clipboard.writeText(content);
+    showToast("复制成功");
+  } catch (err) {
+    // 降级兼容
+    const temp = document.createElement('textarea');
+    temp.value = content;
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand('copy');
+    document.body.removeChild(temp);
+    showToast("复制成功");
+  }
 };
 
 initTheme();

@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>YAML</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>JSON转YAML工具</title>
 <style>
@@ -90,7 +91,7 @@ body{
   justify-content:center;
   background:var(--bg-page);
   color:var(--text-main);
-  padding:20px;
+  padding:calc(var(--card-label-offset) + 16px) 3vw 3rem;
   position: relative;
 }
 .top-header-bar{
@@ -152,7 +153,6 @@ body{
   padding:32px;
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
-  margin-top: 70px;
 }
 h2{
   text-align:center;
@@ -194,7 +194,7 @@ textarea{
 .btn-group{
   display:flex;
   gap:10px;
-  margin-bottom:16px;
+  margin-bottom:var(--space-lg);
   flex-wrap:wrap;
 }
 .btn{
@@ -226,19 +226,27 @@ textarea{
   position: fixed;
   bottom: 40px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(20px);
   padding: 10px 20px;
-  background: rgba(0,0,0,0.65);
-  color: #fff;
+  background: var(--bg-card);
+  color: var(--text-main);
   border-radius: var(--radius-md);
   font-size: 14px;
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   pointer-events: none;
   z-index: 9999;
-  transition: opacity 0.25s ease;
+  transition: all 0.25s ease;
 }
 .toast-copy.show {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast-success {
+  color: var(--primary);
+}
+.toast-error {
+  color: var(--danger);
 }
 @media screen and (max-width:767px) and (orientation:portrait){
   body{
@@ -260,7 +268,6 @@ textarea{
   }
   .box{
     padding:24px 20px;
-    margin-top: 60px;
   }
   h2{
     font-size:22px;
@@ -288,7 +295,7 @@ textarea{
 <div class="toast-copy" id="toastTip"></div>
 
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -328,10 +335,12 @@ textarea{
 document.addEventListener('DOMContentLoaded', function(){
   const htmlRoot = document.documentElement;
   const themeToggle = document.getElementById("themeToggle");
+  const backHome = document.getElementById("backHome");
   const toastTip = document.getElementById('toastTip');
   const STORAGE_KEY = "site_theme_mode";
 
-  function showToast(msg) {
+  function showToast(msg, success = true) {
+    toastTip.className = "toast-copy " + (success ? "toast-success" : "toast-error");
     toastTip.textContent = msg;
     toastTip.classList.add('show');
     setTimeout(function(){
@@ -364,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  document.getElementById("backHome").addEventListener('click', function(){
+  backHome.addEventListener('click', function(){
     history.back();
   });
 
@@ -393,7 +402,6 @@ document.addEventListener('DOMContentLoaded', function(){
     convertStatus.textContent = "已完成转换：无";
   });
 
-  // 修复数组变量笔误 arr → arrLines
   function jsonToYaml(obj, indentLevel = 0) {
     const indent = '  '.repeat(indentLevel);
     let lines = [];
@@ -438,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function(){
   convertBtn.addEventListener('click', function(){
     const raw = jsonInput.value.trim();
     if (!raw) {
-      showToast("请输入JSON内容");
+      showToast("请输入JSON内容", false);
       return;
     }
     try {
@@ -446,8 +454,9 @@ document.addEventListener('DOMContentLoaded', function(){
       const yaml = jsonToYaml(data);
       yamlOutput.value = yaml;
       convertStatus.textContent = "已完成转换：JSON转YAML";
+      showToast("转换完成");
     } catch (e) {
-      showToast("JSON格式解析失败：" + e.message);
+      showToast("JSON格式解析失败：" + e.message, false);
     }
   });
 
@@ -455,11 +464,12 @@ document.addEventListener('DOMContentLoaded', function(){
     jsonInput.value = "";
     yamlOutput.value = "";
     convertStatus.textContent = "已完成转换：无";
+    showToast("已清空");
   });
 
   async function copyContent(text) {
     if (!text.trim()) {
-      showToast("无内容可复制");
+      showToast("无内容可复制", false);
       return;
     }
     if (navigator.clipboard && window.isSecureContext) {

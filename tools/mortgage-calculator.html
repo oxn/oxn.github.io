@@ -9,9 +9,12 @@
     :root {
       --primary: #10b981;
       --primary-light: #dcfce7;
+      --success: #22c55e;
+      --success-light: #dcfce7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
       --header-bg: #f0fdf4;
       --warn: #f97316;
-      --danger: #ef4444;
       --nav-btn-bg: #ffffff;
       --nav-btn-border: #e5e7eb;
       --nav-btn-text: #222222;
@@ -56,12 +59,15 @@
     html[data-theme="dark"] {
       --primary: #34d399;
       --primary-light: rgba(52, 211, 153, 0.18);
+      --success: #34d399;
+      --success-light: rgba(34, 197, 94, 0.12);
+      --danger: #f87171;
+      --danger-light: rgba(248, 113, 113, 0.12);
       --header-bg: #111827;
       --nav-btn-bg: #1f2937;
       --nav-btn-border: #374151;
       --nav-btn-text: #f3f4f6;
       --warn: #fdba74;
-      --danger: #f87171;
       --text-main: #f9fafb;
       --text-secondary: #d1d5db;
       --text-weak: #9ca3af;
@@ -247,6 +253,18 @@ input:focus,select:focus{
   background: var(--primary-light);
   color: var(--primary);
 }
+.btn-copy{
+  margin-top:12px;
+  width:100%;
+  background:var(--nav-btn-bg);
+  color:var(--text-main);
+  border:1px solid var(--border-base);
+}
+.btn-copy:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
 .result-wrap{
   padding:20px;
   border-radius:var(--radius-md);
@@ -268,6 +286,66 @@ input:focus,select:focus{
   font-size:14px;
   line-height:1.7;
   color:var(--text-secondary);
+}
+/* 全局悬浮Toast提示 */
+.toast-wrap {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 32px;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    min-height: 72px;
+}
+.toast-wrap.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+.toast-success {
+    background: var(--success-light);
+    border: 1px solid #bbf7d0;
+}
+.toast-fail {
+    background: var(--danger-light);
+    border: 1px solid #fecdd3;
+}
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.icon-success {
+    background: var(--success);
+    color: #fff;
+}
+.icon-fail {
+    background: var(--danger);
+    color: #fff;
+}
+.toast-text {
+    font-size: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.text-success {
+    color: #16a34a;
+}
+.text-fail {
+    color: var(--danger);
 }
 /* 手机竖屏适配 */
 @media screen and (max-width:767px) and (orientation:portrait){
@@ -311,12 +389,25 @@ input:focus,select:focus{
   .tip{
     font-size:13px;
   }
+  .toast-wrap {
+    width: calc(100% - 40px);
+    padding: 12px 20px;
+    min-height: 64px;
+  }
+  .toast-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  .toast-text {
+    font-size: 16px;
+  }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -363,6 +454,7 @@ input:focus,select:focus{
     <div class="result-line">贷款本金：<span id="baseMoney">--</span> 元</div>
     <div class="result-line">月利率：<span id="monthRate">--</span> %</div>
     <div class="result-line">还款期数：<span id="totalMonth">--</span> 期</div>
+    <button class="btn btn-copy" id="copyResultBtn">复制全部计算结果</button>
   </div>
 
   <div class="tip">
@@ -370,10 +462,41 @@ input:focus,select:focus{
   </div>
 </div>
 
+<!-- 全局悬浮提示框 -->
+<div class="toast-wrap" id="toastBox">
+    <div class="toast-icon" id="toastIcon"></div>
+    <span class="toast-text" id="toastMsg"></span>
+</div>
+
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+const toastBox = document.getElementById("toastBox");
+const toastIcon = document.getElementById("toastIcon");
+const toastMsg = document.getElementById("toastMsg");
+
+// 全局Toast弹窗工具
+function showToast(isSuccess, msg) {
+  clearTimeout(window.toastTimer);
+  toastBox.className = "toast-wrap";
+  if(isSuccess){
+    toastBox.classList.add("toast-success");
+    toastIcon.className = "toast-icon icon-success";
+    toastIcon.textContent = "✓";
+    toastMsg.className = "toast-text text-success";
+  }else{
+    toastBox.classList.add("toast-fail");
+    toastIcon.className = "toast-icon icon-fail";
+    toastIcon.textContent = "×";
+    toastMsg.className = "toast-text text-fail";
+  }
+  toastMsg.textContent = msg;
+  toastBox.classList.add("show");
+  window.toastTimer = setTimeout(()=>{
+    toastBox.classList.remove("show");
+  },1800);
+}
 
 // 主题初始化
 function initTheme() {
@@ -398,8 +521,8 @@ themeToggle.onclick = () => {
     themeToggle.textContent = "☀️";
   }
 };
-// 返回首页
-document.getElementById("backHome").onclick = () => window.location.href = "./index.html";
+// 修改：浏览器历史后退，不再跳转index.html
+document.getElementById("backHome").onclick = () => history.back();
 
 // DOM元素
 const loanMoney = document.getElementById("loanMoney");
@@ -408,6 +531,7 @@ const yearRate = document.getElementById("yearRate");
 const payType = document.getElementById("payType");
 const calcBtn = document.getElementById("calcBtn");
 const resetBtn = document.getElementById("resetBtn");
+const copyResultBtn = document.getElementById("copyResultBtn");
 const resultBox = document.getElementById("resultBox");
 const showType = document.getElementById("showType");
 const monthPay = document.getElementById("monthPay");
@@ -415,7 +539,7 @@ const firstPay = document.getElementById("firstPay");
 const totalInterest = document.getElementById("totalInterest");
 const totalAll = document.getElementById("totalAll");
 const reduceVal = document.getElementById("reduceVal");
-const baseMoney = document.getElementById("monthRate");
+const baseMoney = document.getElementById("baseMoney");
 const monthRate = document.getElementById("monthRate");
 const totalMonth = document.getElementById("totalMonth");
 
@@ -427,8 +551,8 @@ function calcMortgage(){
   let yRate = parseFloat(yearRate.value);
   let type = payType.value;
 
-  if(isNaN(moneyWan) || moneyWan <=0 || isNaN(year) || year <=0 || isNaN(yRate)){
-    alert("请填写合法贷款数据");
+  if(isNaN(moneyWan) || moneyWan <=0 || isNaN(year) || year <=0 || isNaN(yRate) || yRate <= 0){
+    showToast(false,"请填写合法贷款数据");
     resultBox.style.display = "none";
     return;
   }
@@ -467,7 +591,39 @@ function calcMortgage(){
   reduceVal.innerText = reduce.toFixed(2);
 
   resultBox.style.display = "block";
+  showToast(true,"计算完成");
 }
+
+// 复制全部结果
+copyResultBtn.onclick = async () => {
+  if(resultBox.style.display === "none"){
+    showToast(false,"暂无计算结果");
+    return;
+  }
+  const copyText = `
+还款方式：${showType.innerText}
+月供：${monthPay.innerText} 元
+首月应还：${firstPay.innerText} 元
+总利息：${totalInterest.innerText} 元
+还款总额：${totalAll.innerText} 元
+每月递减：${reduceVal.innerText} 元
+贷款本金：${baseMoney.innerText} 元
+月利率：${monthRate.innerText} %
+还款期数：${totalMonth.innerText} 期
+  `.trim();
+  try{
+    await navigator.clipboard.writeText(copyText);
+    showToast(true,"复制全部结果成功");
+  }catch(e){
+    const temp = document.createElement("textarea");
+    temp.value = copyText;
+    document.body.appendChild(temp);
+    temp.select();
+    document.execCommand("copy");
+    document.body.removeChild(temp);
+    showToast(true,"已复制全部结果");
+  }
+};
 
 // 计算按钮
 calcBtn.onclick = calcMortgage;
@@ -479,6 +635,7 @@ resetBtn.onclick = ()=>{
   yearRate.value = "";
   payType.value = "bx";
   resultBox.style.display = "none";
+  showToast(true,"已清空所有数据");
 }
 
 initTheme();

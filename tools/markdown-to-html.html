@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>📝</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Markdown 转 HTML</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -19,7 +20,11 @@
   --card-bg: #fff;
   --shadow: 0 6px 16px rgba(0,0,0,0.1);
   --radius: 12px;
-  --max-width: 1400px;
+  --radius-full: 999px;
+  --max-width: 900px;
+  --card-label-offset: 2.25rem;
+  --nav-line-height: 2.375rem;
+  --theme-btn-width: 2.25rem;
 }
 html[data-theme="dark"] {
   --primary: #34d399;
@@ -31,11 +36,11 @@ html[data-theme="dark"] {
   --page-bg: #0f172a;
   --card-bg: #1e293b;
 }
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif;transition: var(--transition);}
 body {
   background: var(--page-bg);
   color: var(--text-main);
-  padding: 80px 3vw 40px;
+  padding: calc(var(--card-label-offset) + 16px) 3vw 40px;
 }
 .top-bar {
   position: fixed;
@@ -54,6 +59,8 @@ body {
   background: var(--nav-bg);
   color: var(--text-main);
   cursor: pointer;
+  font-size: 0.75rem;
+  line-height: 1;
 }
 .wrap {
   max-width: var(--max-width);
@@ -133,23 +140,22 @@ textarea {
   font-size: 14px;
   line-height: 1.6;
 }
-.toast {
-  position: fixed;
-  left: 50%;
-  bottom: 40px;
-  transform: translateX(-50%) translateY(20px);
-  opacity: 0;
-  padding: 12px 24px;
-  border-radius: var(--radius);
-  background: var(--card-bg);
-  box-shadow: var(--shadow);
-  transition: 0.2s;
-  pointer-events: none;
+/* 全局统一底部复制悬浮提示 固定样式 */
+.copy-toast{
+  position:fixed;
+  bottom:30px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:8px 18px;
+  border-radius:var(--radius-full);
+  color:#fff;
+  font-size:14px;
+  opacity:0;
+  pointer-events:none;
+  z-index:9999;
+  transition:opacity 0.2s ease;
 }
-.toast.show {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
+.copy-toast.show{opacity:1;}
 /* md预览样式 */
 .preview h1,h2,h3 {margin: 10px 0;}
 .preview p {margin: 8px 0;}
@@ -162,7 +168,7 @@ html[data-theme="dark"] .preview pre {background:#27272a;}
 </head>
 <body>
 <div class="top-bar">
-  <button id="back">← 返回首页</button>
+  <button id="back">← 返回</button>
   <button id="theme">🌙</button>
 </div>
 
@@ -193,26 +199,29 @@ html[data-theme="dark"] .preview pre {background:#27272a;}
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- 全局统一复制悬浮提示 -->
+<div class="copy-toast" id="copyToast"></div>
 
 <script>
-// 获取DOM
 const mdInput = document.getElementById('mdInput');
 const previewBox = document.getElementById('previewBox');
 const clearBtn = document.getElementById('clear');
 const demoBtn = document.getElementById('demo');
 const copyHtmlBtn = document.getElementById('copyHtml');
 const downloadBtn = document.getElementById('download');
-const toast = document.getElementById('toast');
+const copyToast = document.getElementById('copyToast');
 const themeBtn = document.getElementById('theme');
 const backBtn = document.getElementById('back');
+const htmlRoot = document.documentElement;
+const STORAGE_KEY = 'theme';
 let lastHtml = '';
 
-// 提示弹窗
-function showTip(text) {
-  toast.innerText = text;
-  toast.classList.add('show');
-  setTimeout(()=>toast.classList.remove('show'),2000);
+// 统一复制提示函数
+function showToast(msg, success = true){
+  copyToast.style.background = success ? "rgba(16,185,129,0.85)" : "rgba(239,68,68,0.85)";
+  copyToast.innerText = msg;
+  copyToast.classList.add("show");
+  setTimeout(()=>copyToast.classList.remove("show"),1200);
 }
 
 // 转换渲染
@@ -250,22 +259,23 @@ console.log(a);
 ---
 [链接](https://github.com)`;
   render();
-  showTip("已加载示例");
+  showToast("已加载示例");
 }
 
 // 清空
 function clearAll() {
   mdInput.value = '';
   render();
-  showTip("已清空");
+  showToast("已清空");
 }
 
 // 复制HTML
 async function copyHtml() {
-  if (!lastHtml) return showTip("暂无转换内容");
+  const val = lastHtml.trim();
+  if (!val) return showToast("暂无转换内容", false);
   try {
     await navigator.clipboard.writeText(lastHtml);
-    showTip("HTML复制成功");
+    showToast("复制成功");
   } catch(e) {
     const temp = document.createElement('textarea');
     temp.value = lastHtml;
@@ -273,7 +283,7 @@ async function copyHtml() {
     temp.select();
     document.execCommand('copy');
     document.body.removeChild(temp);
-    showTip("已复制");
+    showToast("复制成功");
   }
 }
 
@@ -288,6 +298,7 @@ function downloadFile() {
 body{max-width:700px;margin:2rem auto;padding:0 1rem;}
 pre{padding:0.6rem;background:#eee;border-radius:6px;}
 blockquote{border-left:4px solid #999;padding-left:0.8rem;}
+html[data-theme="dark"] pre{background:#27272a;}
 </style>
 </head>
 <body>${lastHtml}</body>
@@ -299,19 +310,18 @@ blockquote{border-left:4px solid #999;padding-left:0.8rem;}
   a.download = 'md-output.html';
   a.click();
   URL.revokeObjectURL(url);
-  showTip("文件已下载");
+  showToast("文件已下载");
 }
 
 // 主题切换
 function toggleTheme() {
-  const html = document.documentElement;
-  if (html.hasAttribute('data-theme')) {
-    html.removeAttribute('data-theme');
-    localStorage.setItem('theme','light');
+  if (htmlRoot.hasAttribute('data-theme')) {
+    htmlRoot.removeAttribute('data-theme');
+    localStorage.setItem(STORAGE_KEY,'light');
     themeBtn.innerText = '🌙';
   } else {
-    html.setAttribute('data-theme','dark');
-    localStorage.setItem('theme','dark');
+    htmlRoot.setAttribute('data-theme','dark');
+    localStorage.setItem(STORAGE_KEY,'dark');
     themeBtn.innerText = '☀️';
   }
 }
@@ -322,12 +332,12 @@ demoBtn.onclick = loadDemo;
 copyHtmlBtn.onclick = copyHtml;
 downloadBtn.onclick = downloadFile;
 themeBtn.onclick = toggleTheme;
-backBtn.onclick = ()=>window.location.href = "./index.html";
+backBtn.onclick = ()=>history.back();
 mdInput.oninput = render;
 
 // 初始化主题
-if (localStorage.getItem('theme') === 'dark') {
-  document.documentElement.setAttribute('data-theme','dark');
+if (localStorage.getItem(STORAGE_KEY) === 'dark') {
+  htmlRoot.setAttribute('data-theme','dark');
   themeBtn.innerText = '☀️';
 }
 loadDemo();

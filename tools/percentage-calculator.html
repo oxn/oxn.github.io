@@ -9,9 +9,12 @@
     :root {
       --primary: #10b981;
       --primary-light: #dcfce7;
+      --success: #22c55e;
+      --success-light: #dcfce7;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
       --header-bg: #f0fdf4;
       --warn: #f97316;
-      --danger: #ef4444;
       --nav-btn-bg: #ffffff;
       --nav-btn-border: #e5e7eb;
       --nav-btn-text: #222222;
@@ -29,7 +32,7 @@
       --radius-xs: 4px;
       --radius-sm: 6px;
       --radius-md: 8px;
-      --radius-lg: 12;
+      --radius-lg: 12px;
       --radius-full: 999px;
       --space-xs: 6px;
       --space-sm: 10px;
@@ -56,12 +59,15 @@
     html[data-theme="dark"] {
       --primary: #34d399;
       --primary-light: rgba(52, 211, 153, 0.18);
+      --success: #34d399;
+      --success-light: rgba(34, 197, 94, 0.12);
+      --danger: #f87171;
+      --danger-light: rgba(248, 113, 113, 0.12);
       --header-bg: #111827;
       --nav-btn-bg: #1f2937;
       --nav-btn-border: #374151;
       --nav-btn-text: #f3f4f6;
       --warn: #fdba74;
-      --danger: #f87171;
       --text-main: #f9fafb;
       --text-secondary: #d1d5db;
       --text-weak: #9ca3af;
@@ -245,6 +251,23 @@ input:focus,select:focus{
   font-size:17px;
   font-weight:600;
   color:var(--primary);
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.btn-copy{
+  padding:6px 12px;
+  border:1px solid var(--border-base);
+  border-radius:var(--radius-md);
+  background:var(--bg-btn);
+  color:var(--text-main);
+  font-size:14px;
+  cursor:pointer;
+}
+.btn-copy:hover{
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
 }
 .tip{
   text-align:left;
@@ -253,6 +276,80 @@ input:focus,select:focus{
   line-height:1.6;
   color:var(--text-secondary);
   margin-top:20px;
+}
+/* 统一双状态弹窗样式（成功/失败） */
+.toast-copy {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 32px;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    min-height: 72px;
+}
+.toast-success {
+    background: var(--success-light);
+    border: 1px solid #bbf7d0;
+}
+.toast-fail {
+    background: var(--danger-light);
+    border: 1px solid #fecdd3;
+}
+.toast-copy.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+.toast-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.icon-success {
+    background: var(--success);
+    color: #fff;
+}
+.icon-fail {
+    background: var(--danger);
+    color: #fff;
+}
+.toast-text {
+    font-size: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.text-success {
+    color: #16a34a;
+}
+.text-fail {
+    color: var(--danger);
+}
+html[data-theme="dark"] .toast-success {
+    background: rgba(34,197,94,0.12);
+    border-color: rgba(34,197,94,0.3);
+}
+html[data-theme="dark"] .text-success {
+    color: #4ade80;
+}
+html[data-theme="dark"] .toast-fail {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.3);
+}
+html[data-theme="dark"] .text-fail {
+    color: #f87171;
 }
 /* 手机竖屏适配 */
 @media screen and (max-width:767px) and (orientation:portrait){
@@ -299,16 +396,31 @@ input:focus,select:focus{
   }
   .result-line{
     font-size:16px;
+    flex-direction:column;
+    align-items:flex-start;
   }
   .tip{
     font-size:13px;
+  }
+  .toast-copy {
+    width: calc(100% - 40px);
+    padding: 12px 20px;
+    min-height: 64px;
+  }
+  .toast-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  .toast-text {
+    font-size: 16px;
   }
 }
 </style>
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -330,7 +442,10 @@ input:focus,select:focus{
       </div>
       <span>%</span>
     </div>
-    <div class="result-line" id="res1">--</div>
+    <div class="result-line" id="res1">
+      --
+      <button class="btn-copy" data-target="res1">复制结果</button>
+    </div>
   </div>
 
   <!-- 模块2：X 是 Y 的百分之几 -->
@@ -347,7 +462,10 @@ input:focus,select:focus{
         <input id="total2" type="number" step="any" placeholder="例如 200">
       </div>
     </div>
-    <div class="result-line" id="res2">--</div>
+    <div class="result-line" id="res2">
+      --
+      <button class="btn-copy" data-target="res2">复制结果</button>
+    </div>
   </div>
 
   <!-- 模块3：增减百分比 -->
@@ -364,7 +482,10 @@ input:focus,select:focus{
       </div>
       <span>%</span>
     </div>
-    <div class="result-line" id="res3">--</div>
+    <div class="result-line" id="res3">
+      --
+      <button class="btn-copy" data-target="res3">复制结果</button>
+    </div>
   </div>
 
   <!-- 模块4：百分比变化 -->
@@ -381,7 +502,10 @@ input:focus,select:focus{
         <input id="new4" type="number" step="any" placeholder="130">
       </div>
     </div>
-    <div class="result-line" id="res4">--</div>
+    <div class="result-line" id="res4">
+      --
+      <button class="btn-copy" data-target="res4">复制结果</button>
+    </div>
   </div>
 
   <div class="tip">
@@ -389,12 +513,70 @@ input:focus,select:focus{
   </div>
 </div>
 
+<!-- 全局统一双色弹窗DOM -->
+<div class="toast-copy" id="copyToast">
+    <div class="toast-icon" id="toastIcon"></div>
+    <span class="toast-text" id="toastMsg"></span>
+</div>
+
 <script>
 const htmlRoot = document.documentElement;
 const themeToggle = document.getElementById("themeToggle");
 const STORAGE_KEY = "site_theme_mode";
+const copyToast = document.getElementById("copyToast");
+const toastIcon = document.getElementById("toastIcon");
+const toastMsg = document.getElementById("toastMsg");
+let toastTimer = null;
 
-// 主题初始化与切换
+// 统一弹窗渲染函数
+function showToast(isSuccess, msg) {
+    clearTimeout(toastTimer);
+    copyToast.classList.remove("show", "toast-success", "toast-fail");
+    toastIcon.className = "toast-icon";
+    toastMsg.className = "toast-text";
+    if(isSuccess) {
+        copyToast.classList.add("toast-success");
+        toastIcon.classList.add("icon-success");
+        toastIcon.textContent = "✓";
+        toastMsg.classList.add("text-success");
+    } else {
+        copyToast.classList.add("toast-fail");
+        toastIcon.classList.add("icon-fail");
+        toastIcon.textContent = "×";
+        toastMsg.classList.add("text-fail");
+    }
+    toastMsg.textContent = msg;
+    requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>copyToast.classList.add("show"));
+    });
+    toastTimer = setTimeout(()=>copyToast.classList.remove("show"),1800);
+}
+
+// 通用文本复制函数（前置空值校验、双兼容方案）
+async function copyText(text) {
+    const target = text.trim();
+    if(!target) {
+        showToast(false,"暂无可复制内容");
+        return false;
+    }
+    try{
+        await navigator.clipboard.writeText(target);
+        return true;
+    }catch(err){
+        const temp = document.createElement('textarea');
+        temp.style.position = 'fixed';
+        temp.style.left = '-9999px';
+        temp.style.top = '-9999px';
+        temp.value = target;
+        document.body.appendChild(temp);
+        temp.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(temp);
+        return ok;
+    }
+}
+
+// 初始化主题（修复原JS theme变量拼写bug）
 function initTheme() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved === "dark") {
@@ -408,17 +590,17 @@ function initTheme() {
 themeToggle.onclick = () => {
   const dark = htmlRoot.hasAttribute("data-theme");
   if (dark) {
-    htmlRoot.removeAttribute("dark");
+    htmlRoot.removeAttribute("data-theme");
     localStorage.setItem(STORAGE_KEY, "light");
     themeToggle.textContent = "🌙";
   } else {
     htmlRoot.setAttribute("data-theme", "dark");
     localStorage.setItem(STORAGE_KEY, "dark");
-    theme.textContent = "☀️";
+    themeToggle.textContent = "☀️";
   }
 };
-// 返回首页
-document.getElementById("backHome").onclick = () => location.href = "./index.html";
+// 返回按钮标准化：history.back 原生后退上一页
+document.getElementById("backHome").onclick = () => history.back();
 
 // 元素
 const num1 = document.getElementById("num1");
@@ -437,16 +619,29 @@ const old4 = document.getElementById("old4");
 const new4 = document.getElementById("new4");
 const res4 = document.getElementById("res4");
 
+// 复制按钮统一绑定
+document.querySelectorAll(".btn-copy").forEach(btn=>{
+  btn.onclick = async ()=>{
+    const targetId = btn.dataset.target;
+    const text = document.getElementById(targetId).innerText.replace("复制结果","").trim();
+    const ok = await copyText(text);
+    if(ok) showToast(true,"计算结果复制成功");
+    else showToast(false,"复制失败，请手动选中复制");
+  }
+})
+
 // 1. X 的 Y%
 function calc1() {
   const n = parseFloat(num1.value);
   const p = parseFloat(pct1.value);
   if (isNaN(n) || isNaN(p)) {
     res1.textContent = "--";
+    res1.insertAdjacentHTML("beforeend",`<button class="btn-copy" data-target="res1">复制结果</button>`);
     return;
   }
   const r = n * p / 100;
   res1.textContent = `结果 = ${r.toFixed(4)}`;
+  res1.insertAdjacentHTML("beforeend",`<button class="btn-copy" data-target="res1">复制结果</button>`);
 }
 
 // 2. X 是 Y 的百分之几
@@ -455,10 +650,12 @@ function calc2() {
   const y = parseFloat(total2.value);
   if (isNaN(x) || isNaN(y) || y === 0) {
     res2.textContent = "--";
+    res2.insertAdjacentHTML("beforeend",`<button class="btn-copy" data-target="res2">复制结果</button>`);
     return;
   }
   const p = (x / y) * 100;
   res2.textContent = `占比 = ${p.toFixed(2)} %`;
+  res2.insertAdjacentHTML("beforeend",`<button class="btn-copy" data-target="res2">复制结果</button>`);
 }
 
 // 3. 原值 ± 百分比
@@ -467,12 +664,13 @@ function calc3() {
   const p = parseFloat(pct3.value);
   if (isNaN(base) || isNaN(p)) {
     res3.textContent = "--";
+    res3.insertAdjacentHTML("beforeend",`<button class="btn-copy" data-target="res3">复制结果</button>`);
     return;
   }
   const r = base * (1 + p / 100);
   const type = p >= 0 ? "增加" : "减少";
-  res1.textContent = "--";
   res3.textContent = `结果 = ${r.toFixed(4)} (${Math.abs(p)}%${type})`;
+  res3.insertAdjacentHTML("beforeend",`<button class="btn-copy" data-target="res3">复制结果</button>`);
 }
 
 // 4. 从旧到新变化率
@@ -481,12 +679,14 @@ function calc4() {
   const n = parseFloat(new4.value);
   if (isNaN(o) || isNaN(n) || o === 0) {
     res4.textContent = "--";
+    res4.insertAdjacentHTML("beforeend",`<button class="btn-copy" data-target="res4">复制结果</button>`);
     return;
   }
   const diff = n - o;
   const rate = (diff / o) * 100;
   const text = rate >= 0 ? `上涨 ${rate.toFixed(2)}%` : `下跌 ${Math.abs(rate).toFixed(2)}%`;
   res4.textContent = `变化：${text}`;
+  res4.insertAdjacentHTML("beforeend",`<button class="btn-copy" data-target="res4">复制结果</button>`);
 }
 
 // 绑定所有输入实时计算

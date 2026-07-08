@@ -319,7 +319,7 @@
             line-height: 1.8;
             color: var(--text-secondary);
         }
-        /* 复制弹窗 */
+        /* 复制弹窗 文字统一16px */
         .toast-copy {
             position: fixed;
             top: 80px;
@@ -357,7 +357,7 @@
             flex-shrink: 0;
         }
         .toast-text {
-            font-size: 28px;
+            font-size: 16px;
             color: #16a34a;
             font-weight: 500;
             white-space: nowrap;
@@ -401,7 +401,7 @@
                 font-size: 16px;
             }
             .toast-text {
-                font-size: 20px;
+                font-size: 16px;
             }
             .btn-row, .input-row {
                 flex-wrap: wrap;
@@ -422,7 +422,8 @@
 <body>
 <header id="headerDom">
     <div class="container header-inner">
-        <a href="index.html" class="back-btn">← 返回首页</a>
+        <!-- 修改按钮文字为 返回，移除a跳转 -->
+        <span class="back-btn" id="backBtn">← 返回</span>
         <div class="theme-switch-wrap">
             <button id="themeToggle" class="header-btn-circle">🌙</button>
         </div>
@@ -521,12 +522,14 @@
     window.addEventListener('resize', syncHeaderHeight);
     syncHeaderHeight();
 
-    // 复制弹窗
+    // 复制弹窗优化：新弹窗直接覆盖旧弹窗，清除旧定时器
     const copyToast = document.getElementById('copyToast');
+    let toastTimer = null;
     function showToast() {
+        clearTimeout(toastTimer);
         copyToast.classList.remove('show');
         setTimeout(() => copyToast.classList.add('show'), 10);
-        setTimeout(() => copyToast.classList.remove('show'), 1800);
+        toastTimer = setTimeout(() => copyToast.classList.remove('show'), 1800);
     }
     function copyStr(text) {
         const temp = document.createElement('textarea');
@@ -550,6 +553,17 @@
     const copyResult = document.getElementById('copyResult');
     const clearAll = document.getElementById('clearAll');
     const statInfo = document.getElementById('statInfo');
+    const backBtn = document.getElementById('backBtn');
+
+    // 页面加载自动填充示例文本
+    window.addEventListener('DOMContentLoaded', () => {
+        rawInput.value = "apple,banana,orange,,grape,peach";
+    });
+
+    // 返回按钮原生浏览器后退逻辑
+    backBtn.addEventListener('click', () => {
+        history.back();
+    });
 
     // 分割功能
     splitBtn.onclick = () => {
@@ -569,7 +583,7 @@
         statInfo.textContent = `共 ${arr.length} 条数据`;
     }
 
-    // 连接功能
+    // 连接功能：修复数组直接输出bug
     joinBtn.onclick = () => {
         const text = rawInput.value;
         const sep = splitSep.value;
@@ -584,7 +598,7 @@
         }
         const res = arr.join(sep);
         resultOutput.value = res;
-        statInfo.textContent = `共 ${arr} 条，连接后字符长度：${res.length}`;
+        statInfo.textContent = `共 ${arr.length} 条，连接后字符长度：${res.length}`;
     }
 
     // 清空
@@ -594,7 +608,7 @@
         statInfo.textContent = "暂无处理结果，请先输入内容并执行操作";
     }
 
-    // 复制结果
+    // 复制结果：空内容拦截
     copyResult.onclick = () => {
         const val = resultOutput.value.trim();
         if (!val) return;

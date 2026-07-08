@@ -20,10 +20,12 @@
   --card-bg: #ffffff;
   --shadow-lg: 0 6px 16px rgba(0,0,0.1);
   --radius-md: 8px;
+  --radius-full: 999px;
   --space-md: 0.875rem;
   --space-lg: 1.2rem;
-  --max-width: 1400px;
+  --max-width: 900px;
   --transition: all 0.22s ease;
+  --card-label-offset: 2.25rem;
 }
 html[data-theme="dark"] {
   --primary: #34d399;
@@ -48,7 +50,7 @@ html[data-theme="dark"] {
 body {
   background: var(--page-bg);
   color: var(--text-main);
-  padding: calc(0.75rem + var(--space-md)) 3vw 3rem;
+  padding: calc(var(--card-label-offset) + 16px) 3vw 3rem;
 }
 .top-header-bar{
   position: fixed;
@@ -78,7 +80,7 @@ body {
   height: 40px;
   padding: 0;
   border:1px solid var(--nav-border);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   background: var(--nav-bg);
   color: var(--nav-text);
   cursor:pointer;
@@ -147,7 +149,7 @@ textarea{
   display:flex;
   flex-wrap:wrap;
   gap:0.6rem;
-  margin-bottom: 20px;
+  margin-bottom: var(--space-lg);
 }
 .btn-row button{
   flex:1;
@@ -236,7 +238,7 @@ textarea{
 </head>
 <body>
 <div class="top-header-bar">
-  <button class="back-btn" id="backBtn">← 返回首页</button>
+  <button class="back-btn" id="backBtn">← 返回</button>
   <button class="theme-btn" id="themeBtn">🌙</button>
 </div>
 
@@ -408,7 +410,7 @@ themeBtn.onclick = () => {
     themeBtn.textContent = "☀️";
   }
 };
-backBtn.onclick = () => window.location.href = "./index.html";
+backBtn.onclick = () => history.back();
 
 initTheme();
 loadDemo();

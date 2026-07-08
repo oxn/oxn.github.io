@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>URL</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>URL编码解码工具</title>
 <style>
@@ -39,7 +40,7 @@
       --key-bg: #e5e7eb;
       --key-text: #222;
       --key-radius: 6px;
-      --key-shadow: 0 1px 2px rgba(0,0,0.15);
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.15);
       --body-font-size: 16px;
       --body-line-height: 1.6;
       --title-line-height: 1.2;
@@ -70,11 +71,11 @@
       --bg-card: #1e293b;
       --bg-btn: #1f2937;
       --bg-footer: #111827;
-      --shadow-sm: 0 1px 3px rgba(0,0,0.25);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.25);
       --shadow-lg: 0 6px 16px rgba(0,0,0.45);
       --key-bg: #374151;
       --key-text: #f9fafb;
-      --key-shadow: 0 1px 2px rgba(0,0,0.35);
+      --key-shadow: 0 1px 2px rgba(0,0,0,0.35);
     }
 *{
   margin:0;
@@ -90,7 +91,7 @@ body{
   justify-content:center;
   background:var(--bg-page);
   color:var(--text-main);
-  padding:20px;
+  padding:calc(var(--card-label-offset) + 16px) 3vw 3rem;
   position: relative;
 }
 .top-header-bar{
@@ -152,7 +153,6 @@ body{
   padding:32px;
   border-radius:var(--radius-lg);
   box-shadow:var(--shadow-lg);
-  margin-top: 70px;
 }
 h2{
   text-align:center;
@@ -184,7 +184,7 @@ textarea{
 .btn-group{
   display:flex;
   gap:10px;
-  margin-bottom:16px;
+  margin-bottom:var(--space-lg);
 }
 .btn{
   padding:12px 20px;
@@ -214,19 +214,27 @@ textarea{
   position: fixed;
   bottom: 40px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(20px);
   padding: 10px 20px;
-  background: rgba(0,0,0,0.65);
-  color: #fff;
+  background: var(--bg-card);
+  color: var(--text-main);
   border-radius: var(--radius-md);
   font-size: 14px;
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   pointer-events: none;
   z-index: 9999;
-  transition: opacity 0.25s ease;
+  transition: all 0.25s ease;
 }
 .toast-copy.show {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast-success {
+  color: var(--primary);
+}
+.toast-error {
+  color: var(--danger);
 }
 @media screen and (max-width:767px) and (orientation:portrait){
   body{
@@ -248,7 +256,6 @@ textarea{
   }
   .box{
     padding:24px 20px;
-    margin-top: 60px;
   }
   h2{
     font-size:22px;
@@ -276,7 +283,7 @@ textarea{
 <div class="toast-copy" id="toastTip"></div>
 
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -317,10 +324,12 @@ URL编码将中文、空格、&?=/等特殊字符转为百分号编码；
 document.addEventListener('DOMContentLoaded', function(){
   const htmlRoot = document.documentElement;
   const themeToggle = document.getElementById("themeToggle");
+  const backHome = document.getElementById("backHome");
   const toastTip = document.getElementById('toastTip');
   const STORAGE_KEY = "site_theme_mode";
 
-  function showToast(msg) {
+  function showToast(msg, success = true) {
+    toastTip.className = "toast-copy " + (success ? "toast-success" : "toast-error");
     toastTip.textContent = msg;
     toastTip.classList.add('show');
     setTimeout(function(){
@@ -353,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  document.getElementById("backHome").addEventListener('click', function(){
+  backHome.addEventListener('click', function(){
     history.back();
   });
 
@@ -390,32 +399,35 @@ document.addEventListener('DOMContentLoaded', function(){
   encodeBtn.addEventListener('click', function(){
     const val = inputText.value.trim();
     if(!val){
-      showToast("请输入待转换内容");
+      showToast("请输入待转换内容", false);
       return;
     }
     outputText.value = urlEncode(val);
     convertStatus.textContent = "已完成转换：URL编码";
+    showToast("转换完成");
   });
 
   decodeBtn.addEventListener('click', function(){
     const val = inputText.value.trim();
     if(!val){
-      showToast("请输入待转换内容");
+      showToast("请输入待转换内容", false);
       return;
     }
     outputText.value = urlDecode(val);
     convertStatus.textContent = "已完成转换：URL解码";
+    showToast("转换完成");
   });
 
   clearBtn.addEventListener('click', function(){
     inputText.value = "";
     outputText.value = "";
     convertStatus.textContent = "已完成转换：无";
+    showToast("已清空");
   });
 
   async function copyContent(text) {
     if(!text.trim()){
-      showToast("无内容可复制");
+      showToast("无内容可复制", false);
       return;
     }
     if(navigator.clipboard && window.isSecureContext){

@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='90' font-size='90'>📄</text></svg>">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>HTML转纯文本工具</title>
 <style>
@@ -93,7 +94,7 @@
       justify-content: center;
       background: var(--bg-page);
       color: var(--text-main);
-      padding: 20px;
+      padding: calc(var(--card-label-offset) + 16px) 3vw 3rem;
       position: relative;
     }
 
@@ -138,7 +139,7 @@
       height: 40px;
       padding: 0;
       border: 1px solid var(--nav-btn-border);
-      border-radius: 50%;
+      border-radius: var(--radius-full);
       font-size: 16px;
       cursor: pointer;
       display: grid;
@@ -161,7 +162,6 @@
       padding: 32px;
       border-radius: var(--radius-lg);
       box-shadow: var(--shadow-lg);
-      margin-top: 70px;
     }
 
     h2 {
@@ -198,7 +198,7 @@
     .btn-group {
       display: flex;
       gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: var(--space-lg);
     }
 
     .btn {
@@ -244,20 +244,28 @@
       position: fixed;
       bottom: 40px;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) translateY(20px);
       padding: 10px 20px;
-      background: rgba(0, 0, 0, 0.65);
-      color: #fff;
+      background: var(--bg-card);
+      color: var(--text-main);
       border-radius: var(--radius-md);
       font-size: 14px;
+      box-shadow: var(--shadow-lg);
       opacity: 0;
       pointer-events: none;
       z-index: 9999;
-      transition: opacity 0.25s ease;
+      transition: all 0.25s ease;
     }
 
     .toast-copy.show {
       opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .toast-success {
+      color: var(--primary);
+    }
+    .toast-error {
+      color: var(--danger);
     }
 
     @media screen and (max-width: 767px) and (orientation: portrait) {
@@ -284,7 +292,6 @@
 
       .box {
         padding: 24px 20px;
-        margin-top: 60px;
       }
 
       h2 {
@@ -317,7 +324,7 @@
 <div class="toast-copy" id="toastTip"></div>
 
 <div class="top-header-bar">
-  <button class="header-btn-back" id="backHome">← 返回首页</button>
+  <button class="header-btn-back" id="backHome">← 返回</button>
   <button class="header-btn-theme" id="themeToggle" aria-label="切换明暗模式">🌙</button>
 </div>
 
@@ -355,10 +362,12 @@
 document.addEventListener('DOMContentLoaded', function(){
   const htmlRoot = document.documentElement;
   const themeToggle = document.getElementById("themeToggle");
+  const backHome = document.getElementById("backHome");
   const toastTip = document.getElementById('toastTip');
   const STORAGE_KEY = "site_theme_mode";
 
-  function showToast(msg) {
+  function showToast(msg, success = true) {
+    toastTip.className = "toast-copy " + (success ? "toast-success" : "toast-error");
     toastTip.textContent = msg;
     toastTip.classList.add('show');
     setTimeout(function(){
@@ -391,8 +400,8 @@ document.addEventListener('DOMContentLoaded', function(){
     }
   });
 
-  document.getElementById("backHome").addEventListener('click', function(){
-    window.location.href = "./index.html";
+  backHome.addEventListener('click', function(){
+    history.back();
   });
 
   const inputText = document.getElementById('inputText');
@@ -432,24 +441,26 @@ document.addEventListener('DOMContentLoaded', function(){
   convertBtn.addEventListener('click', function(){
     const val = inputText.value.trim();
     if (!val) {
-      showToast('请输入HTML代码');
+      showToast('请输入HTML代码', false);
       return;
     }
 
     const result = htmlToPlainText(val);
     outputText.value = result;
     convertStatus.textContent = '已完成转换：HTML提取纯文本';
+    showToast('转换完成');
   });
 
   clearBtn.addEventListener('click', function(){
     inputText.value = '';
     outputText.value = '';
     convertStatus.textContent = '已完成转换：无';
+    showToast('已清空');
   });
 
   async function copyContent(text) {
     if (!text.trim()) {
-      showToast('无内容可复制');
+      showToast('无内容可复制', false);
       return;
     }
 
